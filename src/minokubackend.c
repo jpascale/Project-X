@@ -37,3 +37,40 @@ void initializeVisualBoard(tBoard * structboard)
 		for (j=0; j<dimcols; j++)
 			structboard->board[i][j]=VISUAL_UNFLAGGED;
 }
+
+int
+CreateBoard(tBoard * structboard)
+{
+	int i, auxrows, auxcolumns;
+	char ** auxboard;
+	auxboard = structboard->board;
+	auxrows = structboard->rows;
+	auxcolumns = structboard->columns;
+	auxboard = malloc(auxrows*sizeof(char*));
+	if (auxboard == NULL)
+	{	
+		free(auxboard);
+		return FALSE;
+	}
+	for(i=0; i<auxrows; i++)
+	{
+		auxboard[i] = malloc(auxcolumns*sizeof(char));
+		if(auxboard[i]==NULL)
+		{
+			freeBoard(auxboard, i);
+			return FALSE;
+		}	
+	}
+	structboard->board = auxboard;
+	return TRUE;	
+
+}
+
+void
+freeBoard(char ** Board, int rows)
+{
+	int i;
+	for(i=0;i<rows;i++)
+		free(Board[i]);
+	free(Board);
+}
