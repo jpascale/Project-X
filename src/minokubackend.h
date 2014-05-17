@@ -32,7 +32,7 @@
 */
 typedef struct
 {
-	int ** board;
+	char ** board;
 	int rows;
 	int columns;
 
@@ -40,7 +40,8 @@ typedef struct
 
 typedef struct 
 {
-	tBoard boardstate;
+	tBoard visibleboard;
+	tBoard hiddenboard;
 	int gametype;
 	int level;
 	int moves;
@@ -53,7 +54,7 @@ typedef struct
 **		Function prototypes (front)
 */
 int Menu(void);
-int Menu2(void);
+void Menu2(tGame * game);
 void getLevelandDim(tGame * game);
 
 /*

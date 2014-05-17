@@ -10,8 +10,8 @@ main(void)
 	switch (option)
 	{
 		case 1: /*Juego Nuevo*/
-			option = Menu2();
-			switch (option)
+			Menu2(&game);
+			switch (game.gametype)
 			{
 				case 1:
 					getLevelandDim (&game);
@@ -47,8 +47,8 @@ Menu(void)
 
 }
 
-int
-Menu2(void)
+void
+Menu2(tGame * game)
 {
 	int option;
 	do
@@ -60,18 +60,22 @@ Menu2(void)
 		if (option>3 || option <1)
 			printf("Ingrese una option valida.\n");
 	}while(option>3 || option<1);
-	return option;
+	game->gametype = option;
 }
 
-/*return level, modify rows and columns*/
+/*returns level, modify rows and columns*/
 void getLevelandDim (tGame * game)
 {
 	int rowsaux, colaux, level;
 	do
 	{
 		rowsaux = getint("Ingrese FILAS, minimo 5 y maximo 19:\n");
+	} while (rowsaux < 5 || rowsaux > 19);
+
+	do
+	{
 		colaux = getint("Ingrese COLUMNAS, minimo 5 y maximo 19:\n");
-	} while (rowsaux < 5 || rowsaux > 19 || colaux < 5 || colaux > 19);
+	} while (colaux < 5 || colaux > 19);
 	
 	do
 	{
@@ -81,4 +85,5 @@ void getLevelandDim (tGame * game)
 	game->boardstate.rows = rowsaux;
 	game->boardstate.columns = colaux;
 	game->level = level;
+
 }
