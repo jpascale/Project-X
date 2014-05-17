@@ -16,6 +16,11 @@
 */
 #define DEBUG
 
+#define EASY 1
+#define MEDIUM 2
+#define HARD 3
+#define NIGHTMARE 4 
+
 /*
 **		Function prototypes
 */
