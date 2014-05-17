@@ -3,9 +3,9 @@
 int
 main(void)
 {
-	randomize();
-
 	int option;
+	tGame game;
+	randomize();
 	option = Menu();
 	switch (option)
 	{
@@ -13,7 +13,8 @@ main(void)
 			option = Menu2();
 			switch (option)
 			{
-				case 1:  /*Juego individual sin limite de movimientos*/
+				case 1:
+					getLevelandDim (&game);
 					break;
 				case 2:	/*Juego individual con limite de movimientos*/
 					break;
@@ -63,22 +64,21 @@ Menu2(void)
 }
 
 /*return level, modify rows and columns*/
-int getLevelandDim(int * rows, int * columns)
+void getLevelandDim (tGame * game)
 {
 	int rowsaux, colaux, level;
 	do
 	{
-		rowsaux=getint("Ingrese filas, minimo 5 y maximo 19\n");
-		colaux=getint("Ingrese columnas, minimo 5 y maximo 19\n");
-	} while(rowsaux<5 || rowsaux>19 || colaux <5 || colaux>19);
+		rowsaux = getint("Ingrese FILAS, minimo 5 y maximo 19:\n");
+		colaux = getint("Ingrese COLUMNAS, minimo 5 y maximo 19:\n");
+	} while (rowsaux < 5 || rowsaux > 19 || colaux < 5 || colaux > 19);
 	
 	do
 	{
-		level=getint("Ingrese dificultad:\n1.Facil\n2.Medio\n3.Dificil\n4.Pesadilla\n");
-	} while (level<1 || level>4);
+		level = getint("Ingrese dificultad:\n1.Facil\n2.Medio\n3.Dificil\n4.Pesadilla\n");
+	} while (level < 1 || level > 4);
 	
-	*rows=rowsaux;
-	*colums=colaux;
-
-	return level;
+	game->boardstate.rows = rowsaux;
+	game->boardstate.columns = colaux;
+	game->level = level;
 }
