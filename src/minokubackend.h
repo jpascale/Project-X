@@ -16,16 +16,38 @@
 */
 #define DEBUG
 
-#define EASY 1
-#define MEDIUM 2
-#define HARD 3
-#define NIGHTMARE 4
+// Levels
+#define EASY 		1
+#define MEDIUM		2
+#define HARD 		3
+#define NIGHTMARE	4
+
+// Hidden board
+#define HIDDEN_MINE 	'#'
+#define HIDDEN_EMPTY 	'-'
+
+// Chars for visual display
+#define VISUAL_UNFLAGGED 	'0'
+#define VISUAL_FLAGGED 		'&'
+#define VISUAL_EMPTY 		'-'
+#define VISUAL_MINE 		'#'
 
 #define GAMETYPE_INDIVIDUAL_NOLIMIT 0
 #define GAMETYPE_INDIVIDUAL_LIMIT 1
 #define GAMETYPE_CAMPAIGN 2
 
 #define UNLIMITED_MOVES 0
+
+// Level mines percentage
+#define PERCENT_EASY 0.2
+#define PERCENT_MEDIUM 0.5
+#define PERCENT_HARD 0.7
+#define PERCENT_NIGHTMARE 0.9
+
+// map undos quantity
+#define get_undos(level) ((level==NIGHTMARE)?1: \
+						  (level==HARD)?3: \
+						  (level==MEDIUM)?5:10)
 
 /*
 **		Structs
@@ -60,3 +82,4 @@ void getLevelandDim(tGame * game);
 /*
 **		Function prototypes (back)
 */
+void setMines(tGame * game);
