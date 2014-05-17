@@ -38,8 +38,7 @@ void initializeVisualBoard(tBoard * structboard)
 			structboard->board[i][j]=VISUAL_UNFLAGGED;
 }
 
-int
-CreateBoard(tBoard * structboard)
+int CreateBoard(tBoard * structboard)
 {
 	int i, auxrows, auxcolumns;
 	char ** auxboard;
@@ -66,11 +65,71 @@ CreateBoard(tBoard * structboard)
 
 }
 
-void
-freeBoard(char ** Board, int rows)
+void freeBoard(char ** Board, int rows)
 {
 	int i;
 	for(i=0;i<rows;i++)
 		free(Board[i]);
 	free(Board);
+}
+
+
+void InitHiddenBoardEmpty(tBoard * structboard)
+{
+	int i,j;
+	int dimr = structboard->rows;
+	int dimc = structboard->colums;
+	char ** board = structboard->board;
+
+	for (i = 0; i < dimr ; i++)
+		for (j = 0; j < dimc; j++)
+			board[i][j] = HIDDEN_EMPTY;
+
+	return;
+}
+
+int InitHiddenBoardMines(tBoard * structboard, int mines)
+{
+	int i, k;
+	int auxrows = structboard->rows;
+	int auxcolumns = structboard->columns;
+	char ** board = structboard->board;
+
+	int * randvec;
+	int dimrandvec;
+
+	int randpos;
+	int boardpos;
+
+	dimrandvec = auxrows * auxcolumns;
+
+	randvec = malloc(dimrandvec * sizeof(*randvec));
+	if (randvec == NULL)
+		return FALSE;
+
+	/* Board positions taken randomly to put mines */
+	for (k = 0; k < dimrandvec; k++)
+		randvec[k] = k;
+
+	for (i = 0; i < mines; i++)
+	{
+		randpos = randint(0, dimrandvec-1);
+		boardpos = randvec[randpos];
+
+		board[boardpos/auxrows][boardpos%auxrows] = HIDDEN_MINE;
+
+		randvec[randpos] = randvec[--dimrandvec];
+	}
+
+	return TRUE;
+}
+
+int InitHiddenBoard(tBoard * structboard, int mines)
+{
+	InitHiddenBoardEmpty(structboard);
+
+	if (InitHiddenBoardMines(structboard, mines) == NULL)
+		return FALSE;
+
+	return TRUE;
 }
