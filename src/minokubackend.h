@@ -85,3 +85,5 @@ void getLevelandDim(tGame * game);
 void setMines(tGame * game);
 void initializeVisualBoard(tBoard * structboard);
 void printBoard(tBoard * structboard);
+void freeBoard(char ** Board, int rows);
+int CreateBoard(tBoard * structboard);
