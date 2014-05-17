@@ -29,3 +29,11 @@ void setMines(tGame * game)
 
 	return;
 }
+
+void initializeVisualBoard(tBoard * structboard)
+{
+	int i, j, dimrows=structboard->rows, dimcols=structboard->columns;
+	for (i=0; i<dimrows; i++)
+		for (j=0; j<dimcols; j++)
+			structboard->board[i][j]=VISUAL_UNFLAGGED;
+}
