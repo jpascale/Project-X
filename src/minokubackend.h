@@ -84,3 +84,4 @@ void getLevelandDim(tGame * game);
 */
 void setMines(tGame * game);
 void initializeVisualBoard(tBoard * structboard);
+void printBoard(tBoard * structboard);
