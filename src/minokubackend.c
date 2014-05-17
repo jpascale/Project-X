@@ -78,7 +78,7 @@ void InitHiddenBoardEmpty(tBoard * structboard)
 {
 	int i,j;
 	int dimr = structboard->rows;
-	int dimc = structboard->colums;
+	int dimc = structboard->columns;
 	char ** board = structboard->board;
 
 	for (i = 0; i < dimr ; i++)
@@ -128,7 +128,7 @@ int InitHiddenBoard(tBoard * structboard, int mines)
 {
 	InitHiddenBoardEmpty(structboard);
 
-	if (InitHiddenBoardMines(structboard, mines) == NULL)
+	if (InitHiddenBoardMines(structboard, mines) == FALSE)
 		return FALSE;
 
 	return TRUE;

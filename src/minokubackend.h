@@ -16,6 +16,9 @@
 */
 #define DEBUG
 
+#define FALSE 0
+#define TRUE 1
+
 // Levels
 #define EASY 		1
 #define MEDIUM		2
