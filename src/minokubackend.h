@@ -40,7 +40,7 @@ typedef struct
 
 typedef struct 
 {
-	tBoard visibleboard;
+	tBoard visualboard;
 	tBoard hiddenboard;
 	int gametype;
 	int level;

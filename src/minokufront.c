@@ -82,8 +82,8 @@ void getLevelandDim (tGame * game)
 		level = getint("Ingrese dificultad:\n1.Facil\n2.Medio\n3.Dificil\n4.Pesadilla\n");
 	} while (level < 1 || level > 4);
 	
-	game->boardstate.rows = rowsaux;
-	game->boardstate.columns = colaux;
+	game->visualboard.rows = game->hiddenboard.rows = rowsaux;
+	game->visualboard.columns = game->hiddenboard.columns = colaux;
 	game->level = level;
 
 }
