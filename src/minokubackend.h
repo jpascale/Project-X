@@ -22,5 +22,10 @@
 #define NIGHTMARE 4 
 
 /*
-**		Function prototypes
+**		Function prototypes (front)
+*/
+int getLevelandDim(int * rows, int * columns);
+
+/*
+**		Function prototypes (back)
 */

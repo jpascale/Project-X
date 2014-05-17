@@ -62,3 +62,23 @@ Menu2(void)
 	return option;
 }
 
+/*return level, modify rows and columns*/
+int getLevelandDim(int * rows, int * columns)
+{
+	int rowsaux, colaux, level;
+	do
+	{
+		rowsaux=getint("Ingrese filas, minimo 5 y maximo 19\n");
+		colaux=getint("Ingrese columnas, minimo 5 y maximo 19\n");
+	} while(rowsaux<5 || rowsaux>19 || colaux <5 || colaux>19);
+	
+	do
+	{
+		level=getint("Ingrese dificultad:\n1.Facil\n2.Medio\n3.Dificil\n4.Pesadilla\n");
+	} while (level<1 || level>4);
+	
+	*rows=rowsaux;
+	*colums=colaux;
+
+	return level;
+}
