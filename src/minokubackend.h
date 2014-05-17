@@ -87,3 +87,6 @@ void initializeVisualBoard(tBoard * structboard);
 void printBoard(tBoard * structboard);
 void freeBoard(char ** Board, int rows);
 int CreateBoard(tBoard * structboard);
+int InitHiddenBoard(tBoard * structboard, int mines);
+int InitHiddenBoardMines(tBoard * structboard, int mines);
+void InitHiddenBoardEmpty(tBoard * structboard);
