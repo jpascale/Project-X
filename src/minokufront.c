@@ -87,3 +87,14 @@ void getLevelandDim (tGame * game)
 	game->level = level;
 
 }
+
+void printBoard(tBoard * structboard)
+{
+	int i, j, rows = structboard->rows, columns = structboard->columns;
+	for(i = 0; i < rows; i++)
+	{
+		for (j = 0; j < columns; j++)
+			putchar(structboard->board[i][j]);
+		putchar('\n');
+	}
+}
