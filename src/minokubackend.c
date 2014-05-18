@@ -103,7 +103,7 @@ int InitHiddenBoardMines(tBoard * structboard, int mines)
 
 int InitHiddenBoard(tBoard * structboard, int mines)
 {
-	InitBoard(structboard, HIDDEN);
+	InitBoard(structboard, HIDDEN_EMPTY);
 
 	if (InitHiddenBoardMines(structboard, mines) == FALSE)
 		return FALSE;
@@ -111,7 +111,7 @@ int InitHiddenBoard(tBoard * structboard, int mines)
 	return TRUE;
 }
 
-void InitBoard(tBoard * structboard, char boardtype)
+void InitBoard(tBoard * structboard, char initchar)
 {
 	int i,j;
 	int dimr = structboard->rows;
@@ -120,7 +120,7 @@ void InitBoard(tBoard * structboard, char boardtype)
 
 	for (i = 0; i < dimr ; i++)
 		for (j = 0; j < dimc; j++)
-			board[i][j] = (boardtype == HIDDEN ? HIDDEN_EMPTY : VISUAL_UNFLAGGED);
+			board[i][j] = initchar;
 
 	return;
 }
