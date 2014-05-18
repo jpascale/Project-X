@@ -95,4 +95,4 @@ void freeBoard(char ** Board, int rows);
 int CreateBoard(tBoard * structboard);
 int InitHiddenBoard(tBoard * structboard, int mines);
 int InitHiddenBoardMines(tBoard * structboard, int mines);
-void InitBoard(tBoard * structboard, char boardtype);
+void InitBoard(tBoard * structboard, char initchar);
