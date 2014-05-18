@@ -30,14 +30,6 @@ void setMines(tGame * game)
 	return;
 }
 
-void initializeVisualBoard(tBoard * structboard)
-{
-	int i, j, dimrows=structboard->rows, dimcols=structboard->columns;
-	for (i=0; i<dimrows; i++)
-		for (j=0; j<dimcols; j++)
-			structboard->board[i][j]=VISUAL_UNFLAGGED;
-}
-
 int CreateBoard(tBoard * structboard)
 {
 	int i, auxrows, auxcolumns;
@@ -71,21 +63,6 @@ void freeBoard(char ** Board, int rows)
 	for(i=0;i<rows;i++)
 		free(Board[i]);
 	free(Board);
-}
-
-
-void InitHiddenBoardEmpty(tBoard * structboard)
-{
-	int i,j;
-	int dimr = structboard->rows;
-	int dimc = structboard->columns;
-	char ** board = structboard->board;
-
-	for (i = 0; i < dimr ; i++)
-		for (j = 0; j < dimc; j++)
-			board[i][j] = HIDDEN_EMPTY;
-
-	return;
 }
 
 int InitHiddenBoardMines(tBoard * structboard, int mines)
@@ -126,10 +103,24 @@ int InitHiddenBoardMines(tBoard * structboard, int mines)
 
 int InitHiddenBoard(tBoard * structboard, int mines)
 {
-	InitHiddenBoardEmpty(structboard);
+	InitBoard(structboard, HIDDEN);
 
 	if (InitHiddenBoardMines(structboard, mines) == FALSE)
 		return FALSE;
 
 	return TRUE;
+}
+
+void InitBoard(tBoard * structboard, char boardtype)
+{
+	int i,j;
+	int dimr = structboard->rows;
+	int dimc = structboard->columns;
+	char ** board = structboard->board;
+
+	for (i = 0; i < dimr ; i++)
+		for (j = 0; j < dimc; j++)
+			board[i][j] = (boardtype == HIDDEN ? HIDDEN_EMPTY : VISUAL_UNFLAGGED);
+
+	return;
 }

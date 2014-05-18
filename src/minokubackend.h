@@ -29,6 +29,10 @@
 #define HIDDEN_MINE 	'#'
 #define HIDDEN_EMPTY 	'-'
 
+// Hidden or visual board
+#define HIDDEN 0
+#define VISUAL 1
+
 // Chars for visual display
 #define VISUAL_UNFLAGGED 	'0'
 #define VISUAL_FLAGGED 		'&'
@@ -86,10 +90,9 @@ void getLevelandDim(tGame * game);
 **		Function prototypes (back)
 */
 void setMines(tGame * game);
-void initializeVisualBoard(tBoard * structboard);
 void printBoard(tBoard * structboard);
 void freeBoard(char ** Board, int rows);
 int CreateBoard(tBoard * structboard);
 int InitHiddenBoard(tBoard * structboard, int mines);
 int InitHiddenBoardMines(tBoard * structboard, int mines);
-void InitHiddenBoardEmpty(tBoard * structboard);
+void InitBoard(tBoard * structboard, char boardtype);
