@@ -25,13 +25,9 @@
 #define HARD 		3
 #define NIGHTMARE	4
 
-// Hidden board
+// Chars for hidden board
 #define HIDDEN_MINE 	'#'
 #define HIDDEN_EMPTY 	'-'
-
-// Hidden or visual board
-#define HIDDEN 0
-#define VISUAL 1
 
 // Chars for visual display
 #define VISUAL_UNFLAGGED 	'0'
