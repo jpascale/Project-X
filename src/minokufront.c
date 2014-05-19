@@ -10,7 +10,7 @@ main(void)
 	switch (option)
 	{
 		case 1: /*Juego Nuevo*/
-			Menu2(&game);
+			PlayMenu(&game);
 			switch (game.gametype)
 			{
 				case 1:
@@ -48,7 +48,7 @@ Menu(void)
 }
 
 void
-Menu2(tGame * game)
+PlayMenu(tGame * game)
 {
 	int option;
 	do

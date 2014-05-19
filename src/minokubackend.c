@@ -65,7 +65,7 @@ void freeBoard(char ** Board, int rows)
 	free(Board);
 }
 
-int InitHiddenBoardMines(tBoard * structboard, int mines)
+int InitBoardMines(tBoard * structboard, int mines)
 {
 	int i, k;
 	int auxrows = structboard->rows;
@@ -105,7 +105,7 @@ int InitHiddenBoard(tBoard * structboard, int mines)
 {
 	InitBoard(structboard, HIDDEN_EMPTY);
 
-	if (InitHiddenBoardMines(structboard, mines) == FALSE)
+	if (InitBoardMines(structboard, mines) == FALSE)
 		return FALSE;
 
 	return TRUE;

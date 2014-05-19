@@ -79,16 +79,16 @@ typedef struct
 **		Function prototypes (front)
 */
 int Menu(void);
-void Menu2(tGame * game);
+void PlayMenu(tGame * game);
 void getLevelandDim(tGame * game);
+void printBoard(tBoard * structboard);
 
 /*
 **		Function prototypes (back)
 */
 void setMines(tGame * game);
-void printBoard(tBoard * structboard);
 void freeBoard(char ** Board, int rows);
 int CreateBoard(tBoard * structboard);
 int InitHiddenBoard(tBoard * structboard, int mines);
-int InitHiddenBoardMines(tBoard * structboard, int mines);
+int InitBoardMines(tBoard * structboard, int mines);
 void InitBoard(tBoard * structboard, char initchar);
