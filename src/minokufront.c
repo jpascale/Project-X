@@ -66,6 +66,7 @@ PlayMenu(tGame * game)
 /*returns level, modify rows and columns*/
 void getLevelandDim (tGame * game)
 {
+	//ToDo: Separar en GetLevel y GetDim
 	int rowsaux, colaux, level;
 	do
 	{
