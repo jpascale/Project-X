@@ -33,7 +33,7 @@
 #define VISUAL_UNFLAGGED 	'0'
 #define VISUAL_FLAGGED 		'&'
 #define VISUAL_EMPTY 		'-'
-#define VISUAL_MINE 		'#'
+/*#define VISUAL_MINE 		'#'*/
 
 #define GAMETYPE_INDIVIDUAL_NOLIMIT 0
 #define GAMETYPE_INDIVIDUAL_LIMIT 1
@@ -81,7 +81,7 @@ typedef struct
 int Menu(void);
 void PlayMenu(tGame * game);
 void getLevelandDim(tGame * game);
-void printBoard(tBoard * structboard);
+void PrintBoard(tBoard * structboard);
 
 /*
 **		Function prototypes (back)
@@ -92,3 +92,4 @@ int CreateBoard(tBoard * structboard);
 int InitHiddenBoard(tBoard * structboard, int mines);
 int InitBoardMines(tBoard * structboard, int mines);
 void InitBoard(tBoard * structboard, char initchar);
+void CreateVisualBoard(tBoard * structboard);

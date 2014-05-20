@@ -124,3 +124,10 @@ void InitBoard(tBoard * structboard, char initchar)
 
 	return;
 }
+
+void CreateVisualBoard(tBoard * structboard)
+{
+	CreateBoard(structboard);
+	InitBoard(structboard, VISUAL_UNFLAGGED);
+
+}
