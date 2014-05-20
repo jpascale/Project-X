@@ -101,13 +101,13 @@ int InitBoardMines(tBoard * structboard, int mines)
 	return TRUE;
 }
 
-int InitHiddenBoard(tBoard * structboard, int mines)
+int CreateHiddenBoard(tBoard * structboard, int mines)
 {
+	if (CreateBoard(structboard) == FALSE)
+		return FALSE;
 	InitBoard(structboard, HIDDEN_EMPTY);
-
 	if (InitBoardMines(structboard, mines) == FALSE)
 		return FALSE;
-
 	return TRUE;
 }
 
@@ -125,9 +125,11 @@ void InitBoard(tBoard * structboard, char initchar)
 	return;
 }
 
-void CreateVisualBoard(tBoard * structboard)
+int CreateVisualBoard(tBoard * structboard)
 {
-	CreateBoard(structboard);
+	if (CreateBoard(structboard) == FALSE)
+		return FALSE;
 	InitBoard(structboard, VISUAL_UNFLAGGED);
+	return TRUE;
 
 }
