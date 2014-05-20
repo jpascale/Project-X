@@ -52,6 +52,9 @@
 						  (level==HARD)?3: \
 						  (level==MEDIUM)?5:10)
 
+// Number to upper letter
+#define toupperalpha(x) ((x)+'A')
+
 /*
 **		Structs
 */

@@ -91,10 +91,16 @@ void getLevelandDim (tGame * game)
 void PrintBoard(tBoard * structboard)
 {
 	int i, j, rows = structboard->rows, columns = structboard->columns;
+	char ** board = structboard->board;
+	putchar('\t');
+	for(i = 0; i < columns; i++)
+		printf("%d\t", i+1);
+	putchar('\n');
 	for(i = 0; i < rows; i++)
 	{
+		printf("%c\t", toupperalpha(i));
 		for (j = 0; j < columns; j++)
-			putchar(structboard->board[i][j]);
+			printf("%c\t", board[i][j]);
 		putchar('\n');
 	}
 }
