@@ -34,7 +34,6 @@ int CreateBoard(tBoard * structboard)
 {
 	int i, auxrows, auxcolumns;
 	char ** auxboard;
-	auxboard = structboard->board;
 	auxrows = structboard->rows;
 	auxcolumns = structboard->columns;
 	auxboard = malloc(auxrows*sizeof(char*));
