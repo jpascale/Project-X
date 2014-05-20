@@ -52,6 +52,9 @@
 						  (level==HARD)?3: \
 						  (level==MEDIUM)?5:10)
 
+//
+#define get_row_pos_byref(row) (toupper(row) - 'A')
+
 // Number to upper letter
 #define toupperalpha(x) ((x)+'A')
 
@@ -78,6 +81,7 @@ typedef struct
 
 } tGame;
 
+
 /*
 **		Function prototypes (front)
 */
@@ -85,6 +89,7 @@ int Menu(void);
 void PlayMenu(tGame * game);
 void getLevelandDim(tGame * game);
 void PrintBoard(tBoard * structboard);
+int GetRowByRef(char * rowref);
 
 /*
 **		Function prototypes (back)
@@ -96,3 +101,4 @@ int InitBoardMines(tBoard * structboard, int mines);
 void InitBoard(tBoard * structboard, char initchar);
 int CreateVisualBoard(tBoard * structboard);
 int CreateHiddenBoard(tBoard * structboard, int mines);
+

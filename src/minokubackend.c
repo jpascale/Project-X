@@ -2,7 +2,7 @@
 
 void setMines(tGame * game)
 {
-	//20 50 70 90
+
 	int dim = game->hiddenboard.rows * game->hiddenboard.columns;
 	int mines;
 
@@ -124,11 +124,11 @@ void InitBoard(tBoard * structboard, char initchar)
 	return;
 }
 
+
 int CreateVisualBoard(tBoard * structboard)
 {
 	if (CreateBoard(structboard) == FALSE)
 		return FALSE;
 	InitBoard(structboard, VISUAL_UNFLAGGED);
 	return TRUE;
-
 }
