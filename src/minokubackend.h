@@ -33,7 +33,6 @@
 #define VISUAL_UNFLAGGED 	'0'
 #define VISUAL_FLAGGED 		'&'
 #define VISUAL_EMPTY 		'-'
-/*#define VISUAL_MINE 		'#'*/
 
 #define GAMETYPE_INDIVIDUAL_NOLIMIT 0
 #define GAMETYPE_INDIVIDUAL_LIMIT 1
@@ -48,11 +47,14 @@
 #define PERCENT_NIGHTMARE 0.9
 
 // map undos quantity
-#define get_undos(level) ((level==NIGHTMARE)?1: \
-						  (level==HARD)?3: \
-						  (level==MEDIUM)?5:10)
+#define get_undos(level) (((level)==NIGHTMARE)?1: \
+						  ((level)==HARD)?3: \
+						  ((level)==MEDIUM)?5:10)
 
-//
+// Gets player moves
+#define get_moves(mines, undos) ((mines) + (undos))
+
+// Maps letter reference to board row number
 #define get_row_pos_byref(row) (toupper(row) - 'A')
 
 // Number to upper letter
@@ -81,20 +83,36 @@ typedef struct
 
 } tGame;
 
+typedef struct
+{
+	int x;
+	int y;
+
+} tPos;
+
+typedef struct
+{
+	tPos lastmove;
+	char last_was_undo;
+
+} tUndo;
 
 /*
-**		Function prototypes (front)
+**		Function prototypes (front) 
+**		TODO: Put this in frontend. Backend does not need this.
+**		>>Stays here for now only for clarity.
 */
 int Menu(void);
-void PlayMenu(tGame * game);
-void getLevelandDim(tGame * game);
+void setGametypeMenu(tGame * game);
 void PrintBoard(tBoard * structboard);
-int GetRowByRef(char * rowref);
+void getLevel(tGame * game);
+void getDim(tGame * game);
+void setNewGame(tGame * game);
 
 /*
 **		Function prototypes (back)
 */
-void setMines(tGame * game);
+void setGameMinesNumber(tGame * game);
 void freeBoard(char ** Board, int rows);
 int CreateBoard(tBoard * structboard);
 int InitBoardMines(tBoard * structboard, int mines);

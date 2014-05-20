@@ -1,6 +1,6 @@
 #include "minokubackend.h"
 
-void setMines(tGame * game)
+void setGameMinesNumber(tGame * game)
 {
 
 	int dim = game->hiddenboard.rows * game->hiddenboard.columns;
@@ -129,6 +129,8 @@ int CreateVisualBoard(tBoard * structboard)
 {
 	if (CreateBoard(structboard) == FALSE)
 		return FALSE;
+
 	InitBoard(structboard, VISUAL_UNFLAGGED);
+	
 	return TRUE;
 }
