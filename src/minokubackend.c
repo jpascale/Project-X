@@ -134,3 +134,49 @@ int CreateVisualBoard(tBoard * structboard)
 	
 	return TRUE;
 }
+
+int Query(tBoard * structboard, tQuery * pquery, int element, char isrow, int block)
+{
+	int i, j = 0, boarddim = isrow ? structboard->columns : structboard->rows, * aux;
+	char ** board = structboard->board, state = NOT_FOUND_MINE;
+	pquery->results = malloc(block * sizeof(*(pquery->results)));
+	if (pquery->results == NULL)
+		return FALSE;
+	pquery->results[0]=0;
+	for (i=0; i<boarddim; i++)
+	{
+		switch (state)
+		{
+			case NOT_FOUND_MINE:
+				if ((isrow && board[element][i] == HIDDEN_MINE) || (!isrow && board[i][element] == HIDDEN_MINE))
+				{
+					state=FOUND_MINE;
+					if (j % block == 0 && j > 0)
+					{
+						aux=realloc(pquery->results, (j + block) * sizeof(*(pquery->results)));
+						if (aux == NULL)
+						{
+							free(pquery->results);
+							return FALSE;
+						}
+
+						pquery->results = aux;
+					}
+					pquery->results[j] = 1;
+				}
+				break;
+			case FOUND_MINE:
+				if ((isrow ? board[element][i] : board[i][element]) == HIDDEN_MINE)
+					pquery->results[j]++;
+				else
+				{
+					state = NOT_FOUND_MINE;
+					j++;
+				}
+				break;
+		}
+	}
+	pquery->results = realloc(pquery->results, max((j + (state == FOUND_MINE)), 1) * sizeof(*(pquery->results))); /* If no mines are found returns {0} */
+	pquery->dim=max(j + (state == FOUND_MINE), 1);
+	return TRUE;
+}
