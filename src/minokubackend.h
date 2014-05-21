@@ -25,6 +25,9 @@
 #define HARD 		3
 #define NIGHTMARE	4
 
+// Query States
+#define NOT_FOUND_MINE 0
+#define FOUND_MINE 1
 // Chars for hidden board
 #define HIDDEN_MINE 	'#'
 #define HIDDEN_EMPTY 	'-'
@@ -59,6 +62,10 @@
 
 // Number to upper letter
 #define toupperalpha(x) ((x)+'A')
+
+// Maximum and minimum
+#define min(x, y) ((x)<(y)?(x):(y))
+#define max(x, y) ((x)>(y)?(x):(y))
 
 /*
 **		Structs
@@ -97,6 +104,13 @@ typedef struct
 
 } tUndo;
 
+typedef struct
+{
+	int * results;
+	int dim;
+
+} tQuery;
+
 /*
 **		Function prototypes (front) 
 **		TODO: Put this in frontend. Backend does not need this.
@@ -119,4 +133,5 @@ int InitBoardMines(tBoard * structboard, int mines);
 void InitBoard(tBoard * structboard, char initchar);
 int CreateVisualBoard(tBoard * structboard);
 int CreateHiddenBoard(tBoard * structboard, int mines);
+int Query(tBoard * structboard, tQuery * pquery, int element, char isrow, int block);
 
