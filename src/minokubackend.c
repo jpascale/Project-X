@@ -1,8 +1,8 @@
 #include "minokubackend.h"
 
-void setMines(tGame * game)
+void setGameMinesNumber(tGame * game)
 {
-	//20 50 70 90
+
 	int dim = game->hiddenboard.rows * game->hiddenboard.columns;
 	int mines;
 
@@ -30,20 +30,10 @@ void setMines(tGame * game)
 	return;
 }
 
-void initializeVisualBoard(tBoard * structboard)
-{
-	int i, j, dimrows=structboard->rows, dimcols=structboard->columns;
-	for (i=0; i<dimrows; i++)
-		for (j=0; j<dimcols; j++)
-			structboard->board[i][j]=VISUAL_UNFLAGGED;
-}
-
-int
-CreateBoard(tBoard * structboard)
+int CreateBoard(tBoard * structboard)
 {
 	int i, auxrows, auxcolumns;
 	char ** auxboard;
-	auxboard = structboard->board;
 	auxrows = structboard->rows;
 	auxcolumns = structboard->columns;
 	auxboard = malloc(auxrows*sizeof(char*));
@@ -66,11 +56,127 @@ CreateBoard(tBoard * structboard)
 
 }
 
-void
-freeBoard(char ** Board, int rows)
+void freeBoard(char ** Board, int rows)
 {
 	int i;
 	for(i=0;i<rows;i++)
 		free(Board[i]);
 	free(Board);
+}
+
+int InitBoardMines(tBoard * structboard, int mines)
+{
+	int i, k;
+	int auxrows = structboard->rows;
+	int auxcolumns = structboard->columns;
+	char ** board = structboard->board;
+
+	int * randvec;
+	int dimrandvec;
+
+	int randpos;
+	int boardpos;
+
+	dimrandvec = auxrows * auxcolumns;
+
+	randvec = malloc(dimrandvec * sizeof(*randvec));
+	if (randvec == NULL)
+		return FALSE;
+
+	/* Board positions taken randomly to put mines */
+	for (k = 0; k < dimrandvec; k++)
+		randvec[k] = k;
+
+	for (i = 0; i < mines; i++)
+	{
+		randpos = randint(0, dimrandvec-1);
+		boardpos = randvec[randpos];
+
+		board[boardpos/auxrows][boardpos%auxrows] = HIDDEN_MINE;
+
+		randvec[randpos] = randvec[--dimrandvec];
+	}
+
+	return TRUE;
+}
+
+int CreateHiddenBoard(tBoard * structboard, int mines)
+{
+	if (CreateBoard(structboard) == FALSE)
+		return FALSE;
+	InitBoard(structboard, HIDDEN_EMPTY);
+	if (InitBoardMines(structboard, mines) == FALSE)
+		return FALSE;
+	return TRUE;
+}
+
+void InitBoard(tBoard * structboard, char initchar)
+{
+	int i,j;
+	int dimr = structboard->rows;
+	int dimc = structboard->columns;
+	char ** board = structboard->board;
+
+	for (i = 0; i < dimr ; i++)
+		for (j = 0; j < dimc; j++)
+			board[i][j] = initchar;
+
+	return;
+}
+
+
+int CreateVisualBoard(tBoard * structboard)
+{
+	if (CreateBoard(structboard) == FALSE)
+		return FALSE;
+
+	InitBoard(structboard, VISUAL_UNFLAGGED);
+	
+	return TRUE;
+}
+
+int Query(tBoard * structboard, tQuery * pquery, int element, char isrow, int block)
+{
+	int i, j = 0, boarddim = isrow ? structboard->columns : structboard->rows, * aux;
+	char ** board = structboard->board, state = NOT_FOUND_MINE;
+	pquery->results = malloc(block * sizeof(*(pquery->results)));
+	if (pquery->results == NULL)
+		return FALSE;
+	pquery->results[0]=0;
+	for (i=0; i<boarddim; i++)
+	{
+		switch (state)
+		{
+			case NOT_FOUND_MINE:
+				if ((isrow && board[element][i] == HIDDEN_MINE) || (!isrow && board[i][element] == HIDDEN_MINE))
+				{
+					state=FOUND_MINE;
+					if (j % block == 0 && j > 0)
+					{
+						aux=realloc(pquery->results, (j + block) * sizeof(*(pquery->results)));
+						if (aux == NULL)
+						{
+							free(pquery->results);
+							return FALSE;
+						}
+
+						pquery->results = aux;
+					}
+					pquery->results[j] = 1;
+				}
+				break;
+			case FOUND_MINE:
+				if ((isrow ? board[element][i] : board[i][element]) == HIDDEN_MINE)
+					pquery->results[j]++;
+				else
+				{
+					state = NOT_FOUND_MINE;
+					j++;
+				}
+				break;
+		}
+	}
+	pquery->results = realloc(pquery->results, max((j + (state == FOUND_MINE)), 1) * sizeof(*(pquery->results))); /* If no mines are found returns {0} */
+	pquery->dim=max(j + (state == FOUND_MINE), 1);
+	return TRUE;
 }

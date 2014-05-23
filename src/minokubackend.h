@@ -16,13 +16,19 @@
 */
 #define DEBUG
 
+#define FALSE 0
+#define TRUE 1
+
 // Levels
 #define EASY 		1
 #define MEDIUM		2
 #define HARD 		3
 #define NIGHTMARE	4
 
-// Hidden board
+// Query States
+#define NOT_FOUND_MINE 0
+#define FOUND_MINE 1
+// Chars for hidden board
 #define HIDDEN_MINE 	'#'
 #define HIDDEN_EMPTY 	'-'
 
@@ -30,7 +36,6 @@
 #define VISUAL_UNFLAGGED 	'0'
 #define VISUAL_FLAGGED 		'&'
 #define VISUAL_EMPTY 		'-'
-#define VISUAL_MINE 		'#'
 
 #define GAMETYPE_INDIVIDUAL_NOLIMIT 0
 #define GAMETYPE_INDIVIDUAL_LIMIT 1
@@ -45,9 +50,22 @@
 #define PERCENT_NIGHTMARE 0.9
 
 // map undos quantity
-#define get_undos(level) ((level==NIGHTMARE)?1: \
-						  (level==HARD)?3: \
-						  (level==MEDIUM)?5:10)
+#define get_undos(level) (((level)==NIGHTMARE)?1: \
+						  ((level)==HARD)?3: \
+						  ((level)==MEDIUM)?5:10)
+
+// Gets player moves
+#define get_moves(mines, undos) ((mines) + (undos))
+
+// Maps letter reference to board row number
+#define get_row_pos_byref(row) (toupper(row) - 'A')
+
+// Number to upper letter
+#define toupperalpha(x) ((x)+'A')
+
+// Maximum and minimum
+#define min(x, y) ((x)<(y)?(x):(y))
+#define max(x, y) ((x)>(y)?(x):(y))
 
 /*
 **		Structs
@@ -72,18 +90,48 @@ typedef struct
 
 } tGame;
 
+typedef struct
+{
+	int x;
+	int y;
+
+} tPos;
+
+typedef struct
+{
+	tPos lastmove;
+	char last_was_undo;
+
+} tUndo;
+
+typedef struct
+{
+	int * results;
+	int dim;
+
+} tQuery;
+
 /*
-**		Function prototypes (front)
+**		Function prototypes (front) 
+**		TODO: Put this in frontend. Backend does not need this.
+**		>>Stays here for now only for clarity.
 */
 int Menu(void);
-void Menu2(tGame * game);
-void getLevelandDim(tGame * game);
+void setGametypeMenu(tGame * game);
+void PrintBoard(tBoard * structboard);
+void getLevel(tGame * game);
+void getDim(tGame * game);
+void setNewGame(tGame * game);
 
 /*
 **		Function prototypes (back)
 */
-void setMines(tGame * game);
-void initializeVisualBoard(tBoard * structboard);
-void printBoard(tBoard * structboard);
+void setGameMinesNumber(tGame * game);
 void freeBoard(char ** Board, int rows);
 int CreateBoard(tBoard * structboard);
+int InitBoardMines(tBoard * structboard, int mines);
+void InitBoard(tBoard * structboard, char initchar);
+int CreateVisualBoard(tBoard * structboard);
+int CreateHiddenBoard(tBoard * structboard, int mines);
+int Query(tBoard * structboard, tQuery * pquery, int element, char isrow, int block);
+

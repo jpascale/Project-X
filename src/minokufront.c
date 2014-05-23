@@ -3,26 +3,17 @@
 int
 main(void)
 {
+	//ToDo: tidy this
 	int option;
 	tGame game;
 	randomize();
 	option = Menu();
 	switch (option)
 	{
-		case 1: /*Juego Nuevo*/
-			Menu2(&game);
-			switch (game.gametype)
-			{
-				case 1:
-					getLevelandDim (&game);
-					break;
-				case 2:	/*Juego individual con limite de movimientos*/
-					break;
-				case 3:	/*Juego por campania*/
-					break;
-			}
+		case 1: /* New Game */
+			setNewGame(&game);
 			break;
-		case 2:	/*Cargar partida*/
+		case 2:	/* Load */
 			break;		
 	}
 
@@ -33,40 +24,67 @@ int
 Menu(void)
 {
 	int option;
+	
 	do
-	{	printf("1. Juego Nuevo\n"  
-				"2. Recuperar Juego Grabado\n"
-				"3. Terminar\n");
+	{	
+		printf("1. Juego Nuevo\n"  
+			   "2. Recuperar Juego Grabado\n"
+			   "3. Terminar\n");
 	
 		option = getint("Elija una opcion: ");
-		if (option>3 || option<1)
+
+		if (option > 3 || option < 1)
 			printf("Ingrese una opcion valida.\n");
-	}while(option>3 || option<1 );
+
+	} while(option > 3 || option < 1 );
 	
 	return option;
 
 }
 
 void
-Menu2(tGame * game)
+setGametypeMenu(tGame * game)
 {
 	int option;
+
 	do
 	{
 		printf("1.1 Juego individual sin limite de movimientos\n"
 				"1.2 Juego individual con limite de movimientos\n"
 				"1.3 Juego por campaña\n");
+
 		option = getint("Elija una opcion: ");
-		if (option>3 || option <1)
+		
+		if (option > 3 || option < 1)
 			printf("Ingrese una option valida.\n");
-	}while(option>3 || option<1);
+		
+	} while(option > 3 || option < 1);
+
 	game->gametype = option;
+
+	return;
 }
 
-/*returns level, modify rows and columns*/
-void getLevelandDim (tGame * game)
+/* Sets ONLY gameplay config */
+void setNewGame(tGame * game)
 {
-	int rowsaux, colaux, level;
+	setGametypeMenu(game);
+	getDim(game);
+	getLevel(game);
+	setGameMinesNumber(game);
+
+ 	game->undos = get_undos(game->level);
+ 	game->moves = get_moves(game->undos, game->mines);
+
+ 	//Ready to play
+
+ 	return;
+}
+
+void getDim(tGame * game)
+{
+	int rowsaux, colaux;
+	
 	do
 	{
 		rowsaux = getint("Ingrese FILAS, minimo 5 y maximo 19:\n");
@@ -76,25 +94,40 @@ void getLevelandDim (tGame * game)
 	{
 		colaux = getint("Ingrese COLUMNAS, minimo 5 y maximo 19:\n");
 	} while (colaux < 5 || colaux > 19);
+
+	game->visualboard.rows = game->hiddenboard.rows = rowsaux;
+	game->visualboard.columns = game->visualboard.columns = colaux;
+
+	return;
+}
+
+void getLevel(tGame * game){
 	
+	int level;
+
 	do
 	{
 		level = getint("Ingrese dificultad:\n1.Facil\n2.Medio\n3.Dificil\n4.Pesadilla\n");
 	} while (level < 1 || level > 4);
-	
-	game->visualboard.rows = game->hiddenboard.rows = rowsaux;
-	game->visualboard.columns = game->hiddenboard.columns = colaux;
+
 	game->level = level;
 
+	return;
 }
 
-void printBoard(tBoard * structboard)
-{
+void PrintBoard(tBoard * structboard)
+{//ToDo: Tidy this
 	int i, j, rows = structboard->rows, columns = structboard->columns;
+	char ** board = structboard->board;
+	putchar('\t');
+	for(i = 0; i < columns; i++)
+		printf("%d\t", i+1);
+	putchar('\n');
 	for(i = 0; i < rows; i++)
 	{
+		printf("%c\t", toupperalpha(i));
 		for (j = 0; j < columns; j++)
-			putchar(structboard->board[i][j]);
+			printf("%c\t", board[i][j]);
 		putchar('\n');
 	}
 }
