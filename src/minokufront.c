@@ -6,13 +6,17 @@ main(void)
 	//ToDo: tidy this
 	int option;
 	tGame game;
+	
 	randomize();
 	option = Menu();
+	
 	switch (option)
 	{
 		case 1: /* New Game */
 			setNewGame(&game);
+			Play(&game);
 			break;
+
 		case 2:	/* Load */
 			break;		
 	}
@@ -56,7 +60,7 @@ setGametypeMenu(tGame * game)
 		option = getint("Elija una opcion: ");
 		
 		if (option > 3 || option < 1)
-			printf("Ingrese una option valida.\n");
+			printf("Ingrese una opcion valida.\n");
 		
 	} while(option > 3 || option < 1);
 
@@ -117,17 +121,31 @@ void getLevel(tGame * game){
 
 void PrintBoard(tBoard * structboard)
 {//ToDo: Tidy this
-	int i, j, rows = structboard->rows, columns = structboard->columns;
+	int i, j;
+	int rows = structboard->rows;
+	int columns = structboard->columns;
+
 	char ** board = structboard->board;
+
 	putchar('\t');
+	
 	for(i = 0; i < columns; i++)
 		printf("%d\t", i+1);
+
 	putchar('\n');
+	
 	for(i = 0; i < rows; i++)
 	{
 		printf("%c\t", toupperalpha(i));
+
 		for (j = 0; j < columns; j++)
 			printf("%c\t", board[i][j]);
+
 		putchar('\n');
 	}
+}
+
+void Play(tGame * game)
+{
+	return;
 }
