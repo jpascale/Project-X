@@ -138,6 +138,8 @@ int CreateVisualBoard(tBoard * structboard)
 int Query(tBoard * structboard, tQuery * pquery, int element, char isrow, int block)
 { //ToDo: Use realloc directly
   //ToDo: Modularize??
+  //ToDo: Think what is going to return this
+
 	int i, j;
 	int boarddim = isrow ? structboard->columns : structboard->rows;
 
