@@ -136,38 +136,53 @@ int CreateVisualBoard(tBoard * structboard)
 }
 
 int Query(tBoard * structboard, tQuery * pquery, int element, char isrow, int block)
-{
-	int i, j = 0, boarddim = isrow ? structboard->columns : structboard->rows, * aux;
-	char ** board = structboard->board, state = NOT_FOUND_MINE;
-	pquery->results = malloc(block * sizeof(*(pquery->results)));
-	if (pquery->results == NULL)
+{ //ToDo: Use realloc directly
+  //ToDo: Modularize??
+	int i, j;
+	int boarddim = isrow ? structboard->columns : structboard->rows;
+
+	int * aux;
+	int * results = pquery-> results;
+	char ** board = structboard->board;
+	
+	char state = NOT_FOUND_MINE;
+	
+	results = malloc(block * sizeof(*results));
+	
+	if (results == NULL)
 		return FALSE;
-	pquery->results[0]=0;
-	for (i=0; i<boarddim; i++)
+
+	results[0] = 0;
+
+	for (i = 0, j = 0; i < boarddim; i++)
 	{
 		switch (state)
 		{
 			case NOT_FOUND_MINE:
 				if ((isrow && board[element][i] == HIDDEN_MINE) || (!isrow && board[i][element] == HIDDEN_MINE))
 				{
-					state=FOUND_MINE;
+					state = FOUND_MINE;
+
 					if (j % block == 0 && j > 0)
 					{
-						aux=realloc(pquery->results, (j + block) * sizeof(*(pquery->results)));
+						aux = realloc(results, (j + block) * sizeof(*results));
+
 						if (aux == NULL)
 						{
-							free(pquery->results);
+							free(results);
 							return FALSE;
 						}
 
-						pquery->results = aux;
+						results = aux;
 					}
-					pquery->results[j] = 1;
+
+					results[j] = 1;
 				}
 				break;
+
 			case FOUND_MINE:
 				if ((isrow ? board[element][i] : board[i][element]) == HIDDEN_MINE)
-					pquery->results[j]++;
+					results[j]++;
 				else
 				{
 					state = NOT_FOUND_MINE;
@@ -176,7 +191,10 @@ int Query(tBoard * structboard, tQuery * pquery, int element, char isrow, int bl
 				break;
 		}
 	}
-	pquery->results = realloc(pquery->results, max((j + (state == FOUND_MINE)), 1) * sizeof(*(pquery->results))); /* If no mines are found returns {0} */
-	pquery->dim=max(j + (state == FOUND_MINE), 1);
+	 /* If no mines are found returns 0 */
+	results = realloc(results, max((j + (state == FOUND_MINE)), 1) * sizeof(*results));
+	
+	pquery->dim = max(j + (state == FOUND_MINE), 1);
+	
 	return TRUE;
 }
