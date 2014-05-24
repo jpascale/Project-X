@@ -66,6 +66,7 @@
 // Command constants
 #define MAX_COMMAND_LEN 7
 #define MAX_PARAMS_LEN 24
+#define COMMANDS_NUMBER 7
 
 #define COMMAND_SWEEP	0
 #define COMMAND_FLAG	1

@@ -152,6 +152,68 @@ void PrintBoard(tBoard * structboard)
 
 void Play(tGame * game)
 {
+	char won = FALSE; //ToDo: put in tGame
+	char end = FALSE;
+	tCommand command;
+
+	do
+	{
+		do
+		{
+			int result = InputCommand(&command);
+
+			if (!result)
+				printf("Comando no válido.\n");
+
+		} while (!result)
+
+	} while(!won && !end);
+
 	return;
 }
 
+int InputCommand(tCommand * structcommand)
+{	
+	int i;
+	char found = FALSE;
+	int scanned_params_number;
+	// Get commands
+
+	char * comands[] = {"s", "flag", "unflag", "query", "save", "quit", "undo"};
+
+	char scannedcommand[MAX_COMMAND_LEN];
+	char params[MAX_PARAMS_LEN];
+
+	// Scanf formatting
+	char fmt[13]; //ToDo: Constant
+	sprintf(fmt, "%%%ds %%%ds", MAX_COMMAND_LEN, MAX_PARAMS_LEN);
+
+	printf("Introducir un comando:\n");
+
+	scanned_params_number = scanf(fmt, scannedcommand, params);
+
+	if (!scanned_params_number)
+		return FALSE;
+
+	for (i = 0; i < COMMANDS_NUMBER && !found; i++) //TODO: Clarify for with comment
+	{
+		if (!strcmp(scannedcommand, commands[i]))
+		{
+			structcommand->command = i;
+			found = TRUE;
+		}
+	}
+
+	if (!found)
+		return FALSE;
+
+	if (structcommand->command != COMMAND_QUIT && structcommand->command != COMMAND_UNDO)
+	{
+		if (scanned_params_number != 2)
+			return FALSE;
+
+		strcpy(structcommand->params, params);
+	}
+
+	return TRUE;
+}
