@@ -39,6 +39,9 @@
 #define NOT_FOUND_MINE 0
 #define FOUND_MINE 1
 
+// Sweep 
+#define SWEEP_MINE -1
+
 // Chars for hidden board
 #define HIDDEN_MINE 	'#'
 #define HIDDEN_EMPTY 	'-'
@@ -60,6 +63,19 @@
 #define PERCENT_HARD 0.7
 #define PERCENT_NIGHTMARE 0.9
 
+// Command constants
+#define MAX_COMMAND_LEN 7
+#define MAX_PARAMS_LEN 24
+#define COMMANDS_NUMBER 7
+
+#define COMMAND_SWEEP	0
+#define COMMAND_FLAG	1
+#define COMMAND_UNFLAG 	2
+#define COMMAND_QUERY 	3
+#define COMMAND_SAVE	4
+#define COMMAND_QUIT 	5
+#define COMMAND_UNDO 	6
+
 // map undos quantity
 #define get_undos(level) (((level)==NIGHTMARE)?1: \
 						  ((level)==HARD)?3: \
@@ -77,6 +93,9 @@
 // Maximum and minimum
 #define min(x, y) ((x)<(y)?(x):(y))
 #define max(x, y) ((x)>(y)?(x):(y))
+
+// Delete buffer
+#define DELBFF() while(getchar() != '\n')
 
 /*
 **		Structs
@@ -125,6 +144,12 @@ typedef struct
 
 } tQuery;
 
+typedef struct
+{
+	int command;
+	char params[MAX_PARAMS_LEN];
+
+} tCommand;
 
 /*
 **		Function prototypes (front) 
@@ -138,7 +163,7 @@ void getLevel(tGame * game);
 void getDim(tGame * game);
 void setNewGame(tGame * game);
 void Play(tGame * game);
-void InputCommand(tGame * game);
+//void InputCommand(tGame * game, char * wonflag, char *);
 
 /*
 **		Function prototypes (back)
@@ -152,3 +177,5 @@ int CreateHiddenBoard(tBoard * structboard, int mines);
 int Query(tBoard * structboard, tQuery * pquery, int element, char isrow, int block);
 void Flag(tGame * game, tPos * pos);
 void Unlag(tGame * game, tPos * pos);
+int Sweep(tGame * game, tPos * position);
+int LegalPos(tBoard * structboard, tPos * position);
