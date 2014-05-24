@@ -19,6 +19,16 @@
 #define FALSE 0
 #define TRUE 1
 
+// Printf color constants - Usage: printf("%sasdasd\n", KRED);
+#define KNRM  "\x1B[0m" //default
+#define KRED  "\x1B[31m"
+#define KGRN  "\x1B[32m"
+#define KYEL  "\x1B[33m"
+#define KBLU  "\x1B[34m"
+#define KMAG  "\x1B[35m"
+#define KCYN  "\x1B[36m"
+#define KWHT  "\x1B[37m"
+
 // Levels
 #define EASY 		1
 #define MEDIUM		2
@@ -28,6 +38,7 @@
 // Query States
 #define NOT_FOUND_MINE 0
 #define FOUND_MINE 1
+
 // Chars for hidden board
 #define HIDDEN_MINE 	'#'
 #define HIDDEN_EMPTY 	'-'
@@ -99,7 +110,8 @@ typedef struct
 
 typedef struct
 {
-	tPos lastmove;
+	tPos lastpos;
+	int last_play;
 	char last_was_undo;
 
 } tUndo;
@@ -122,6 +134,8 @@ void PrintBoard(tBoard * structboard);
 void getLevel(tGame * game);
 void getDim(tGame * game);
 void setNewGame(tGame * game);
+void Play(tGame * game);
+void InputCommand(tGame * game);
 
 /*
 **		Function prototypes (back)
