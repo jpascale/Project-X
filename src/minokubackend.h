@@ -39,6 +39,9 @@
 #define NOT_FOUND_MINE 0
 #define FOUND_MINE 1
 
+// Sweep 
+#define SWEEP_MINE -1
+
 // Chars for hidden board
 #define HIDDEN_MINE 	'#'
 #define HIDDEN_EMPTY 	'-'
@@ -152,3 +155,5 @@ int CreateHiddenBoard(tBoard * structboard, int mines);
 int Query(tBoard * structboard, tQuery * pquery, int element, char isrow, int block);
 void Flag(tGame * game, tPos * pos);
 void Unlag(tGame * game, tPos * pos);
+int Sweep(tGame * game, tPos * position);
+int LegalPos(tBoard * structboard, tPos * position);

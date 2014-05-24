@@ -231,5 +231,31 @@ void Unflag(tGame * game, tPos * pos)
 
 	if (game->hiddenboard.board[i][j] == HIDDEN_MINE)
 		game->mines_left++;
+}
+
+int
+Sweep(tGame * game, tPos * position)
+{
+	char ** hiddenboard = game->hiddenboard.board;
+	char ** visualboard = game->visualboard.board;
+	
+	if (hiddenboard[position->i][position->j] == HIDDEN_MINE)
+		return SWEEP_MINE;
+	
+	visualboard[position->i][position->j] = VISUAL_EMPTY;
+	
+	return TRUE;
+}
+
+
+int
+LegalPos(tBoard * structboard, tPos * position)
+{
+	int i,j;
+	i = position->i;
+	j = position->j;
+	if ( i >= structboard->rows || i < 0 || j >= structboard->columns || j < 0)
+		return FALSE;
+	return TRUE;
 
 }
