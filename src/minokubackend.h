@@ -63,6 +63,18 @@
 #define PERCENT_HARD 0.7
 #define PERCENT_NIGHTMARE 0.9
 
+// Command constants
+#define MAX_COMMAND_LEN 7
+#define MAX_PARAMS_LEN 24
+
+#define COMMAND_SWEEP	0
+#define COMMAND_FLAG	1
+#define COMMAND_UNFLAG 	2
+#define COMMAND_QUERY 	3
+#define COMMAND_SAVE	4
+#define COMMAND_QUIT 	5
+#define COMMAND_UNDO 	6
+
 // map undos quantity
 #define get_undos(level) (((level)==NIGHTMARE)?1: \
 						  ((level)==HARD)?3: \
@@ -80,6 +92,9 @@
 // Maximum and minimum
 #define min(x, y) ((x)<(y)?(x):(y))
 #define max(x, y) ((x)>(y)?(x):(y))
+
+// Delete buffer
+#define DELBFF() while(getchar() != '\n')
 
 /*
 **		Structs
@@ -128,6 +143,12 @@ typedef struct
 
 } tQuery;
 
+typedef struct
+{
+	int command;
+	char params[MAX_PARAMS_LEN];
+
+} tCommand;
 
 /*
 **		Function prototypes (front) 
@@ -141,7 +162,7 @@ void getLevel(tGame * game);
 void getDim(tGame * game);
 void setNewGame(tGame * game);
 void Play(tGame * game);
-void InputCommand(tGame * game);
+//void InputCommand(tGame * game, char * wonflag, char *);
 
 /*
 **		Function prototypes (back)
