@@ -3,7 +3,7 @@
 int
 main(void)
 {
-	//ToDo: tidy this
+	//ToDo: tidy this, replace cases with constants
 	int option;
 	tGame game;
 	
@@ -40,7 +40,7 @@ Menu(void)
 		if (option > 3 || option < 1)
 			printf("Ingrese una opcion valida.\n");
 
-	} while(option > 3 || option < 1 );
+	} while(option > 3 || option < 1);
 	
 	return option;
 
@@ -78,8 +78,13 @@ void setNewGame(tGame * game)
 	setGameMinesNumber(game);
 
  	game->undos = get_undos(game->level);
- 	game->moves = get_moves(game->undos, game->mines);
-
+ 	
+ 	if (game->gametype == GAMETYPE_INDIVIDUAL_NOLIMIT)
+ 		game->moves = UNLIMITED_MOVES;
+ 	else
+ 		game->moves = get_moves(game->undos, game->mines);
+ 	
+ 	//ToDo: Prepare boards
  	//Ready to play
 
  	return;
@@ -149,3 +154,4 @@ void Play(tGame * game)
 {
 	return;
 }
+

@@ -1,5 +1,7 @@
 #include "minokubackend.h"
 
+static void freeBoard(char ** Board, int rows);
+
 void setGameMinesNumber(tGame * game)
 {
 
@@ -56,7 +58,7 @@ int CreateBoard(tBoard * structboard)
 
 }
 
-void freeBoard(char ** Board, int rows)
+static void freeBoard(char ** Board, int rows)
 {
 	int i;
 	for(i=0;i<rows;i++)
@@ -200,3 +202,4 @@ int Query(tBoard * structboard, tQuery * pquery, int element, char isrow, int bl
 	
 	return TRUE;
 }
+

@@ -141,11 +141,9 @@ void InputCommand(tGame * game);
 **		Function prototypes (back)
 */
 void setGameMinesNumber(tGame * game);
-void freeBoard(char ** Board, int rows);
 int CreateBoard(tBoard * structboard);
 int InitBoardMines(tBoard * structboard, int mines);
 void InitBoard(tBoard * structboard, char initchar);
 int CreateVisualBoard(tBoard * structboard);
 int CreateHiddenBoard(tBoard * structboard, int mines);
 int Query(tBoard * structboard, tQuery * pquery, int element, char isrow, int block);
-
