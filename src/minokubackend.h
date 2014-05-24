@@ -98,13 +98,15 @@ typedef struct
 	int moves;
 	int undos;
 	int mines;
+	int mines_left; //number of mines not flagged
+	int sweeps_left; //number of positions without sweep
 
 } tGame;
 
 typedef struct
 {
-	int x;
-	int y;
+	int i;
+	int j;
 
 } tPos;
 
@@ -122,6 +124,7 @@ typedef struct
 	int dim;
 
 } tQuery;
+
 
 /*
 **		Function prototypes (front) 
@@ -147,3 +150,5 @@ void InitBoard(tBoard * structboard, char initchar);
 int CreateVisualBoard(tBoard * structboard);
 int CreateHiddenBoard(tBoard * structboard, int mines);
 int Query(tBoard * structboard, tQuery * pquery, int element, char isrow, int block);
+void Flag(tGame * game, tPos * pos);
+void Unlag(tGame * game, tPos * pos);

@@ -203,3 +203,33 @@ int Query(tBoard * structboard, tQuery * pquery, int element, char isrow, int bl
 	return TRUE;
 }
 
+/*
+**	Receives board and flag pos, puts 
+**  flag in pos, checks wether the pos
+**  is empty or mined.
+*/
+
+void Flag(tGame * game, tPos * pos)
+{
+	//ToDo: Merge with unflag
+	int i = pos->i;
+	int j = pos->j;
+
+	game->visualboard.board[i][j] = VISUAL_FLAGGED;
+
+	if (game->hiddenboard.board[i][j] == HIDDEN_MINE)
+		game->mines_left--;
+
+}
+
+void Unflag(tGame * game, tPos * pos)
+{
+	int i = pos->i;
+	int j = pos->j;
+
+	game->visualboard.board[i][j] = VISUAL_UNFLAGGED;
+
+	if (game->hiddenboard.board[i][j] == HIDDEN_MINE)
+		game->mines_left++;
+
+}
