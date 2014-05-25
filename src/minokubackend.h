@@ -36,8 +36,8 @@
 #define NIGHTMARE	4
 
 // Query States
-#define NOT_FOUND_MINE 0
-#define FOUND_MINE 1
+#define NOT_FOUND_MINE 	0
+#define FOUND_MINE 		1
 
 // Sweep 
 #define SWEEP_MINE -1
@@ -52,21 +52,22 @@
 #define VISUAL_EMPTY 		'-'
 
 #define GAMETYPE_INDIVIDUAL_NOLIMIT 0
-#define GAMETYPE_INDIVIDUAL_LIMIT 1
-#define GAMETYPE_CAMPAIGN 2
+#define GAMETYPE_INDIVIDUAL_LIMIT 	1
+#define GAMETYPE_CAMPAIGN 			2
 
 #define UNLIMITED_MOVES 0
 
 // Level mines percentage
-#define PERCENT_EASY 0.2
-#define PERCENT_MEDIUM 0.5
-#define PERCENT_HARD 0.7
-#define PERCENT_NIGHTMARE 0.9
+#define PERCENT_EASY 		0.2
+#define PERCENT_MEDIUM 		0.5
+#define PERCENT_HARD 		0.7
+#define PERCENT_NIGHTMARE 	0.9
 
 // Command constants
-#define MAX_COMMAND_LEN 7
+#define MAX_COMMAND_LEN 8
 #define MAX_PARAMS_LEN 24
 #define COMMANDS_NUMBER 7
+#define MAX_FILENAME_LEN 24
 
 #define COMMAND_SWEEP	0
 #define COMMAND_FLAG	1
@@ -75,6 +76,10 @@
 #define COMMAND_SAVE	4
 #define COMMAND_QUIT 	5
 #define COMMAND_UNDO 	6
+
+// Flag/Unflag tasks
+#define DO_FLAG		0
+#define DO_UNFLAG 	1
 
 // map undos quantity
 #define get_undos(level) (((level)==NIGHTMARE)?1: \
@@ -139,15 +144,42 @@ typedef struct
 
 typedef struct
 {
-	int * results;
+	int * results; //ToDo: change for array
 	int dim;
+
+} tArray;
+
+typedef struct
+{
+	int scanned_number;
+	char command[MAX_COMMAND_LEN];
+	char params[MAX_PARAMS_LEN];
+
+} tScan;
+
+typedef struct 
+{
+	tPos first_pos;
+	tPos last_pos;
+	char is_range;
+	char is_row;
+
+} tFlag;
+
+typedef struct 
+{
+	char index;
+	char is_row;
 
 } tQuery;
 
 typedef struct
 {
-	int command;
-	char params[MAX_PARAMS_LEN];
+	int command_ref;
+	tPos sweep;
+	tFlag flag;
+	tQuery query;
+	char save_filename[MAX_FILENAME_LEN];
 
 } tCommand;
 
@@ -163,6 +195,9 @@ void getLevel(tGame * game);
 void getDim(tGame * game);
 void setNewGame(tGame * game);
 void Play(tGame * game);
+int LegalCommand(tScan * scan, tCommand * command);
+int InputCommand(tScan * scan);
+
 //void InputCommand(tGame * game, char * wonflag, char *);
 
 /*
@@ -174,8 +209,9 @@ int InitBoardMines(tBoard * structboard, int mines);
 void InitBoard(tBoard * structboard, char initchar);
 int CreateVisualBoard(tBoard * structboard);
 int CreateHiddenBoard(tBoard * structboard, int mines);
-int Query(tBoard * structboard, tQuery * pquery, int element, char isrow, int block);
+int Query(tBoard * structboard, tArray * pquery, int element, char isrow, int block);
 void Flag(tGame * game, tPos * pos);
-void Unlag(tGame * game, tPos * pos);
+void Unflag(tGame * game, tPos * pos);
 int Sweep(tGame * game, tPos * position);
 int LegalPos(tBoard * structboard, tPos * position);
+
