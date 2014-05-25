@@ -168,6 +168,7 @@ typedef struct
 
 typedef struct 
 {
+	tArray results;
 	char index;
 	char is_row;
 
