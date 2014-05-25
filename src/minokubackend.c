@@ -222,7 +222,7 @@ int DoFlagUnflag(tGame * game, tPos * pos, char task)
 	if (game->visualboard.board[i][j] == VISUAL_EMPTY)
 		return FALSE;
 
-	game->visualbord.board[i][j] = (task == DO_FLAG? VISUAL_FLAGGED:VISUAL_UNFLAGGED);
+	game->visualboard.board[i][j] = (task == DO_FLAG? VISUAL_FLAGGED:VISUAL_UNFLAGGED);
 
 	if (game->hiddenboard.board[i][j] == HIDDEN_MINE)
 		(task == DO_FLAG? game->mines_left-- : game->mines_left++);
