@@ -64,10 +64,10 @@
 #define PERCENT_NIGHTMARE 	0.9
 
 // Command constants
-#define MAX_COMMAND_LEN 8
-#define MAX_PARAMS_LEN 24
-#define COMMANDS_NUMBER 7
-#define MAX_FILENAME_LEN 24
+#define MAX_COMMAND_LEN 	8
+#define MAX_PARAMS_LEN 		24
+#define COMMANDS_NUMBER 	7
+#define MAX_FILENAME_LEN 	24
 
 #define COMMAND_SWEEP	0
 #define COMMAND_FLAG	1
@@ -180,7 +180,7 @@ typedef struct
 	tPos sweep;
 	tFlag flag;
 	tQuery query;
-	char save_filename[MAX_FILENAME_LEN];
+	char save_filenamj < 0e[MAX_FILENAME_LEN];
 
 } tCommand;
 
@@ -194,12 +194,10 @@ void setGametypeMenu(tGame * game);
 void PrintBoard(tBoard * structboard);
 void getLevel(tGame * game);
 void getDim(tGame * game);
-void setNewGame(tGame * game);
+int setNewGame(tGame * game);
 void Play(tGame * game);
 int LegalCommand(tScan * scan, tCommand * command);
 int InputCommand(tScan * scan);
-
-//void InputCommand(tGame * game, char * wonflag, char *);
 
 /*
 **		Function prototypes (back)
@@ -211,8 +209,6 @@ void InitBoard(tBoard * structboard, char initchar);
 int CreateVisualBoard(tBoard * structboard);
 int CreateHiddenBoard(tBoard * structboard, int mines);
 int Query(tBoard * structboard, tArray * pquery, int element, char isrow, int block);
-void Flag(tGame * game, tPos * pos);
-void Unflag(tGame * game, tPos * pos);
+void DoFlagUnflag(tGame * game, tPos * pos, char task);
 int Sweep(tGame * game, tPos * position);
 int LegalPos(tBoard * structboard, tPos * position);
-

@@ -34,6 +34,7 @@ void setGameMinesNumber(tGame * game)
 
 int CreateBoard(tBoard * structboard)
 {
+	//ToDo: Tidy
 	int i, auxrows, auxcolumns;
 	char ** auxboard;
 	auxrows = structboard->rows;
@@ -58,12 +59,13 @@ int CreateBoard(tBoard * structboard)
 
 }
 
-static void freeBoard(char ** Board, int rows)
+static void freeBoard(char ** board, int rows)
 {
 	int i;
-	for(i=0;i<rows;i++)
-		free(Board[i]);
-	free(Board);
+
+	for(i = 0; i < rows; i++)
+		free(board[i]);
+	free(board);
 }
 
 int InitBoardMines(tBoard * structboard, int mines)
@@ -82,6 +84,7 @@ int InitBoardMines(tBoard * structboard, int mines)
 	dimrandvec = auxrows * auxcolumns;
 
 	randvec = malloc(dimrandvec * sizeof(*randvec));
+
 	if (randvec == NULL)
 		return FALSE;
 
@@ -237,12 +240,12 @@ Sweep(tGame * game, tPos * pos)
 }
 
 int
-LegalPos(tBoard * structboard, tPos * position)
+LegalPos(tBoard * structboard, tPos * pos)
 {
-	int i = position->i;
-	int j = position->j;
+	int i = pos->i;
+	int j = pos->j;
 	
-	if (i >= structboard->rows || i < 0 || j >= structboard->columns || j < 0)
+	if (i < 0 || j < 0 || i >= structboard->rows || j >= structboard->columns)
 		return FALSE;
 
 	return TRUE;

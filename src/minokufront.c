@@ -13,8 +13,11 @@ main(void)
 	switch (option)
 	{
 		case 1: /* New Game */
-			setNewGame(&game);
-			Play(&game);
+			if (setNewGame(&game))
+				Play(&game);
+			else
+				printf("No hay suficiente memoria para seguir jugando.");
+			
 			break;
 
 		case 2:	/* Load */
@@ -53,11 +56,11 @@ setGametypeMenu(tGame * game)
 
 	do
 	{
-		printf("1.1 Juego individual sin limite de movimientos\n"
+		printf( "1.1 Juego individual sin limite de movimientos\n"
 				"1.2 Juego individual con limite de movimientos\n"
 				"1.3 Juego por campaña\n");
 
-		option = getint("Elija una opcion: ");
+		option = getint("Elija una opcion: \n");
 		
 		if (option > 3 || option < 1)
 			printf("Ingrese una opcion valida.\n");
@@ -70,7 +73,7 @@ setGametypeMenu(tGame * game)
 }
 
 /* Sets ONLY gameplay config */
-void setNewGame(tGame * game)
+int setNewGame(tGame * game)
 {
 	setGametypeMenu(game);
 	getDim(game);
@@ -84,10 +87,24 @@ void setNewGame(tGame * game)
  	else
  		game->moves = get_moves(game->undos, game->mines);
  	
- 	//ToDo: Prepare boards, check if the function could create them
- 	//Ready to play
+ 	if (!CreateHiddenVisualBoard(game))
+ 		return FALSE;
 
- 	return;
+ 	//Ready to play
+ 	return TRUE;
+}
+
+/*
+**	CreateHiddenVisualBoard - Creates both hidden
+**	and visual board. Returns FALSE when there´s 
+** 	no memory left.
+*/
+int CreateHiddenVisualBoard(tGame * game)
+{
+	if (!CreateHiddenBoard(&game->hiddenboard, game->mines) || !CreateVisualBoard(&game->visualboard))
+ 		return FALSE;
+
+ 	return TRUE;
 }
 
 void getDim(tGame * game)
@@ -200,8 +217,9 @@ int InputCommand(tScan * scan)
 }
 
 /*
-**		LegalCommand - Receives scanned command, retuns
-**		TRUE if valid.
+**		LegalCommand - Receives scanned command, sets 
+**		command reference in structure,retuns TRUE 
+**		if valid.
 */
 
 int LegalCommand(tScan * scan, tCommand * command)
