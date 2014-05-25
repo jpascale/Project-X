@@ -81,6 +81,9 @@
 #define DO_FLAG		0
 #define DO_UNFLAG 	1
 
+//Block
+#define BLOCK 5
+
 // map undos quantity
 #define get_undos(level) (((level)==NIGHTMARE)?1: \
 						  ((level)==HARD)?3: \
@@ -168,6 +171,7 @@ typedef struct
 
 typedef struct 
 {
+	tArray results;
 	char index;
 	char is_row;
 
@@ -207,7 +211,8 @@ int InitBoardMines(tBoard * structboard, int mines);
 void InitBoard(tBoard * structboard, char initchar);
 int CreateVisualBoard(tBoard * structboard);
 int CreateHiddenBoard(tBoard * structboard, int mines);
-int Query(tBoard * structboard, tArray * pquery, int element, char isrow, int block);
+int Query(tBoard * structboard, tArray * pquery, int element, char isrow);
 int DoFlagUnflag(tGame * game, tPos * pos, char task);
 int Sweep(tGame * game, tPos * position);
 int LegalPos(tBoard * structboard, tPos * position);
+int ExecCommand(tGame *game, tCommand *command);

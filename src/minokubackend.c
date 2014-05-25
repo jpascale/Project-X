@@ -140,44 +140,38 @@ int CreateVisualBoard(tBoard * structboard)
 	return TRUE;
 }
 
-int Query(tBoard * structboard, tArray * pquery, int element, char isrow, int block)
+int Query(tBoard * hiddenboard, tArray * pquery, int element, char isrow)
 { //ToDo: Use realloc directly
   //ToDo: Modularize??
   //ToDo: Think what is going to return this
 
 	int i, j;
-	int boarddim = isrow ? structboard->columns : structboard->rows;
+	int boarddim = isrow ? hiddenboard->columns : hiddenboard->rows;
 
 	int * aux;
-	int * results = pquery-> results;
-	char ** board = structboard->board;
+	int * results = NULL;
+	char ** board = hiddenboard->board;
 	
 	char state = NOT_FOUND_MINE;
-	
-	results = malloc(block * sizeof(*results));
-	
-	if (results == NULL)
-		return FALSE;
-
-	results[0] = 0;
 
 	for (i = 0, j = 0; i < boarddim; i++)
 	{
 		switch (state)
 		{
 			case NOT_FOUND_MINE:
-				if ((isrow && board[element][i] == HIDDEN_MINE) || (!isrow && board[i][element] == HIDDEN_MINE))
+				if ((isrow ? board[element][i] : board[i][element]) == HIDDEN_MINE)
 				{
 					state = FOUND_MINE;
 
-					if (j % block == 0 && j > 0)
+					if (j % BLOCK == 0)
 					{
-						aux = realloc(results, (j + block) * sizeof(*results));
+						aux = realloc(results, (j + BLOCK) * sizeof(*results));
 
 						if (aux == NULL)
 						{
-							free(results);
-							return FALSE;
+							if (j != 0)
+								free(results);
+							return -1;
 						}
 
 						results = aux;
@@ -198,12 +192,12 @@ int Query(tBoard * structboard, tArray * pquery, int element, char isrow, int bl
 				break;
 		}
 	}
-	 /* If no mines are found returns 0 */
-	results = realloc(results, max((j + (state == FOUND_MINE)), 1) * sizeof(*results));
-	
-	pquery->dim = max(j + (state == FOUND_MINE), 1);
-	
-	return TRUE;
+
+	if (results != NULL)
+		results = realloc(results, (j + (state == FOUND_MINE)) * sizeof(*results));
+	pquery->dim = j + (state == FOUND_MINE);
+	pquery->results = results;
+	return (results != NULL);
 }
 
 /*
@@ -256,4 +250,49 @@ LegalPos(tBoard * structboard, tPos * pos)
 		return FALSE;
 
 	return TRUE;
+}
+
+int ExecCommand(tGame *game, tCommand *command)
+{
+
+	int i = command->command_ref; 
+	int res;
+
+	switch (i)
+	{
+		case COMMAND_SWEEP:
+			res=Sweep(game, &(command->sweep));
+			break;
+		case COMMAND_FLAG:
+			if (!(command->flag.is_range))
+				res=DoFlagUnflag(game, &(command->flag.first_pos), DO_FLAG);
+			else
+				res=FlagRange(game, &(command->flag), DO_FLAG);
+			break;
+		case COMMAND_UNFLAG:
+			if (!(command->flag.is_range))
+				res=DoFlagUnflag(game, &(command->flag.first_pos), DO_UNFLAG);
+			else
+				res=FlagRange(game, &(command->flag), DO_UNFLAG);
+			break;
+		case COMMAND_QUERY:
+			res=Query(&(game->hiddenboard), &(command->query.results), command->query.index, command->query.is_row);
+			break;
+		case COMMAND_SAVE:
+			res=WriteSaveFile(game, command->save_filename);
+			break;
+		case COMMAND_QUIT:
+			/*exit*/
+			break;
+		case COMMAND_UNDO:
+			/*undo*/
+			break;
+
+
+
+
+	}
+	if (i == COMMAND_SWEEP || i == COMMAND_FLAG || i == COMMAND_UNFLAG)
+		game->moves--;
+	return res;
 }
