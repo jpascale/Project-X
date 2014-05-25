@@ -168,7 +168,6 @@ typedef struct
 
 typedef struct 
 {
-	tArray results;
 	char index;
 	char is_row;
 
@@ -180,7 +179,7 @@ typedef struct
 	tPos sweep;
 	tFlag flag;
 	tQuery query;
-	char save_filenamj < 0e[MAX_FILENAME_LEN];
+	char save_filename[MAX_FILENAME_LEN];
 
 } tCommand;
 
@@ -209,6 +208,6 @@ void InitBoard(tBoard * structboard, char initchar);
 int CreateVisualBoard(tBoard * structboard);
 int CreateHiddenBoard(tBoard * structboard, int mines);
 int Query(tBoard * structboard, tArray * pquery, int element, char isrow, int block);
-void DoFlagUnflag(tGame * game, tPos * pos, char task);
+int DoFlagUnflag(tGame * game, tPos * pos, char task);
 int Sweep(tGame * game, tPos * position);
 int LegalPos(tBoard * structboard, tPos * position);
