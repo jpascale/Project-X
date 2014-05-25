@@ -84,7 +84,7 @@ void setNewGame(tGame * game)
  	else
  		game->moves = get_moves(game->undos, game->mines);
  	
- 	//ToDo: Prepare boards
+ 	//ToDo: Prepare boards, check if the function could create them
  	//Ready to play
 
  	return;
@@ -172,17 +172,15 @@ void Play(tGame * game)
 	return;
 }
 
-int InputCommand(tCommand * structcommand)
+/*
+**		InputCommand - Scans a command and it´s params
+**		and saves them in a structure. Returns FALSE if
+**		no input. 
+*/
+
+int InputCommand(tScan * scan)
 {	
-	int i;
-	char found = FALSE;
-	int scanned_params_number;
-	// Get commands
-
-	char * comands[] = {"s", "flag", "unflag", "query", "save", "quit", "undo"};
-
-	char scannedcommand[MAX_COMMAND_LEN];
-	char params[MAX_PARAMS_LEN];
+	int scanned_number;
 
 	// Scanf formatting
 	char fmt[13]; //ToDo: Constant
@@ -190,30 +188,44 @@ int InputCommand(tCommand * structcommand)
 
 	printf("Introducir un comando:\n");
 
-	scanned_params_number = scanf(fmt, scannedcommand, params);
+	scanned_number = scanf(fmt, scan->command, scan->params);
+	DELBFF();
 
-	if (!scanned_params_number)
+	if (!scanned_number)
 		return FALSE;
 
-	for (i = 0; i < COMMANDS_NUMBER && !found; i++) //TODO: Clarify for with comment
+	scan->scanned_number = scanned_number;
+
+	return TRUE;
+}
+
+/*
+**		LegalCommand - Receives scanned command, retuns
+**		TRUE if valid.
+*/
+
+int LegalCommand(tScan * scan, tCommand * command)
+{
+	//ToDo: Reduce mem access in for
+	/* Hardcoded commands respecting the COMMAND_ defines order */
+	static char * commandlist[] = {"s", "flag", "unflag", "query", "save", "quit", "undo"};
+	
+	char found = FALSE;
+	int commandindex;
+
+	for (commandindex = 0; i < COMMANDS_NUMBER && !found; i++) //ToDo: Clarify for with comment
 	{
-		if (!strcmp(scannedcommand, commands[i]))
+		if (!strcmp(scan->command, commandlist[commandindex]))
 		{
-			structcommand->command = i;
+			/* Assigns the command reference respecting the 
+			   COMMAND_ defines order */
+			command->command_ref = commandindex;
 			found = TRUE;
 		}
 	}
 
 	if (!found)
 		return FALSE;
-
-	if (structcommand->command != COMMAND_QUIT && structcommand->command != COMMAND_UNDO)
-	{
-		if (scanned_params_number != 2)
-			return FALSE;
-
-		strcpy(structcommand->params, params);
-	}
 
 	return TRUE;
 }

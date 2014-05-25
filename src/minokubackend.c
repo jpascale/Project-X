@@ -137,7 +137,7 @@ int CreateVisualBoard(tBoard * structboard)
 	return TRUE;
 }
 
-int Query(tBoard * structboard, tQuery * pquery, int element, char isrow, int block)
+int Query(tBoard * structboard, tArray * pquery, int element, char isrow, int block)
 { //ToDo: Use realloc directly
   //ToDo: Modularize??
   //ToDo: Think what is going to return this
@@ -204,58 +204,46 @@ int Query(tBoard * structboard, tQuery * pquery, int element, char isrow, int bl
 }
 
 /*
-**	Receives board and flag pos, puts 
-**  flag in pos, checks wether the pos
-**  is empty or mined.
+** 	DoFlagUnflag - Receives game(boards), flag pos and tasks, 
+**  puts flags/unflags pos, checks wether the pos
+**  is empty or mined and increases/decreases left mines.
 */
 
-void Flag(tGame * game, tPos * pos)
-{
-	//ToDo: Merge with unflag
-	int i = pos->i;
-	int j = pos->j;
-
-	game->visualboard.board[i][j] = VISUAL_FLAGGED;
-
-	if (game->hiddenboard.board[i][j] == HIDDEN_MINE)
-		game->mines_left--;
-
-}
-
-void Unflag(tGame * game, tPos * pos)
+void DoFlagUnflag(tGame * game, tPos * pos, char task)
 {
 	int i = pos->i;
 	int j = pos->j;
 
-	game->visualboard.board[i][j] = VISUAL_UNFLAGGED;
+	game->visualbord.board[i][j] = (task == DO_FLAG? VISUAL_FLAGGED:VISUAL_UNFLAGGED);
 
 	if (game->hiddenboard.board[i][j] == HIDDEN_MINE)
-		game->mines_left++;
+		(task == DO_FLAG? game->mines_left-- : game->mines_left++);
 }
 
 int
-Sweep(tGame * game, tPos * position)
+Sweep(tGame * game, tPos * pos)
 {
-	char ** hiddenboard = game->hiddenboard.board;
-	char ** visualboard = game->visualboard.board;
+	int i = pos->i;
+	int j = pos->j;
 	
-	if (hiddenboard[position->i][position->j] == HIDDEN_MINE)
+	if (game->hiddenboard.board[i][j] == HIDDEN_MINE)
 		return SWEEP_MINE;
 	
-	visualboard[position->i][position->j] = VISUAL_EMPTY;
+	game->visualboard.board[i][j] = VISUAL_EMPTY;
+	
 	game->sweeps_left--;
+
 	return TRUE;
 }
-
 
 int
 LegalPos(tBoard * structboard, tPos * position)
 {
-	int i,j;
-	i = position->i;
-	j = position->j;
-	if ( i >= structboard->rows || i < 0 || j >= structboard->columns || j < 0)
+	int i = position->i;
+	int j = position->j;
+	
+	if (i >= structboard->rows || i < 0 || j >= structboard->columns || j < 0)
 		return FALSE;
-	return TRUE;
 
+	return TRUE;
 }
