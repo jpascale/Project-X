@@ -243,7 +243,7 @@ Sweep(tGame * game, tPos * position)
 		return SWEEP_MINE;
 	
 	visualboard[position->i][position->j] = VISUAL_EMPTY;
-	
+	game->sweeps_left--;
 	return TRUE;
 }
 
