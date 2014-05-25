@@ -64,9 +64,10 @@
 #define PERCENT_NIGHTMARE 0.9
 
 // Command constants
-#define MAX_COMMAND_LEN 7
+#define MAX_COMMAND_LEN 8
 #define MAX_PARAMS_LEN 24
 #define COMMANDS_NUMBER 7
+#define MAX_FILENAME_LEN 24
 
 #define COMMAND_SWEEP	0
 #define COMMAND_FLAG	1
@@ -139,15 +140,42 @@ typedef struct
 
 typedef struct
 {
-	int * results;
+	int * results; //ToDo: change for array
 	int dim;
+
+} tArray;
+
+typedef struct
+{
+	int scanned_number;
+	char commands[MAX_COMMAND_LEN];
+	char params[MAX_PARAMS_LEN];
+
+} tScan;
+
+typedef struct 
+{
+	tPos first_pos;
+	tPos last_pos;
+	char is_range;
+	char is_row;
+
+} tFlag;
+
+typedef struct 
+{
+	char index;
+	char is_row;
 
 } tQuery;
 
 typedef struct
 {
 	int command;
-	char params[MAX_PARAMS_LEN];
+	tPos sweep;
+	tFlag flag;
+	tQuery query;
+	char save_filename[MAX_FILENAME_LEN];
 
 } tCommand;
 
@@ -174,7 +202,7 @@ int InitBoardMines(tBoard * structboard, int mines);
 void InitBoard(tBoard * structboard, char initchar);
 int CreateVisualBoard(tBoard * structboard);
 int CreateHiddenBoard(tBoard * structboard, int mines);
-int Query(tBoard * structboard, tQuery * pquery, int element, char isrow, int block);
+int Query(tBoard * structboard, tArray * pquery, int element, char isrow, int block);
 void Flag(tGame * game, tPos * pos);
 void Unlag(tGame * game, tPos * pos);
 int Sweep(tGame * game, tPos * position);
