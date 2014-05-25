@@ -171,15 +171,17 @@ void Play(tGame * game)
 {
 	char won = FALSE; //ToDo: put in tGame
 	char end = FALSE;
+
+	tScan scan;
 	tCommand command;
 
 	do
 	{
 		do
 		{
-			int result = InputCommand(&command);
-
-			if (!result)
+			if (result = InputCommand(&scan));
+				//Validate
+			else
 				printf("Comando no válido.\n");
 
 		} while (!result)
