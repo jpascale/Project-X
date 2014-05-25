@@ -296,3 +296,23 @@ int ExecCommand(tGame *game, tCommand *command)
 		game->moves--;
 	return res;
 }
+
+int FlagRange(tGame *game, tFlag *flag, char task)
+{
+	int k;
+	int res=FALSE;
+	char isrow = flag->is_row;
+	tPos auxpos = flag->first_pos;
+	tPos finalpos = flag->last_pos;
+	if (isrow)
+	{
+		for(k = auxpos.j; auxpos.j<=finalpos.j; auxpos.j = ++k)
+			res = DoFlagUnflag(game, &auxpos, task) || res;
+	}
+	else
+	{
+		for(k = auxpos.i; auxpos.i<=finalpos.i; auxpos.i = ++k)
+			res = DoFlagUnflag(game, &auxpos, task) || res;
+	}
+	return res;
+}

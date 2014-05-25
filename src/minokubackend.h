@@ -216,3 +216,4 @@ int DoFlagUnflag(tGame * game, tPos * pos, char task);
 int Sweep(tGame * game, tPos * position);
 int LegalPos(tBoard * structboard, tPos * position);
 int ExecCommand(tGame *game, tCommand *command);
+int FlagRange(tGame *game, tFlag *flag, char task);
