@@ -97,7 +97,7 @@ int InitBoardMines(tBoard * structboard, int mines)
 		randpos = randint(0, dimrandvec-1);
 		boardpos = randvec[randpos];
 
-		board[boardpos/auxrows][boardpos%auxrows] = HIDDEN_MINE;
+		board[boardpos/auxcolumns][boardpos%auxcolumns] = HIDDEN_MINE;
 
 		randvec[randpos] = randvec[--dimrandvec];
 	}
@@ -212,7 +212,7 @@ int DoFlagUnflag(tGame * game, tPos * pos, char task)
 	int i = pos->i;
 	int j = pos->j;
 
-	// Not possible to flag/unflag
+	// Not possible to flag/unflag sweeped pos
 	if (game->visualboard.board[i][j] == VISUAL_EMPTY)
 		return FALSE;
 
@@ -246,7 +246,7 @@ LegalPos(tBoard * structboard, tPos * pos)
 	int i = pos->i;
 	int j = pos->j;
 	
-	if (i < 0 || j < 0 || i >= structboard->rows || j >= structboard->columns)
+	if (i < 0 || j < 0 || i > structboard->rows || j > structboard->columns)
 		return FALSE;
 
 	return TRUE;
@@ -254,41 +254,46 @@ LegalPos(tBoard * structboard, tPos * pos)
 
 int ExecCommand(tGame *game, tCommand *command)
 {
-
+	//ToDo: tidy.
 	int i = command->command_ref; 
 	int res;
 
 	switch (i)
 	{
 		case COMMAND_SWEEP:
-			res=Sweep(game, &(command->sweep));
+			printf("%d %d\n", command->sweep.i, command->sweep.j);
+			res = Sweep(game, &command->sweep);
 			break;
+		
 		case COMMAND_FLAG:
 			if (!(command->flag.is_range))
 				res=DoFlagUnflag(game, &(command->flag.first_pos), DO_FLAG);
 			else
 				res=FlagRange(game, &(command->flag), DO_FLAG);
 			break;
+		
 		case COMMAND_UNFLAG:
 			if (!(command->flag.is_range))
-				res=DoFlagUnflag(game, &(command->flag.first_pos), DO_UNFLAG);
+				res = DoFlagUnflag(game, &(command->flag.first_pos), DO_UNFLAG);
 			else
 				res=FlagRange(game, &(command->flag), DO_UNFLAG);
 			break;
+		
 		case COMMAND_QUERY:
 			res=Query(&(game->hiddenboard), &(command->query.results), command->query.index, command->query.is_row);
 			break;
+
 		case COMMAND_SAVE:
-			res=WriteSaveFile(game, command->save_filename);
+			//res=WriteSaveFile(game, command->save_filename);
 			break;
+		
 		case COMMAND_QUIT:
 			/*exit*/
 			break;
+		
 		case COMMAND_UNDO:
 			/*undo*/
 			break;
-
-
 
 
 	}

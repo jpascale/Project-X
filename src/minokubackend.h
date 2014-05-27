@@ -1,5 +1,8 @@
 //_____minokubackend.h_____//
 
+#ifndef _MINOKUBACK_H
+	#define _MINOKUBACK_H
+
 /*
 **		Includes
 */
@@ -8,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include "getnum.h"
 #include "random.h"
 
@@ -171,7 +175,7 @@ typedef struct
 
 typedef struct 
 {
-	tArray results;
+	tArray results; //ToDo: Change
 	char index;
 	char is_row;
 
@@ -201,6 +205,13 @@ int setNewGame(tGame * game);
 void Play(tGame * game);
 int LegalCommand(tScan * scan, tCommand * command);
 int InputCommand(tScan * scan);
+int CreateHiddenVisualBoard(tGame * game); //ToDo: Change name
+int LegalParams(tBoard * visualboard, tCommand * command, tScan * scan);
+int LegalSweep(tBoard * visualboard, tCommand * command, char * params);
+int LegalFlag(tBoard * visualboard, tCommand * command, char * params);
+int LegalQuery(tBoard * visualboard, tCommand * structcommand, char * params);
+
+
 
 /*
 **		Function prototypes (back)
@@ -217,3 +228,5 @@ int Sweep(tGame * game, tPos * position);
 int LegalPos(tBoard * structboard, tPos * position);
 int ExecCommand(tGame *game, tCommand *command);
 int FlagRange(tGame *game, tFlag *flag, char task);
+
+#endif
