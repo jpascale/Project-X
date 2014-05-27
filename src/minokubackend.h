@@ -131,6 +131,7 @@ typedef struct
 	int mines;
 	int mines_left; //number of mines not flagged
 	int sweeps_left; //number of positions without sweep
+	char campaign_name[MAX_FILENAME_LEN];
 
 } tGame;
 
