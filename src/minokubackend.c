@@ -255,13 +255,14 @@ LegalPos(tBoard * structboard, tPos * pos)
 int ExecCommand(tGame *game, tCommand *command)
 {
 	//ToDo: tidy.
+
 	int i = command->command_ref; 
 	int res;
 
 	switch (i)
 	{
 		case COMMAND_SWEEP:
-			printf("%d %d\n", command->sweep.i, command->sweep.j);
+			printf("En ejecutar: %d %d\n", command->sweep.i, command->sweep.j);
 			res = Sweep(game, &command->sweep);
 			break;
 		

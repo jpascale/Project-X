@@ -183,7 +183,7 @@ void PrintBoard(tBoard * structboard)
 }
 
 void Play(tGame * game)
-{
+{	
 	int legal;
 	char won = FALSE; //ToDo: put in tGame
 	char end = FALSE;
@@ -196,11 +196,11 @@ void Play(tGame * game)
 		PrintBoard(&game->visualboard); //ToDo: Print all
 
 		do
-		{
+		{	
 			if ((legal = InputCommand(&scan)))
-			{
+			{	
 				if((legal = LegalCommand(&scan, &command)))
-					if (scan.scanned_number == 1)
+					if (scan.scanned_number == 1);
 						legal = LegalParams(&game->visualboard, &command, &scan);
 				
 			}
@@ -211,6 +211,7 @@ void Play(tGame * game)
 
 		//DEBUG
 		printf("DEBUG: Executing command.\n");
+		printf("Antes de ejecutar: %d %d\n", command.sweep.i, command.sweep.j);
 		ExecCommand(game, &command);
 
 	} while(!won && !end);
@@ -287,6 +288,7 @@ LegalParams(tBoard * visualboard, tCommand * structcommand, tScan * scan)
 	{
 		case COMMAND_SWEEP:
 		printf("ENTRE AL SWITCH YY FLICK\n");
+			printf("EN el switch: %s\n", scan->params);
 			return LegalSweep(visualboard, structcommand, scan->params);
 		
 		case COMMAND_FLAG:
@@ -309,15 +311,19 @@ LegalSweep(tBoard * visualboard, tCommand * structcommand, char * params)
 {
 	tPos aux;
 	char legal = TRUE;
+	char AUX;
 	printf("ENTRE\n");
-	if (sscanf(params, "(%c,%d)", &aux.i, &aux.j) != 2)
+	printf("%s\n", params);
+	if (sscanf(params, "(%c,%d)", &AUX/*&aux.i*/, &aux.j) != 2)
 		return FALSE;
 	//DEBUG
-	printf("AFTER SCAN %d %d\n", aux.i, aux.j);
+	printf("AFTER SCAN %d %d\n", AUX, aux.j);
 
 	//ToDo: Modularize
+	aux.i = AUX;
 	aux.i = get_row_pos_byref(aux.i);
 	aux.j--;
+
 
 	if (isupper('A' + aux.i)) // If Column is not a letter return false
 		legal = FALSE;
