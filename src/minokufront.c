@@ -210,7 +210,6 @@ void Play(tGame * game)
 		} while (!legal);
 
 		//DEBUG
-		printf("DEBUG: Executing command.\n");
 		printf("Antes de ejecutar: %d %d\n", command.sweep.i, command.sweep.j);
 		ExecCommand(game, &command);
 
@@ -283,11 +282,9 @@ int LegalCommand(tScan * scan, tCommand * command)
 int
 LegalParams(tBoard * visualboard, tCommand * structcommand, tScan * scan)
 {	
-	printf("ENTRE AL SWITCH YY FLICK\n");
 	switch(structcommand->command_ref)
 	{
 		case COMMAND_SWEEP:
-		printf("ENTRE AL SWITCH YY FLICK\n");
 			printf("EN el switch: %s\n", scan->params);
 			return LegalSweep(visualboard, structcommand, scan->params);
 		
@@ -317,15 +314,15 @@ LegalSweep(tBoard * visualboard, tCommand * structcommand, char * params)
 	if (sscanf(params, "(%c,%d)", &AUX/*&aux.i*/, &aux.j) != 2)
 		return FALSE;
 	//DEBUG
-	printf("AFTER SCAN %d %d\n", AUX, aux.j);
+	
 
 	//ToDo: Modularize
 	aux.i = AUX;
 	aux.i = get_row_pos_byref(aux.i);
 	aux.j--;
-
-
-	if (isupper('A' + aux.i)) // If Column is not a letter return false
+	printf("AFTER SCAN %d %d\n", aux.i, aux.j);
+	printf("%s\n", LegalPos(visualboard, &aux)?"Si":"No" );
+	if (!isupper('A' + aux.i)) // If Column is not a letter return false
 		legal = FALSE;
 
 	else if (!LegalPos(visualboard, &aux)) // If Position is not on the board return false
@@ -333,6 +330,7 @@ LegalSweep(tBoard * visualboard, tCommand * structcommand, char * params)
 	
 	else if (visualboard->board[aux.i][aux.j] != VISUAL_UNFLAGGED)  // If there's a '&' or '-' on the visual board return false
 		legal = FALSE;
+	//debug
 
 	if (legal){
 		structcommand->sweep.i = aux.i;
