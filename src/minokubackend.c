@@ -34,6 +34,7 @@ void setGameMinesNumber(tGame * game)
 
 int CreateBoard(tBoard * structboard)
 {
+	//ToDo: Tidy
 	int i, auxrows, auxcolumns;
 	char ** auxboard;
 	auxrows = structboard->rows;
@@ -58,12 +59,13 @@ int CreateBoard(tBoard * structboard)
 
 }
 
-static void freeBoard(char ** Board, int rows)
+static void freeBoard(char ** board, int rows)
 {
 	int i;
-	for(i=0;i<rows;i++)
-		free(Board[i]);
-	free(Board);
+
+	for(i = 0; i < rows; i++)
+		free(board[i]);
+	free(board);
 }
 
 int InitBoardMines(tBoard * structboard, int mines)
@@ -82,6 +84,7 @@ int InitBoardMines(tBoard * structboard, int mines)
 	dimrandvec = auxrows * auxcolumns;
 
 	randvec = malloc(dimrandvec * sizeof(*randvec));
+
 	if (randvec == NULL)
 		return FALSE;
 
@@ -94,7 +97,7 @@ int InitBoardMines(tBoard * structboard, int mines)
 		randpos = randint(0, dimrandvec-1);
 		boardpos = randvec[randpos];
 
-		board[boardpos/auxrows][boardpos%auxrows] = HIDDEN_MINE;
+		board[boardpos/auxcolumns][boardpos%auxcolumns] = HIDDEN_MINE;
 
 		randvec[randpos] = randvec[--dimrandvec];
 	}
@@ -137,44 +140,38 @@ int CreateVisualBoard(tBoard * structboard)
 	return TRUE;
 }
 
-int Query(tBoard * structboard, tArray * pquery, int element, char isrow, int block)
+int Query(tBoard * hiddenboard, tArray * pquery, int element, char isrow)
 { //ToDo: Use realloc directly
   //ToDo: Modularize??
   //ToDo: Think what is going to return this
 
 	int i, j;
-	int boarddim = isrow ? structboard->columns : structboard->rows;
+	int boarddim = isrow ? hiddenboard->columns : hiddenboard->rows;
 
 	int * aux;
-	int * results = pquery-> results;
-	char ** board = structboard->board;
+	int * results = NULL;
+	char ** board = hiddenboard->board;
 	
 	char state = NOT_FOUND_MINE;
-	
-	results = malloc(block * sizeof(*results));
-	
-	if (results == NULL)
-		return FALSE;
-
-	results[0] = 0;
 
 	for (i = 0, j = 0; i < boarddim; i++)
 	{
 		switch (state)
 		{
 			case NOT_FOUND_MINE:
-				if ((isrow && board[element][i] == HIDDEN_MINE) || (!isrow && board[i][element] == HIDDEN_MINE))
+				if ((isrow ? board[element][i] : board[i][element]) == HIDDEN_MINE)
 				{
 					state = FOUND_MINE;
 
-					if (j % block == 0 && j > 0)
+					if (j % BLOCK == 0)
 					{
-						aux = realloc(results, (j + block) * sizeof(*results));
+						aux = realloc(results, (j + BLOCK) * sizeof(*results));
 
 						if (aux == NULL)
 						{
-							free(results);
-							return FALSE;
+							if (j != 0)
+								free(results);
+							return -1;
 						}
 
 						results = aux;
@@ -195,29 +192,36 @@ int Query(tBoard * structboard, tArray * pquery, int element, char isrow, int bl
 				break;
 		}
 	}
-	 /* If no mines are found returns 0 */
-	results = realloc(results, max((j + (state == FOUND_MINE)), 1) * sizeof(*results));
-	
-	pquery->dim = max(j + (state == FOUND_MINE), 1);
-	
-	return TRUE;
+
+	if (results != NULL)
+		results = realloc(results, (j + (state == FOUND_MINE)) * sizeof(*results));
+	pquery->dim = j + (state == FOUND_MINE);
+	pquery->results = results;
+	return (results != NULL);
 }
 
 /*
 ** 	DoFlagUnflag - Receives game(boards), flag pos and tasks, 
 **  puts flags/unflags pos, checks wether the pos
 **  is empty or mined and increases/decreases left mines.
+**	Returns TRUE if visualboard is modified.
 */
 
-void DoFlagUnflag(tGame * game, tPos * pos, char task)
+int DoFlagUnflag(tGame * game, tPos * pos, char task)
 {
 	int i = pos->i;
 	int j = pos->j;
 
-	game->visualbord.board[i][j] = (task == DO_FLAG? VISUAL_FLAGGED:VISUAL_UNFLAGGED);
+	// Not possible to flag/unflag sweeped pos
+	if (game->visualboard.board[i][j] == VISUAL_EMPTY)
+		return FALSE;
+
+	game->visualboard.board[i][j] = (task == DO_FLAG? VISUAL_FLAGGED:VISUAL_UNFLAGGED);
 
 	if (game->hiddenboard.board[i][j] == HIDDEN_MINE)
 		(task == DO_FLAG? game->mines_left-- : game->mines_left++);
+
+	return TRUE;
 }
 
 int
@@ -237,13 +241,83 @@ Sweep(tGame * game, tPos * pos)
 }
 
 int
-LegalPos(tBoard * structboard, tPos * position)
+LegalPos(tBoard * structboard, tPos * pos)
 {
-	int i = position->i;
-	int j = position->j;
+	int i = pos->i;
+	int j = pos->j;
 	
-	if (i >= structboard->rows || i < 0 || j >= structboard->columns || j < 0)
+	if (i < 0 || j < 0 || i > structboard->rows || j > structboard->columns)
 		return FALSE;
 
 	return TRUE;
+}
+
+int ExecCommand(tGame *game, tCommand *command)
+{
+	//ToDo: tidy.
+	int i = command->command_ref; 
+	int res;
+
+	switch (i)
+	{
+		case COMMAND_SWEEP:
+			printf("%d %d\n", command->sweep.i, command->sweep.j);
+			res = Sweep(game, &command->sweep);
+			break;
+		
+		case COMMAND_FLAG:
+			if (!(command->flag.is_range))
+				res=DoFlagUnflag(game, &(command->flag.first_pos), DO_FLAG);
+			else
+				res=FlagRange(game, &(command->flag), DO_FLAG);
+			break;
+		
+		case COMMAND_UNFLAG:
+			if (!(command->flag.is_range))
+				res = DoFlagUnflag(game, &(command->flag.first_pos), DO_UNFLAG);
+			else
+				res=FlagRange(game, &(command->flag), DO_UNFLAG);
+			break;
+		
+		case COMMAND_QUERY:
+			res=Query(&(game->hiddenboard), &(command->query.results), command->query.index, command->query.is_row);
+			break;
+
+		case COMMAND_SAVE:
+			//res=WriteSaveFile(game, command->save_filename);
+			break;
+		
+		case COMMAND_QUIT:
+			/*exit*/
+			break;
+		
+		case COMMAND_UNDO:
+			/*undo*/
+			break;
+
+
+	}
+	if (i == COMMAND_SWEEP || i == COMMAND_FLAG || i == COMMAND_UNFLAG)
+		game->moves--;
+	return res;
+}
+
+int FlagRange(tGame *game, tFlag *flag, char task)
+{
+	int k;
+	int res=FALSE;
+	char isrow = flag->is_row;
+	tPos auxpos = flag->first_pos;
+	tPos finalpos = flag->last_pos;
+	if (isrow)
+	{
+		for(k = auxpos.j; auxpos.j<=finalpos.j; auxpos.j = ++k)
+			res = DoFlagUnflag(game, &auxpos, task) || res;
+	}
+	else
+	{
+		for(k = auxpos.i; auxpos.i<=finalpos.i; auxpos.i = ++k)
+			res = DoFlagUnflag(game, &auxpos, task) || res;
+	}
+	return res;
 }

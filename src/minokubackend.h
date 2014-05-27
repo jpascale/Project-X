@@ -1,5 +1,8 @@
 //_____minokubackend.h_____//
 
+#ifndef _MINOKUBACK_H
+	#define _MINOKUBACK_H
+
 /*
 **		Includes
 */
@@ -8,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include "getnum.h"
 #include "random.h"
 
@@ -64,10 +68,10 @@
 #define PERCENT_NIGHTMARE 	0.9
 
 // Command constants
-#define MAX_COMMAND_LEN 8
-#define MAX_PARAMS_LEN 24
-#define COMMANDS_NUMBER 7
-#define MAX_FILENAME_LEN 24
+#define MAX_COMMAND_LEN 	8
+#define MAX_PARAMS_LEN 		24
+#define COMMANDS_NUMBER 	7
+#define MAX_FILENAME_LEN 	24
 
 #define COMMAND_SWEEP	0
 #define COMMAND_FLAG	1
@@ -80,6 +84,9 @@
 // Flag/Unflag tasks
 #define DO_FLAG		0
 #define DO_UNFLAG 	1
+
+//Block
+#define BLOCK 5
 
 // map undos quantity
 #define get_undos(level) (((level)==NIGHTMARE)?1: \
@@ -168,6 +175,7 @@ typedef struct
 
 typedef struct 
 {
+	tArray results; //ToDo: Change
 	char index;
 	char is_row;
 
@@ -193,12 +201,17 @@ void setGametypeMenu(tGame * game);
 void PrintBoard(tBoard * structboard);
 void getLevel(tGame * game);
 void getDim(tGame * game);
-void setNewGame(tGame * game);
+int setNewGame(tGame * game);
 void Play(tGame * game);
 int LegalCommand(tScan * scan, tCommand * command);
 int InputCommand(tScan * scan);
+int CreateHiddenVisualBoard(tGame * game); //ToDo: Change name
+int LegalParams(tBoard * visualboard, tCommand * command, tScan * scan);
+int LegalSweep(tBoard * visualboard, tCommand * command, char * params);
+int LegalFlag(tBoard * visualboard, tCommand * command, char * params);
+int LegalQuery(tBoard * visualboard, tCommand * structcommand, char * params);
 
-//void InputCommand(tGame * game, char * wonflag, char *);
+
 
 /*
 **		Function prototypes (back)
@@ -209,9 +222,11 @@ int InitBoardMines(tBoard * structboard, int mines);
 void InitBoard(tBoard * structboard, char initchar);
 int CreateVisualBoard(tBoard * structboard);
 int CreateHiddenBoard(tBoard * structboard, int mines);
-int Query(tBoard * structboard, tArray * pquery, int element, char isrow, int block);
-void Flag(tGame * game, tPos * pos);
-void Unflag(tGame * game, tPos * pos);
+int Query(tBoard * structboard, tArray * pquery, int element, char isrow);
+int DoFlagUnflag(tGame * game, tPos * pos, char task);
 int Sweep(tGame * game, tPos * position);
 int LegalPos(tBoard * structboard, tPos * position);
+int ExecCommand(tGame *game, tCommand *command);
+int FlagRange(tGame *game, tFlag *flag, char task);
 
+#endif
