@@ -85,8 +85,9 @@
 #define DO_FLAG		0
 #define DO_UNFLAG 	1
 
-//Block
+// Malloc constants
 #define BLOCK 5
+#define MALLOC_ERR -1
 
 // map undos quantity
 #define get_undos(level) (((level)==NIGHTMARE)?1: \
@@ -177,7 +178,7 @@ typedef struct
 typedef struct 
 {
 	tArray results; //ToDo: Change
-	char index;
+	int index;
 	char is_row;
 
 } tQuery;
@@ -211,7 +212,7 @@ int LegalParams(tBoard * visualboard, tCommand * command, tScan * scan);
 int LegalSweep(tBoard * visualboard, tCommand * command, char * params);
 int LegalFlag(tBoard * visualboard, tCommand * command, char * params);
 int LegalQuery(tBoard * visualboard, tCommand * structcommand, char * params);
-
+void PrintQuery (tQuery * query);
 
 
 /*

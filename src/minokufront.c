@@ -210,7 +210,7 @@ void Play(tGame * game)
 		} while (!legal);
 
 		//DEBUG
-		printf("Antes de ejecutar: %d %d\n", command.sweep.i, command.sweep.j);
+		printf("Antes de ejecutar (%s): %d\n", command.query.is_row? "Fila":"Columna", command.query.index);
 		ExecCommand(game, &command);
 
 	} while(!won && !end);
@@ -305,20 +305,20 @@ LegalParams(tBoard * visualboard, tCommand * structcommand, tScan * scan)
 
 int
 LegalSweep(tBoard * visualboard, tCommand * structcommand, char * params)
-{
+{//todo: tidy
 	tPos aux;
 	char legal = TRUE;
-	char AUX;
+	char i_scan;
 	printf("ENTRE\n");
 	printf("%s\n", params);
-	if (sscanf(params, "(%c,%d)", &AUX/*&aux.i*/, &aux.j) != 2)
+	if (sscanf(params, "(%c,%d)", &i_scan, &aux.j) != 2)
 		return FALSE;
 	//DEBUG
 	
 
 	//ToDo: Modularize
-	aux.i = AUX;
-	aux.i = get_row_pos_byref(aux.i);
+	i_scan = get_row_pos_byref(i_scan);
+	aux.i = (int)i_scan;
 	aux.j--;
 	printf("AFTER SCAN %d %d\n", aux.i, aux.j);
 	printf("%s\n", LegalPos(visualboard, &aux)?"Si":"No" );
@@ -349,13 +349,17 @@ LegalFlag(tBoard * visualboard, tCommand * structcommand, char * params) /*No va
 
 	tPos f_aux; 
 	tPos l_aux;
+	char f_scan;
+	char l_scan;
 	char legal = TRUE;
 
 	// Checks if range is legal
-	if (sscanf(params, "(%c,%d:%c,%d)", &f_aux.i, &f_aux.j, &l_aux.i, &l_aux.j) == 4)
+	if (sscanf(params, "(%c,%d:%c,%d)", &f_scan, &f_aux.j, &l_scan, &l_aux.j) == 4)
 	{
-		f_aux.i = get_row_pos_byref(f_aux.i);
-		l_aux.i = get_row_pos_byref(l_aux.i);
+		f_scan = get_row_pos_byref(f_scan);
+		f_aux.i = f_scan;
+		l_scan = get_row_pos_byref(l_scan);
+		l_aux.i = l_scan;
 		f_aux.j--;
 		l_aux.j--;
 
@@ -394,9 +398,10 @@ LegalFlag(tBoard * visualboard, tCommand * structcommand, char * params) /*No va
 		}
 
 	}
-	else if (sscanf(params, "(%c,%d)", &f_aux.i, &f_aux.j) == 2)
+	else if (sscanf(params, "(%c,%d)", &f_scan, &f_aux.j) == 2)
 	{
-		f_aux.i = get_row_pos_byref(f_aux.i);
+		f_scan = get_row_pos_byref(f_scan);
+		f_aux.i = f_scan;
 		f_aux.j--;
 		
 		if (!isupper('A' + f_aux.i))
@@ -417,33 +422,46 @@ LegalFlag(tBoard * visualboard, tCommand * structcommand, char * params) /*No va
 int
 LegalQuery(tBoard * visualboard, tCommand * structcommand, char * params)
 {	
-	int index;
+	char index_row;
+	int index_column;
 	char legal = TRUE;
-	if(scanf(params, "%d", &index) == 1)
+	if(sscanf(params, "%d", &index_column) == 1)
 	{	
-		index--;
-		if (index < 0 || index > visualboard->columns)
+		index_column--;
+		if (index_column < 0 || index_column > visualboard->columns)
 			legal = FALSE;
 		if (legal)
 		{
 			structcommand->query.is_row = FALSE;
-			structcommand->query.index = index;
+			structcommand->query.index = index_column;
 		}	
 	}
-	else if (scanf(params, "%c", &index) == 1 )
+	else if (sscanf(params, "%c", &index_row) == 1 )
 	{	
-		index = get_row_pos_byref(index);
-		if (!isupper('A' + index))
+		index_row = get_row_pos_byref(index_row);
+		if (!isupper('A' + index_row))
 			legal = FALSE;
-		else if (index < 0 || index > visualboard->rows)
+		else if (index_row < 0 || index_row > visualboard->rows)
 			legal = FALSE;
 		if(legal)
 		{	
 			structcommand->query.is_row = TRUE;
-			structcommand->query.index = index;
+			structcommand->query.index = index_row;
 		}
 	}
 	
 	return legal;	
 
+}
+
+void PrintQuery (tQuery * query)
+{	
+	int i;
+	int dim = query->results.dim;
+
+	for (i = 0; i < dim; i++)
+		printf("%d%s", query->results.results[i], (i != (dim-1))? " - ": "");	
+	putchar('\n');
+
+	return;
 }

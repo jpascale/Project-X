@@ -141,7 +141,8 @@ int CreateVisualBoard(tBoard * structboard)
 }
 
 int Query(tBoard * hiddenboard, tArray * pquery, int element, char isrow)
-{ //ToDo: Use realloc directly
+{
+   //ToDo: Free array after use
   //ToDo: Modularize??
   //ToDo: Think what is going to return this
 
@@ -171,7 +172,7 @@ int Query(tBoard * hiddenboard, tArray * pquery, int element, char isrow)
 						{
 							if (j != 0)
 								free(results);
-							return -1;
+							return MALLOC_ERR;
 						}
 
 						results = aux;
@@ -197,6 +198,7 @@ int Query(tBoard * hiddenboard, tArray * pquery, int element, char isrow)
 		results = realloc(results, (j + (state == FOUND_MINE)) * sizeof(*results));
 	pquery->dim = j + (state == FOUND_MINE);
 	pquery->results = results;
+	
 	return (results != NULL);
 }
 
@@ -254,7 +256,7 @@ LegalPos(tBoard * structboard, tPos * pos)
 
 int ExecCommand(tGame *game, tCommand *command)
 {
-	//ToDo: tidy.
+	//ToDo: tidy. front.
 
 	int i = command->command_ref; 
 	int res;
@@ -281,7 +283,12 @@ int ExecCommand(tGame *game, tCommand *command)
 			break;
 		
 		case COMMAND_QUERY:
-			res=Query(&(game->hiddenboard), &(command->query.results), command->query.index, command->query.is_row);
+			res = Query(&(game->hiddenboard), &(command->query.results), command->query.index, command->query.is_row);
+			if (res)
+				PrintQuery(&command->query);
+			else
+				printf("0\n");
+			//Free vec
 			break;
 
 		case COMMAND_SAVE:
