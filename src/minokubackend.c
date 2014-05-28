@@ -329,3 +329,55 @@ int FlagRange(tGame *game, tFlag *flag, char task)
 	}
 	return res;
 }
+
+int WriteSaveFile(tGame *game, char *name)
+{
+	int i;
+	FILE * savefile;
+	int data[6];
+	char ** hiddenboard = game->hiddenboard.board;
+	char ** visualboard = game->visualboard.board;
+	data[SAVEFILE_LEVEL] = game->level;
+	data[SAVEFILE_ROWS] = game->hiddenboard.rows;
+	data[SAVEFILE_COLUMNS] = game->hiddenboard.columns;
+	data[SAVEFILE_UNDOS] = game->undos;
+	data[SAVEFILE_MOVES] = game->gametype? game->moves : 0;
+	data[SAVEFILE_ISCAMPAIGN] = game->gametype == GAMETYPE_CAMPAIGN ? 1 : 0;
+
+	if ((savefile = fopen(name, "wb")) == NULL)
+		return FALSE;
+
+	if ( fwrite(data, sizeof(*data), sizeof(data)/sizeof(*data), savefile) !=  sizeof(data)/sizeof(*data) )
+	{
+		fclose(savefile);
+		return FALSE;
+	}
+	// ToDo: Use aux function or macro
+
+	for (i = 0; i < data[SAVEFILE_ROWS]; i++)
+		if (fwrite(hiddenboard[i], sizeof(char), data[SAVEFILE_COLUMNS], savefile) != data[SAVEFILE_COLUMNS])
+		{
+			fclose(savefile);
+			return FALSE;
+		}
+
+	for (i = 0; i < data[SAVEFILE_ROWS]; i++)
+		if (fwrite(visualboard[i], sizeof(char), data[SAVEFILE_COLUMNS], savefile) != data[SAVEFILE_COLUMNS])
+		{
+			fclose(savefile);
+			return FALSE;
+		}
+	
+	if (data[SAVEFILE_ISCAMPAIGN])
+		if( fputs(game->campaign_name, savefile) == EOF)
+		{
+			fclose(savefile);
+			return FALSE;
+		}
+	
+	fclose(savefile);
+	return TRUE;
+
+
+
+}

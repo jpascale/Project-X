@@ -89,6 +89,14 @@
 #define BLOCK 5
 #define MALLOC_ERR -1
 
+//Savefile constants
+#define SAVEFILE_LEVEL 0
+#define SAVEFILE_ROWS 1
+#define SAVEFILE_COLUMNS 2
+#define SAVEFILE_UNDOS 3
+#define SAVEFILE_MOVES 4
+#define SAVEFILE_ISCAMPAIGN 5
+
 // map undos quantity
 #define get_undos(level) (((level)==NIGHTMARE)?1: \
 						  ((level)==HARD)?3: \
@@ -230,5 +238,6 @@ int Sweep(tGame * game, tPos * position);
 int LegalPos(tBoard * structboard, tPos * position);
 int ExecCommand(tGame *game, tCommand *command);
 int FlagRange(tGame *game, tFlag *flag, char task);
+int WriteSaveFile(tGame *game, char *name);
 
 #endif
