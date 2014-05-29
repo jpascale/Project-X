@@ -118,6 +118,12 @@
 // Delete buffer
 #define DELBFF() while(getchar() != '\n')
 
+// Get Mines
+#define getmines(dim, level) ((dim)*(((level)==NIGHTMARE)?PERCENT_NIGHTMARE: \
+								((level)==HARD)?PERCENT_HARD: \
+								((level)==MEDIUM)?PERCENT_MEDIUM:PERCENT_EASY))
+
+
 /*
 **		Structs
 */
