@@ -210,10 +210,10 @@ int Query(tBoard * hiddenboard, tArray * pquery, int element, char isrow)
 **	Returns TRUE if visualboard is modified.
 */
 
-int DoFlagUnflag(tGame * game, tPos * pos, char task, tCommand * command)
+int DoFlagUnflag(tGame * game, tCommand * command, char task)
 {
-	int i = pos->i;
-	int j = pos->j;
+	int i = command->flag.first_pos.i;
+	int j = command->flag.first_pos.j;
 
 	// Not possible to flag/unflag sweeped pos
 	if (game->visualboard.board[i][j] == VISUAL_EMPTY)
@@ -222,8 +222,10 @@ int DoFlagUnflag(tGame * game, tPos * pos, char task, tCommand * command)
 		return FALSE;
 	else if(task == DO_UNFLAG && game->visualboard.board[i][j] == VISUAL_UNFLAGGED)
 		return FALSE;
-	if(command->flag.is_range)
+	
+	if(!command->flag.is_range)
 		SaveLastState(game, &command->undo);
+
 	game->visualboard.board[i][j] = (task == DO_FLAG? VISUAL_FLAGGED:VISUAL_UNFLAGGED);
 
 	if (game->hiddenboard.board[i][j] == HIDDEN_MINE)
@@ -261,7 +263,7 @@ LegalPos(tBoard * structboard, tPos * pos)
 	return TRUE;
 }
 
-int ExecCommand(tGame *game, tCommand *command)
+int ExecCommand(tGame *game, tCommand * command)
 {
 	//ToDo: tidy. front.
 
@@ -277,16 +279,16 @@ int ExecCommand(tGame *game, tCommand *command)
 		
 		case COMMAND_FLAG:
 			if (!(command->flag.is_range))
-				res=DoFlagUnflag(game, &(command->flag.first_pos), DO_FLAG, command);
+				res=DoFlagUnflag(game, command, DO_FLAG);
 			else
-				res=FlagRange(game, &(command->flag), DO_FLAG, command);
+				res=FlagRange(game, command, DO_FLAG);
 			break;
 		
 		case COMMAND_UNFLAG:
 			if (!(command->flag.is_range))
-				res = DoFlagUnflag(game, &(command->flag.first_pos), DO_UNFLAG, command);
+				res = DoFlagUnflag(game, command, DO_UNFLAG);
 			else
-				res=FlagRange(game, &(command->flag), DO_UNFLAG, command);
+				res=FlagRange(game, command, DO_UNFLAG);
 			break;
 		
 		case COMMAND_QUERY:
@@ -317,24 +319,31 @@ int ExecCommand(tGame *game, tCommand *command)
 	return res;
 }
 
-int FlagRange(tGame *game, tFlag *flag, char task, tCommand * command)
+int FlagRange(tGame *game, tCommand * command, char task)
 {
 	//ToDo: Tidy 
 	int k;
-	int res=FALSE;
-	char isrow = flag->is_row;
-	tPos auxpos = flag->first_pos;
-	tPos finalpos = flag->last_pos;
+	int res = FALSE;
+	char isrow = command->flag.is_row;
+	tPos auxpos = command->flag.first_pos;
+	tPos finalpos = command->flag.last_pos;
 	SaveLastState(game, &command->undo); //Cambiar (Recorrer primero y ver si cambias algo, despues guardar, despues cambiar)
+	
 	if (isrow)
-	{
+	{ //ToDo: Improve
 		for(k = auxpos.j; auxpos.j<=finalpos.j; auxpos.j = ++k)
-			res = DoFlagUnflag(game, &auxpos, task) || res;
+		{
+			command->flag.first_pos.j = k;
+			res = DoFlagUnflag(game, command, task) || res;
+		}
 	}
 	else
 	{
 		for(k = auxpos.i; auxpos.i<=finalpos.i; auxpos.i = ++k)
-			res = DoFlagUnflag(game, &auxpos, task) || res;
+		{
+			command->flag.first_pos.i = k;
+			res = DoFlagUnflag(game, command, task) || res;
+		}
 	}
 	
 	return res;

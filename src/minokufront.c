@@ -102,6 +102,8 @@ int setNewGame(tGame * game)
  	else
  		game->moves = get_moves(game->undos, game->mines);
  	
+ 	game->flags_left = game->mines;
+
  	if (!CreateHiddenVisualBoard(game))
  		return FALSE;
 
