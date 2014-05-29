@@ -1,6 +1,7 @@
 #include "minokubackend.h"
 
 static void freeBoard(char ** Board, int rows);
+static void CopyBoard(tBoard * board_from, tBoard * board_to);
 
 void setGameMinesNumber(tGame * game)
 {
@@ -209,7 +210,7 @@ int Query(tBoard * hiddenboard, tArray * pquery, int element, char isrow)
 **	Returns TRUE if visualboard is modified.
 */
 
-int DoFlagUnflag(tGame * game, tPos * pos, char task)
+int DoFlagUnflag(tGame * game, tPos * pos, char task, tCommand * command)
 {
 	int i = pos->i;
 	int j = pos->j;
@@ -217,17 +218,22 @@ int DoFlagUnflag(tGame * game, tPos * pos, char task)
 	// Not possible to flag/unflag sweeped pos
 	if (game->visualboard.board[i][j] == VISUAL_EMPTY)
 		return FALSE;
-
+	else if (task == DO_FLAG && game->visualboard.board[i][j] == VISUAL_FLAGGED)
+		return FALSE;
+	else if(task == DO_UNFLAG && game->visualboard.board[i][j] == VISUAL_UNFLAGGED)
+		return FALSE;
+	if(command->flag.is_range)
+		SaveLastState(game, &command->undo);
 	game->visualboard.board[i][j] = (task == DO_FLAG? VISUAL_FLAGGED:VISUAL_UNFLAGGED);
 
 	if (game->hiddenboard.board[i][j] == HIDDEN_MINE)
 		(task == DO_FLAG? game->mines_left-- : game->mines_left++);
-
+	
 	return TRUE;
 }
 
 int
-Sweep(tGame * game, tPos * pos)
+Sweep(tGame * game, tPos * pos, tCommand * command)
 {
 	int i = pos->i;
 	int j = pos->j;
@@ -235,10 +241,11 @@ Sweep(tGame * game, tPos * pos)
 	if (game->hiddenboard.board[i][j] == HIDDEN_MINE)
 		return SWEEP_MINE;
 	
-	game->visualboard.board[i][j] = VISUAL_EMPTY;
+	SaveLastState(game, &command->undo);
 	
+	game->visualboard.board[i][j] = VISUAL_EMPTY;
 	game->sweeps_left--;
-
+	
 	return TRUE;
 }
 
@@ -265,21 +272,21 @@ int ExecCommand(tGame *game, tCommand *command)
 	{
 		case COMMAND_SWEEP:
 			printf("En ejecutar: %d %d\n", command->sweep.i, command->sweep.j);
-			res = Sweep(game, &command->sweep);
+			res = Sweep(game, &command->sweep, command);
 			break;
 		
 		case COMMAND_FLAG:
 			if (!(command->flag.is_range))
-				res=DoFlagUnflag(game, &(command->flag.first_pos), DO_FLAG);
+				res=DoFlagUnflag(game, &(command->flag.first_pos), DO_FLAG, command);
 			else
-				res=FlagRange(game, &(command->flag), DO_FLAG);
+				res=FlagRange(game, &(command->flag), DO_FLAG, command);
 			break;
 		
 		case COMMAND_UNFLAG:
 			if (!(command->flag.is_range))
-				res = DoFlagUnflag(game, &(command->flag.first_pos), DO_UNFLAG);
+				res = DoFlagUnflag(game, &(command->flag.first_pos), DO_UNFLAG, command);
 			else
-				res=FlagRange(game, &(command->flag), DO_UNFLAG);
+				res=FlagRange(game, &(command->flag), DO_UNFLAG, command);
 			break;
 		
 		case COMMAND_QUERY:
@@ -310,13 +317,15 @@ int ExecCommand(tGame *game, tCommand *command)
 	return res;
 }
 
-int FlagRange(tGame *game, tFlag *flag, char task)
+int FlagRange(tGame *game, tFlag *flag, char task, tCommand * command)
 {
+	//ToDo: Tidy 
 	int k;
 	int res=FALSE;
 	char isrow = flag->is_row;
 	tPos auxpos = flag->first_pos;
 	tPos finalpos = flag->last_pos;
+	SaveLastState(game, &command->undo); //Cambiar (Recorrer primero y ver si cambias algo, despues guardar, despues cambiar)
 	if (isrow)
 	{
 		for(k = auxpos.j; auxpos.j<=finalpos.j; auxpos.j = ++k)
@@ -327,6 +336,7 @@ int FlagRange(tGame *game, tFlag *flag, char task)
 		for(k = auxpos.i; auxpos.i<=finalpos.i; auxpos.i = ++k)
 			res = DoFlagUnflag(game, &auxpos, task) || res;
 	}
+	
 	return res;
 }
 
@@ -377,8 +387,6 @@ int WriteSaveFile(tGame *game, char *name)
 	
 	fclose(savefile);
 	return TRUE;
-
-
 
 }
 
@@ -514,7 +522,33 @@ int LoadFile(tGame *game, char *name)
 	fclose(loadfile);
 	return TRUE;
 
+}
 
+
+void SaveLastState(tGame * game, tUndo * undo )
+{
+	CopyBoard(&game->visualboard, &undo->lastboard);
+	undo->mines_left = game->mines_left;
+	undo->sweeps_left = game->sweeps_left;
+	//undo->flags_left = game->flags_left; 
+}
+
+static void CopyBoard(tBoard * board_from, tBoard * board_to)
+{
+	int i,j;
+	int dimi, dimj;
+	char ** from, to;
+
+	dimi = board_from->rows;
+	dimj = board_from->columns;
+
+	from = board_from->board;
+	to = board_to->board;
+	
+
+	for (i = 0; i < dimi; i++)
+		for (j = 0; j < dimj; j++)
+			to[i][j] = from[i][j];
 
 
 }

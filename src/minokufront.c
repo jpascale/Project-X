@@ -190,7 +190,9 @@ void Play(tGame * game)
 
 	tScan scan;
 	tCommand command;
-
+	command.command_ref = COMMAND_UNDO;
+	CreateBoard(&command.undo.lastboard);
+	
 	do
 	{
 		PrintBoard(&game->visualboard); //ToDo: Print all
@@ -200,7 +202,7 @@ void Play(tGame * game)
 			if ((legal = InputCommand(&scan)))
 			{	
 				if((legal = LegalCommand(&scan, &command)))
-					if (scan.scanned_number == 1);
+					if (scan.scanned_number == 2)
 						legal = LegalParams(&game->visualboard, &command, &scan);
 				
 			}
@@ -285,7 +287,7 @@ LegalParams(tBoard * visualboard, tCommand * structcommand, tScan * scan)
 	switch(structcommand->command_ref)
 	{
 		case COMMAND_SWEEP:
-			printf("EN el switch: %s\n", scan->params);
+			//printf("EN el switch: %s\n", scan->params);
 			return LegalSweep(visualboard, structcommand, scan->params);
 		
 		case COMMAND_FLAG:
@@ -309,19 +311,26 @@ LegalSweep(tBoard * visualboard, tCommand * structcommand, char * params)
 	tPos aux;
 	char legal = TRUE;
 	char i_scan;
-	printf("ENTRE\n");
-	printf("%s\n", params);
-	if (sscanf(params, "(%c,%d)", &i_scan, &aux.j) != 2)
-		return FALSE;
-	//DEBUG
+	int i;
 	
+	//DEBUG
+	//printf("ENTRE\n");
+	//printf("%s\n", params);
 
+	if (sscanf(params, "(%c,%d", &i_scan, &aux.j) != 2)
+		return FALSE;
+
+	if ( *(strchr(params,')') + 1) != '\0')
+		return FALSE;
+
+	//printf ("%d\n", *(strchr(params, ')')+1));
 	//ToDo: Modularize
 	i_scan = get_row_pos_byref(i_scan);
 	aux.i = (int)i_scan;
 	aux.j--;
-	printf("AFTER SCAN %d %d\n", aux.i, aux.j);
-	printf("%s\n", LegalPos(visualboard, &aux)?"Si":"No" );
+	//DEBUG
+	//printf("AFTER SCAN %d %d\n", aux.i, aux.j);
+	//printf("%s\n", LegalPos(visualboard, &aux)?"Si":"No" );
 	if (!isupper('A' + aux.i)) // If Column is not a letter return false
 		legal = FALSE;
 
@@ -330,12 +339,11 @@ LegalSweep(tBoard * visualboard, tCommand * structcommand, char * params)
 	
 	else if (visualboard->board[aux.i][aux.j] != VISUAL_UNFLAGGED)  // If there's a '&' or '-' on the visual board return false
 		legal = FALSE;
-	//debug
 
 	if (legal){
 		structcommand->sweep.i = aux.i;
 		structcommand->sweep.j = aux.j;
-		printf("AFTER SAVE STRUCT %d %d\n", structcommand->sweep.i, structcommand->sweep.j);
+		//printf("AFTER SAVE STRUCT %d %d\n", structcommand->sweep.i, structcommand->sweep.j);
 	}
 
 	return legal;
@@ -421,7 +429,7 @@ LegalFlag(tBoard * visualboard, tCommand * structcommand, char * params) /*No va
 
 int
 LegalQuery(tBoard * visualboard, tCommand * structcommand, char * params)
-{	
+{	//ToDo: tidy
 	char index_row;
 	int index_column;
 	char legal = TRUE;
