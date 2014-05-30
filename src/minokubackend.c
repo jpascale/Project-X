@@ -214,14 +214,6 @@ int DoFlagUnflag(tGame * game, tCommand * command, char task)
 {
 	int i = command->flag.first_pos.i;
 	int j = command->flag.first_pos.j;
-
-	// Not possible to flag/unflag sweeped pos
-	if (game->visualboard.board[i][j] == VISUAL_EMPTY)
-		return FALSE;
-	else if (task == DO_FLAG && game->visualboard.board[i][j] == VISUAL_FLAGGED)
-		return FALSE;
-	else if(task == DO_UNFLAG && game->visualboard.board[i][j] == VISUAL_UNFLAGGED)
-		return FALSE;
 	
 	if(!command->flag.is_range)
 		SaveLastState(game, &command->undo);

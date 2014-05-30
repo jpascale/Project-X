@@ -320,8 +320,10 @@ LegalParams(tBoard * visualboard, tCommand * structcommand, tScan * scan)
 			return LegalSweep(visualboard, structcommand, scan->params);
 		
 		case COMMAND_FLAG:
+			return LegalFlag(visualboard, structcommand, scan->params, DO_FLAG);
+
 		case COMMAND_UNFLAG:
-			return LegalFlag(visualboard, structcommand, scan->params);
+			return LegalFlag(visualboard, structcommand, scan->params, DO_UNFLAG);
 
 		case COMMAND_QUERY:	
 			return LegalQuery(visualboard, structcommand, scan->params);
@@ -384,15 +386,18 @@ LegalSweep(tBoard * visualboard, tCommand * structcommand, char * params)
 }			
 
 int
-LegalFlag(tBoard * visualboard, tCommand * structcommand, char * params) /*No valida si ya esta flaggeado*/
-{	//ToDo: Tidy
-	//int fposi, fposj, lposi, lposj;
 
-	tPos f_aux; 
+LegalFlag(tBoard * visualboard, tCommand * structcommand, char * params, char task) /*No valida si ya esta flaggeado*/
+{	//Tidy
+	//int fposi, fposj, lposi, lposj;
+	int i;
+	char legal = TRUE;
+	char legal_range = FALSE;
+	tPos f_aux;
 	tPos l_aux;
 	char f_scan;
 	char l_scan;
-	char legal = TRUE;
+	
 
 	char * closepos;
 
@@ -437,7 +442,28 @@ LegalFlag(tBoard * visualboard, tCommand * structcommand, char * params) /*No va
 		else
 			legal = FALSE;
 		
-		if (legal)
+		if(structcommand->flag.is_row)
+		{
+			for(i=f_aux.j; i<l_aux.j; i++)
+			{	
+				if ((task == DO_FLAG) && (visualboard->board[f_aux.i][i] == VISUAL_FLAGGED))
+					legal_range = TRUE;
+				else if( (task == DO_UNFLAG) && (visualboard->board[f_aux.i][i] == VISUAL_FLAGGED))
+					legal_range = TRUE;
+			}	
+		}
+		else
+		{
+			for(i=f_aux.i; i<l_aux.i; i++)
+			{	
+				if ((task == DO_FLAG) && (visualboard->board[i][f_pos.j] == VISUAL_FLAGGED))
+					legal_range = TRUE;
+				else if( (task == DO_UNFLAG) && (visualboard->board[i][f_pos.j] == VISUAL_FLAGGED))
+					legal_range = TRUE;
+			}		
+		}	
+		
+		if (legal && legal_range)
 		{
 			structcommand->flag.is_range = TRUE;
 			structcommand->flag.first_pos.i = f_aux.i;
@@ -458,6 +484,12 @@ LegalFlag(tBoard * visualboard, tCommand * structcommand, char * params) /*No va
 
 		else if(!LegalPos(visualboard, &f_aux))
 			legal = FALSE;
+		
+		else if ( (task == DO_FLAG) && (visualboard->board[f_aux.i][f_aux.j] != VISUAL_UNFLAGGED))
+			legal = FALSE;
+		else if( (task == DO_UNFLAG) && (visualboard->board[f_aux.i][f_aux.j] != VISUAL_FLAGGED))
+			legal = FALSE;
+		
 		if (legal)
 		{	
 			structcommand->flag.is_range 	= FALSE;

@@ -231,7 +231,7 @@ int InputCommand(tScan * scan);
 int CreateHiddenVisualBoard(tGame * game); //ToDo: Change name
 int LegalParams(tBoard * visualboard, tCommand * command, tScan * scan);
 int LegalSweep(tBoard * visualboard, tCommand * command, char * params);
-int LegalFlag(tBoard * visualboard, tCommand * command, char * params);
+int LegalFlag(tBoard * visualboard, tCommand * command, char * params, char task);
 int LegalQuery(tBoard * visualboard, tCommand * structcommand, char * params);
 void PrintQuery (tQuery * query);
 
