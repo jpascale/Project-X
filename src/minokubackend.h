@@ -39,6 +39,10 @@
 #define HARD 		3
 #define NIGHTMARE	4
 
+
+//Campaign
+#define INDIVIDUAL_GAME 0
+
 // Query States
 #define NOT_FOUND_MINE 	0
 #define FOUND_MINE 		1
@@ -148,6 +152,7 @@ typedef struct
 	int sweeps_left; //number of positions without sweep
 	int flags_left;
 	char campaign_name[MAX_FILENAME_LEN];
+	int campaign_level;
 
 } tGame;
 
