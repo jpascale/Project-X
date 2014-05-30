@@ -229,21 +229,48 @@ void Play(tGame * game)
 */
 
 int InputCommand(tScan * scan)
-{	
-	int scanned_number;
-
-	// Scanf formatting
-	char fmt[13]; //ToDo: Constant
-	sprintf(fmt, "%%%ds %%%ds", MAX_COMMAND_LEN, MAX_PARAMS_LEN);
-
+{	//ToDo: tidy
+	int scanned_number = 1;
+	int i, j, k;
+	int found_space = FALSE;
+	int endfor = FALSE;
+	char * rinput;
+	char input[MAX_COMMAND_LEN + MAX_PARAMS_LEN + 2];
+	
 	printf("Introducir un comando:\n");
 
-	scanned_number = scanf(fmt, scan->command, scan->params);
-	DELBFF();
+	rinput = fgets(input, MAX_COMMAND_LEN + MAX_PARAMS_LEN + 2, stdin);
 
-	if (!scanned_number)
+	if (rinput == NULL)
 		return FALSE;
 
+	//scanned_number = scanf(fmt, scan->command, scan->params);
+	DELBFF();
+
+	// Exit if no scan
+	if (input[0] == '\n')
+		return FALSE;
+
+	for (i = 0, j = 0, k = 0,; input[i] && !endfor; i++)
+	}
+		if (input[i] == ' ')
+		{	
+			if (input[i+1] != '\n');
+				scanned_number++;
+			
+			if (scanned_number > 2)
+				endfor = TRUE;
+			
+			found_space = TRUE;
+		}
+		else if (!found_space)
+			scan->command[j++] = input[i];
+		else
+			scan->params[k++] = input[i];
+	}
+
+	scan->command[j] = '\0';
+	scan->params[k] = '\0';
 	scan->scanned_number = scanned_number;
 
 	return TRUE;
@@ -311,6 +338,7 @@ int
 LegalSweep(tBoard * visualboard, tCommand * structcommand, char * params)
 {//todo: tidy
 	tPos aux;
+	char * closepos;
 	char legal = TRUE;
 	char i_scan;
 	int i;
@@ -322,8 +350,11 @@ LegalSweep(tBoard * visualboard, tCommand * structcommand, char * params)
 	if (sscanf(params, "(%c,%d", &i_scan, &aux.j) != 2)
 		return FALSE;
 
-	if ( *(strchr(params,')') + 1) != '\0')
+	if ((closepos = strchr(params,')')) == NULL)
 		return FALSE;
+	else
+		if (*(closepos +1) != '\n')
+			return FALSE;
 
 	//printf ("%d\n", *(strchr(params, ')')+1));
 	//ToDo: Modularize
@@ -354,7 +385,7 @@ LegalSweep(tBoard * visualboard, tCommand * structcommand, char * params)
 
 int
 LegalFlag(tBoard * visualboard, tCommand * structcommand, char * params) /*No valida si ya esta flaggeado*/
-{	//Tidy
+{	//ToDo: Tidy
 	//int fposi, fposj, lposi, lposj;
 
 	tPos f_aux; 
@@ -363,8 +394,16 @@ LegalFlag(tBoard * visualboard, tCommand * structcommand, char * params) /*No va
 	char l_scan;
 	char legal = TRUE;
 
+	char * closepos;
+
+		if ((closepos = strchr(params,')')) == NULL)
+			return FALSE;
+		else
+			if (*(closepos +1) != '\n')
+				return FALSE;
+
 	// Checks if range is legal
-	if (sscanf(params, "(%c,%d:%c,%d)", &f_scan, &f_aux.j, &l_scan, &l_aux.j) == 4)
+	if (sscanf(params, "(%c,%d:%c,%d", &f_scan, &f_aux.j, &l_scan, &l_aux.j) == 4)
 	{
 		f_scan = get_row_pos_byref(f_scan);
 		f_aux.i = f_scan;
@@ -435,6 +474,7 @@ LegalQuery(tBoard * visualboard, tCommand * structcommand, char * params)
 	char index_row;
 	int index_column;
 	char legal = TRUE;
+	
 	if(sscanf(params, "%d", &index_column) == 1)
 	{	
 		index_column--;
