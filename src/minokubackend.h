@@ -65,6 +65,12 @@
 
 #define UNLIMITED_MOVES 0
 
+//Minimum and maximum dim
+#define MINIMUM_ROWS 5
+#define MINIMUM_COLUMNS 5
+#define MAXIMUM_ROWS 19
+#define MAXIMUM_COLUMNS 19
+
 // Level mines percentage
 #define PERCENT_EASY 		0.2
 #define PERCENT_MEDIUM 		0.5
@@ -122,10 +128,9 @@
 // Delete buffer
 #define DELBFF() while(getchar() != '\n')
 
-// Get Mines
-#define getmines(dim, level) ((dim)*(((level)==NIGHTMARE)?PERCENT_NIGHTMARE: \
-								((level)==HARD)?PERCENT_HARD: \
-								((level)==MEDIUM)?PERCENT_MEDIUM:PERCENT_EASY))
+//Campaign Format
+#define FILE_FORMAT ".txt"
+#define FORMAT_LENGTH 4
 
 
 /*

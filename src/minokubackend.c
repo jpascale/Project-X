@@ -348,7 +348,7 @@ int WriteSaveFile(tGame *game, char *name)
 	int data[6];
 	char ** hiddenboard = game->hiddenboard.board;
 	char ** visualboard = game->visualboard.board;
-	data[SAVEFILE_LEVEL] = game->level;
+	data[SAVEFILE_LEVEL] = game->campaign_level;
 	data[SAVEFILE_ROWS] = game->hiddenboard.rows;
 	data[SAVEFILE_COLUMNS] = game->hiddenboard.columns;
 	data[SAVEFILE_UNDOS] = game->undos;
@@ -402,19 +402,21 @@ int LoadFile(tGame *game, char *name)
 	char elem;
 	char ** board;
 	int i;
+	int campaign_len;
+	char campaign_name[MAX_FILENAME_LEN];
 	
 	if ((loadfile = fopen(name, "rb")) == NULL)
 		return FALSE;
 
-	if (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < EASY || num > NIGHTMARE) )
+	if (fread(&num, sizeof(num), 1, loadfile) != 1 )
 	{
 		fclose(loadfile);
 		return FALSE;
 	}
 
-	game->level = num;
+	game->campaign_level = num;
 
-	if (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < 5))
+	if (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < MINIMUM_ROWS))
 	{
 
 		fclose(loadfile);
@@ -424,7 +426,7 @@ int LoadFile(tGame *game, char *name)
 	game->hiddenboard.rows = game->visualboard.rows = auxrows = num;
 
 
-	if (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < 5))
+	if (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < MINIMUM_COLUMNS))
 	{
 
 		fclose(loadfile);
@@ -440,7 +442,7 @@ int LoadFile(tGame *game, char *name)
 		fclose(loadfile);
 		return FALSE;
 	}
-	game->undos=num;
+	game->undos = num;
 
 
 	if (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < 0))
@@ -473,7 +475,7 @@ int LoadFile(tGame *game, char *name)
 	}
 	board = game->hiddenboard.board;
 
-	for (i = 0; i < auxcols * auxrows && mines <= getmines(auxcols * auxrows, game->level) ; i++)
+	for (i = 0; i < auxcols * auxrows; i++)
 	{
 		elem = fgetc(loadfile);
 		if (elem != HIDDEN_MINE && elem != HIDDEN_EMPTY)
@@ -488,13 +490,6 @@ int LoadFile(tGame *game, char *name)
 		board[i/auxcols][i%auxcols] = elem;
 	}
 
-	if (mines != getmines(auxcols * auxrows, game->level))
-	{
-
-		freeBoard(game->hiddenboard.board, auxrows);
-		fclose(loadfile);
-		return FALSE;
-	}
 	game->mines=mines;
 
 	if (CreateBoard(&game->visualboard)==FALSE)
@@ -508,7 +503,7 @@ int LoadFile(tGame *game, char *name)
 	for (i = 0; i < auxcols * auxrows; i++)
 	{
 		elem = fgetc(loadfile);
-		if ((elem != VISUAL_UNFLAGGED && elem != VISUAL_EMPTY && elem != VISUAL_UNFLAGGED) || (elem == VISUAL_EMPTY && game->hiddenboard.board[i/auxcols][i%auxcols] != HIDDEN_MINE))
+		if ((elem != VISUAL_UNFLAGGED && elem != VISUAL_EMPTY && elem != VISUAL_UNFLAGGED) || (elem == VISUAL_EMPTY && game->hiddenboard.board[i/auxcols][i%auxcols] == HIDDEN_MINE))
 		{
 
 			freeBoard(game->hiddenboard.board, auxrows);
@@ -517,6 +512,33 @@ int LoadFile(tGame *game, char *name)
 			return FALSE;
 		}
 		board[i/auxcols][i%auxcols] = elem;
+	}
+
+	if (game->gametype == GAMETYPE_CAMPAIGN)
+	{
+		if (fgets(campaign_name, MAX_FILENAME_LEN, loadfile) == NULL || (campaign_len = strlen(campaign_name)) < FORMAT_LENGTH + 1)
+		{
+				freeBoard(game->hiddenboard.board, auxrows);
+				freeBoard(game->visualboard.board, auxrows);
+				fclose(loadfile);
+				return FALSE;
+		}
+		
+		if (strstr(&(campaign_name[campaign_len-FORMAT_LENGTH]), FILE_FORMAT) == NULL)
+		{
+				freeBoard(game->hiddenboard.board, auxrows);
+				freeBoard(game->visualboard.board, auxrows);
+				fclose(loadfile);
+				return FALSE;
+		}
+		strcpy(game->campaign_name, campaign_name);
+	}
+	if (fgetc(loadfile) != EOF)
+	{
+		freeBoard(game->hiddenboard.board, auxrows);
+		freeBoard(game->visualboard.board, auxrows);
+		fclose(loadfile);
+		return FALSE;
 	}
 
 
