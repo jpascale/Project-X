@@ -193,6 +193,8 @@ void Play(tGame * game)
 	tScan scan;
 	tCommand command;
 	command.command_ref = COMMAND_UNDO;
+	command.undo.lastboard.rows = game->visualboard.rows; 
+	command.undo.lastboard.columns = game->visualboard.columns;
 	CreateBoard(&command.undo.lastboard);
 	
 	do
@@ -214,7 +216,7 @@ void Play(tGame * game)
 		} while (!legal);
 
 		//DEBUG
-		printf("Antes de ejecutar (%s): %d\n", command.query.is_row? "Fila":"Columna", command.query.index);
+		//printf("Antes de ejecutar (%s): %d\n", command.query.is_row? "Fila":"Columna", command.query.index);
 		ExecCommand(game, &command);
 
 	} while(!won && !end);
@@ -234,13 +236,13 @@ int InputCommand(tScan * scan)
 	int i, j, k;
 	int found_space = FALSE;
 	int endfor = FALSE;
-	char * rinput;
+	char * rinput; //Result input
 	char input[MAX_COMMAND_LEN + MAX_PARAMS_LEN + 2];
 	
 	printf("Introducir un comando:\n");
 
 	rinput = fgets(input, MAX_COMMAND_LEN + MAX_PARAMS_LEN + 2, stdin);
-
+	puts(input); //DEBUG
 	if (rinput == NULL)
 		return FALSE;
 
@@ -250,12 +252,12 @@ int InputCommand(tScan * scan)
 	// Exit if no scan
 	if (input[0] == '\n')
 		return FALSE;
-
-	for (i = 0, j = 0, k = 0,; input[i] && !endfor; i++)
-	}
+	printf("Leggar a voooos\n");
+	for (i = 0, j = 0, k = 0; input[i] && !endfor; i++)
+	{
 		if (input[i] == ' ')
 		{	
-			if (input[i+1] != '\n');
+			if (input[i+1] != '\n')
 				scanned_number++;
 			
 			if (scanned_number > 2)
@@ -272,6 +274,7 @@ int InputCommand(tScan * scan)
 	scan->command[j] = '\0';
 	scan->params[k] = '\0';
 	scan->scanned_number = scanned_number;
+	puts(scan->command); puts(scan->params);
 
 	return TRUE;
 }
@@ -344,7 +347,6 @@ LegalSweep(tBoard * visualboard, tCommand * structcommand, char * params)
 	char legal = TRUE;
 	char i_scan;
 	int i;
-	
 	//DEBUG
 	//printf("ENTRE\n");
 	//printf("%s\n", params);
@@ -378,7 +380,7 @@ LegalSweep(tBoard * visualboard, tCommand * structcommand, char * params)
 	if (legal){
 		structcommand->sweep.i = aux.i;
 		structcommand->sweep.j = aux.j;
-		//printf("AFTER SAVE STRUCT %d %d\n", structcommand->sweep.i, structcommand->sweep.j);
+		printf("AFTER SAVE STRUCT %d %d\n", structcommand->sweep.i, structcommand->sweep.j);
 	}
 
 	return legal;
@@ -456,9 +458,9 @@ LegalFlag(tBoard * visualboard, tCommand * structcommand, char * params, char ta
 		{
 			for(i=f_aux.i; i<l_aux.i; i++)
 			{	
-				if ((task == DO_FLAG) && (visualboard->board[i][f_pos.j] == VISUAL_FLAGGED))
+				if ((task == DO_FLAG) && (visualboard->board[i][f_aux.j] == VISUAL_FLAGGED))
 					legal_range = TRUE;
-				else if( (task == DO_UNFLAG) && (visualboard->board[i][f_pos.j] == VISUAL_FLAGGED))
+				else if( (task == DO_UNFLAG) && (visualboard->board[i][f_aux.j] == VISUAL_FLAGGED))
 					legal_range = TRUE;
 			}		
 		}	

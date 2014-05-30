@@ -251,13 +251,12 @@ void InitBoard(tBoard * structboard, char initchar);
 int CreateVisualBoard(tBoard * structboard);
 int CreateHiddenBoard(tBoard * structboard, int mines);
 int Query(tBoard * structboard, tArray * pquery, int element, char isrow);
-int DoFlagUnflag(tGame * game, tPos * pos, char task, tCommand * command);
+int DoFlagUnflag(tGame * game, tCommand * command, char task);
 int Sweep(tGame * game, tPos * position, tCommand * command);
 int LegalPos(tBoard * structboard, tPos * position);
 int ExecCommand(tGame *game, tCommand *command);
-int FlagRange(tGame *game, tFlag *flag, char task);
+int FlagRange(tGame *game, tCommand * command, char task);
 int WriteSaveFile(tGame *game, char *name);
-int FlagRange(tGame *game, tFlag *flag, char task, tCommand * command);
 void SaveLastState(tGame * game, tUndo * undo );
 
 

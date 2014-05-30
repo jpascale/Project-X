@@ -236,7 +236,6 @@ Sweep(tGame * game, tPos * pos, tCommand * command)
 		return SWEEP_MINE;
 	
 	SaveLastState(game, &command->undo);
-	
 	game->visualboard.board[i][j] = VISUAL_EMPTY;
 	game->sweeps_left--;
 	
@@ -560,7 +559,8 @@ static void CopyBoard(tBoard * board_from, tBoard * board_to)
 {
 	int i,j;
 	int dimi, dimj;
-	char ** from, to;
+	char ** from;
+	char ** to;
 
 	dimi = board_from->rows;
 	dimj = board_from->columns;
