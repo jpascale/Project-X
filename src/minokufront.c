@@ -619,6 +619,9 @@ int AskUndo(tGame * game, tUndo * undo)
 	if (wasundo)
 	{
 		Undo(game, undo);
+		game->undos--;
+		if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
+			game->moves--;
 		return TRUE;
 	}
 	else

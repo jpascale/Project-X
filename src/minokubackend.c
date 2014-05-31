@@ -248,13 +248,14 @@ int Sweep(tGame * game, tPos * pos, tCommand * command)
 	int i = pos->i;
 	int j = pos->j;
 	
+	SaveLastState(game, &command->undo);
+
 	if (game->hiddenboard.board[i][j] == HIDDEN_MINE)
 	{
 		game->visualboard.board[i][j] = HIDDEN_MINE;
 		return SWEEP_MINE;
 	}
-	//ToDo Subir arriba del if
-	SaveLastState(game, &command->undo);
+
 	game->visualboard.board[i][j] = VISUAL_EMPTY;
 	game->sweeps_left--;
 	
@@ -669,7 +670,7 @@ void CheckGameState(tGame * game)
 	if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
 	{
 		//DEBUG
-		printf("moves: %d, sweeps left: %d, mines left: %d\n",game->moves, game->sweeps_left, game->mines_left);
+		printf("moves: %d, sweeps left: %d, mines left: %d\n", game->moves, game->sweeps_left, game->mines_left);
 		if (game->moves < game->sweeps_left && \
 			game->moves < game->mines_left)
 			game->gamestate = GAMESTATE_LOSE; 
