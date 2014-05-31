@@ -14,7 +14,7 @@ main(void)
 	switch (option)
 	{
 		case 1: /* New Game */
-			if (setNewGame(&game)){
+			if (setNewGame(&game){
 			/* DEBUG 
 			printf("hidden F C : %d %d\n", game.hiddenboard.rows, game.hiddenboard.columns);
 			printf("visual F C : %d %d\n", game.visualboard.rows, game.visualboard.columns);
@@ -42,6 +42,7 @@ main(void)
 				getLoadName(loadname);
 
 			} while (!LoadFile(&game, loadname));
+
 			Play(&game);
 			break;		
 	}
@@ -98,8 +99,11 @@ setGametypeMenu(tGame * game)
 int setNewGame(tGame * game)
 {
 	setGametypeMenu(game);
-	getDim(game);
-	getLevel(game);
+	if (game->gametype != GAMETYPE_CAMPAIGN)
+	{
+		getDim(game);
+		getLevel(game);
+	}
 	setGameMinesNumber(game);
 
  	game->undos = get_undos(game->level);
@@ -606,4 +610,19 @@ int AskUndo(tGame * game, tUndo * undo)
 		return FALSE;
 	}
 
+}
+
+static void PrintearTodo(tGame * Game)
+{
+	printf("%s", KRED);
+	printf("Gametype: %d\n", game->gametype);
+	printf("Moves: %d\n", game->moves);
+	printf("Undos: %d\n", game->undos);
+	printf("Mines: %d\n", game->mines);
+	printf("Mines left: %d\n", game->mines_left);
+	printf("Sweeps left: %d\n", game->sweeps_left);
+	printf("Flags left: %d\n", game->flags_left);
+	printf("Gamestate: %d\n", game->gamestate);
+	printf("%s", KNRM);
+	return;
 }
