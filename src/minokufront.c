@@ -31,7 +31,7 @@ main(void)
 			Play(&game);
 			}
 			else
-				printf("No hay suficiente memoria para seguir jugando.");
+				printf("No hay suficiente memoria para seguir jugando.\n");
 			
 			break;
 
@@ -102,6 +102,10 @@ int setNewGame(tGame * game)
  	else
  		game->moves = get_moves(game->undos, game->mines);
  	
+ 	game->flags_left = game->mines;
+
+ 	game->gamestate = GAMESTATE_DEFAULT;
+
  	if (!CreateHiddenVisualBoard(game))
  		return FALSE;
 
@@ -183,37 +187,44 @@ void PrintBoard(tBoard * structboard)
 }
 
 void Play(tGame * game)
-{
+{	
 	int legal;
-	char won = FALSE; //ToDo: put in tGame
-	char end = FALSE;
 
 	tScan scan;
 	tCommand command;
-
+	command.command_ref = COMMAND_UNDO;
+	command.undo.lastboard.rows = game->visualboard.rows; 
+	command.undo.lastboard.columns = game->visualboard.columns;
+	CreateBoard(&command.undo.lastboard);
+	
 	do
 	{
 		PrintBoard(&game->visualboard); //ToDo: Print all
 
 		do
-		{
+		{	
 			if ((legal = InputCommand(&scan)))
-			{
+			{	
 				if((legal = LegalCommand(&scan, &command)))
-					if (scan.scanned_number == 1)
+					if ( command.command_ref < 5)
 						legal = LegalParams(&game->visualboard, &command, &scan);
 				
 			}
-
+		//printf("SCANNED NUMB: %d\n", scan.scanned_number);
 		if (!legal)
 			printf("Commando invalidOO\n");
 		} while (!legal);
 
 		//DEBUG
-		printf("DEBUG: Executing command.\n");
+		//printf("Antes de ejecutar (%s): %d\n", command.query.is_row? "Fila":"Columna", command.query.index);
 		ExecCommand(game, &command);
+		CheckGameState(game);
+	} while(game->gamestate == GAMESTATE_DEFAULT);
 
-	} while(!won && !end);
+	if (game->gamestate == GAMESTATE_WIN)
+		printf ("GANO\n");
+	else
+		printf("PERDIO\n");
 
 	return;
 }
@@ -225,22 +236,43 @@ void Play(tGame * game)
 */
 
 int InputCommand(tScan * scan)
-{	
-	int scanned_number;
-
-	// Scanf formatting
-	char fmt[13]; //ToDo: Constant
-	sprintf(fmt, "%%%ds %%%ds", MAX_COMMAND_LEN, MAX_PARAMS_LEN);
-
+{	//ToDo: tidy
+	int i, j, k;
+	int found_space = FALSE;
+	int endfor = FALSE;
+	char * rinput; //Result input
+	char input[MAX_COMMAND_LEN + MAX_PARAMS_LEN + 2];
+	
 	printf("Introducir un comando:\n");
 
-	scanned_number = scanf(fmt, scan->command, scan->params);
-	DELBFF();
-
-	if (!scanned_number)
+	rinput = fgets(input, MAX_COMMAND_LEN + MAX_PARAMS_LEN + 2, stdin); //+2 0 and blank
+	puts(input); //DEBUG
+	if (rinput == NULL)
 		return FALSE;
 
-	scan->scanned_number = scanned_number;
+	// Exit if no scan
+	if (input[0] == '\n')
+		return FALSE;
+	printf("Leggar a voooos\n");
+	for (i = 0, j = 0, k = 0; input[i] && !endfor; i++)
+	{
+		if (input[i] == ' ')
+		{	
+			if (!found_space && input[i+1] != '\n')
+				found_space = TRUE;
+			else
+				endfor = TRUE;
+		}
+
+		else if (!found_space)
+			scan->command[j++] = input[i];
+		else
+			scan->params[k++] = input[i];
+	}
+
+	scan->command[j] = '\0';
+	scan->params[k] = '\0';
+	puts(scan->command); puts(scan->params);
 
 	return TRUE;
 }
@@ -255,7 +287,7 @@ int LegalCommand(tScan * scan, tCommand * command)
 {
 	//ToDo: Reduce mem access in for
 	/* Hardcoded commands respecting the COMMAND_ defines order */
-	static char * commandlist[] = {"s", "flag", "unflag", "query", "save", "quit", "undo"};
+	static char * commandlist[] = {"s", "flag", "unflag", "query", "save", "quit\n", "undo\n"};
 	
 	char found = FALSE;
 	int commandindex;
@@ -281,17 +313,18 @@ int LegalCommand(tScan * scan, tCommand * command)
 
 int
 LegalParams(tBoard * visualboard, tCommand * structcommand, tScan * scan)
-{	
-	printf("ENTRE AL SWITCH YY FLICK\n");
+{	printf("LEGAL PARAMS\n");
 	switch(structcommand->command_ref)
 	{
 		case COMMAND_SWEEP:
-		printf("ENTRE AL SWITCH YY FLICK\n");
+			//printf("EN el switch: %s\n", scan->params);
 			return LegalSweep(visualboard, structcommand, scan->params);
 		
 		case COMMAND_FLAG:
+			return LegalFlag(visualboard, structcommand, scan->params, DO_FLAG);
+
 		case COMMAND_UNFLAG:
-			return LegalFlag(visualboard, structcommand, scan->params);
+			return LegalFlag(visualboard, structcommand, scan->params, DO_UNFLAG);
 
 		case COMMAND_QUERY:	
 			return LegalQuery(visualboard, structcommand, scan->params);
@@ -306,20 +339,29 @@ LegalParams(tBoard * visualboard, tCommand * structcommand, tScan * scan)
 
 int
 LegalSweep(tBoard * visualboard, tCommand * structcommand, char * params)
-{
+{//todo: tidy
 	tPos aux;
+	char new_line;
+	char * closepos;
 	char legal = TRUE;
-	printf("ENTRE\n");
-	if (sscanf(params, "(%c,%d)", &aux.i, &aux.j) != 2)
+	char i_scan;
+	int i;
+	int auxnum;
+
+	if (sscanf(params, "(%c,%d)%c", &i_scan, &aux.j, &new_line) != 3)
 		return FALSE;
-	//DEBUG
-	printf("AFTER SCAN %d %d\n", aux.i, aux.j);
-
+	printf("Char: %c, Dentero: %d\n, Char: %c", i_scan, aux.j, new_line);
+	if (new_line != '\n')
+		return FALSE;
+	
 	//ToDo: Modularize
-	aux.i = get_row_pos_byref(aux.i);
+	i_scan = get_row_pos_byref(i_scan);
+	aux.i = (int)i_scan;
 	aux.j--;
-
-	if (isupper('A' + aux.i)) // If Column is not a letter return false
+	//DEBUG
+	//printf("AFTER SCAN %d %d\n", aux.i, aux.j);
+	//printf("%s\n", LegalPos(visualboard, &aux)?"Si":"No" );
+	if (!isupper('A' + aux.i)) // If Column is not a letter return false
 		legal = FALSE;
 
 	else if (!LegalPos(visualboard, &aux)) // If Position is not on the board return false
@@ -339,19 +381,33 @@ LegalSweep(tBoard * visualboard, tCommand * structcommand, char * params)
 }			
 
 int
-LegalFlag(tBoard * visualboard, tCommand * structcommand, char * params) /*No valida si ya esta flaggeado*/
+LegalFlag(tBoard * visualboard, tCommand * structcommand, char * params, char task) /*No valida si ya esta flaggeado*/
 {	//Tidy
 	//int fposi, fposj, lposi, lposj;
-
-	tPos f_aux; 
-	tPos l_aux;
+	int i;
 	char legal = TRUE;
+	char legal_range = FALSE;
+	tPos f_aux;
+	tPos l_aux;
+	char f_scan;
+	char l_scan;
+	
+
+	char * closepos;
+
+		if ((closepos = strchr(params,')')) == NULL)
+			return FALSE;
+		else
+			if (*(closepos +1) != '\n')
+				return FALSE;
 
 	// Checks if range is legal
-	if (sscanf(params, "(%c,%d:%c,%d)", &f_aux.i, &f_aux.j, &l_aux.i, &l_aux.j) == 4)
+	if (sscanf(params, "(%c,%d:%c,%d", &f_scan, &f_aux.j, &l_scan, &l_aux.j) == 4)
 	{
-		f_aux.i = get_row_pos_byref(f_aux.i);
-		l_aux.i = get_row_pos_byref(l_aux.i);
+		f_scan = get_row_pos_byref(f_scan);
+		f_aux.i = f_scan;
+		l_scan = get_row_pos_byref(l_scan);
+		l_aux.i = l_scan;
 		f_aux.j--;
 		l_aux.j--;
 
@@ -380,7 +436,28 @@ LegalFlag(tBoard * visualboard, tCommand * structcommand, char * params) /*No va
 		else
 			legal = FALSE;
 		
-		if (legal)
+		if(structcommand->flag.is_row)
+		{
+			for(i=f_aux.j; i<l_aux.j; i++)
+			{	
+				if ((task == DO_FLAG) && (visualboard->board[f_aux.i][i] == VISUAL_FLAGGED))
+					legal_range = TRUE;
+				else if( (task == DO_UNFLAG) && (visualboard->board[f_aux.i][i] == VISUAL_FLAGGED))
+					legal_range = TRUE;
+			}	
+		}
+		else
+		{
+			for(i=f_aux.i; i<l_aux.i; i++)
+			{	
+				if ((task == DO_FLAG) && (visualboard->board[i][f_aux.j] == VISUAL_FLAGGED))
+					legal_range = TRUE;
+				else if( (task == DO_UNFLAG) && (visualboard->board[i][f_aux.j] == VISUAL_FLAGGED))
+					legal_range = TRUE;
+			}		
+		}	
+		
+		if (legal && legal_range)
 		{
 			structcommand->flag.is_range = TRUE;
 			structcommand->flag.first_pos.i = f_aux.i;
@@ -390,9 +467,10 @@ LegalFlag(tBoard * visualboard, tCommand * structcommand, char * params) /*No va
 		}
 
 	}
-	else if (sscanf(params, "(%c,%d)", &f_aux.i, &f_aux.j) == 2)
+	else if (sscanf(params, "(%c,%d)", &f_scan, &f_aux.j) == 2)
 	{
-		f_aux.i = get_row_pos_byref(f_aux.i);
+		f_scan = get_row_pos_byref(f_scan);
+		f_aux.i = f_scan;
 		f_aux.j--;
 		
 		if (!isupper('A' + f_aux.i))
@@ -400,6 +478,12 @@ LegalFlag(tBoard * visualboard, tCommand * structcommand, char * params) /*No va
 
 		else if(!LegalPos(visualboard, &f_aux))
 			legal = FALSE;
+		
+		else if ( (task == DO_FLAG) && (visualboard->board[f_aux.i][f_aux.j] != VISUAL_UNFLAGGED))
+			legal = FALSE;
+		else if( (task == DO_UNFLAG) && (visualboard->board[f_aux.i][f_aux.j] != VISUAL_FLAGGED))
+			legal = FALSE;
+		
 		if (legal)
 		{	
 			structcommand->flag.is_range 	= FALSE;
@@ -412,34 +496,88 @@ LegalFlag(tBoard * visualboard, tCommand * structcommand, char * params) /*No va
 
 int
 LegalQuery(tBoard * visualboard, tCommand * structcommand, char * params)
-{	
-	int index;
+{	//ToDo: tidy
+	char index_row;
+	int index_column;
+	char new_line;
 	char legal = TRUE;
-	if(scanf(params, "%d", &index) == 1)
+
+	
+	if(sscanf(params, "%d%c", &index_column, &new_line) == 1)
 	{	
-		index--;
-		if (index < 0 || index > visualboard->columns)
+		index_column--;
+		if (index_column < 0 || index_column > visualboard->columns)
 			legal = FALSE;
 		if (legal)
 		{
 			structcommand->query.is_row = FALSE;
-			structcommand->query.index = index;
+			structcommand->query.index = index_column;
 		}	
 	}
-	else if (scanf(params, "%c", &index) == 1 )
+	else if (sscanf(params, "%c", &index_row) == 1 )
 	{	
-		index = get_row_pos_byref(index);
-		if (!isupper('A' + index))
+		index_row = get_row_pos_byref(index_row);
+		if (!isupper('A' + index_row))
 			legal = FALSE;
-		else if (index < 0 || index > visualboard->rows)
+		else if (index_row < 0 || index_row > visualboard->rows)
 			legal = FALSE;
 		if(legal)
 		{	
 			structcommand->query.is_row = TRUE;
-			structcommand->query.index = index;
+			structcommand->query.index = index_row;
 		}
 	}
 	
 	return legal;	
+
+}
+
+void PrintQuery (tQuery * query)
+{	
+	int i;
+	int dim = query->results.dim;
+
+	for (i = 0; i < dim; i++)
+		printf("%d%s", query->results.results[i], (i != (dim-1))? " - ": "");	
+	putchar('\n');
+
+	return;
+}
+
+int AskUndo(tGame * game)
+{
+	char fmt[6]; //ToDo: Constant
+	char input[MAX_COMMAND_LEN];
+
+	int quit;
+	int undo;
+
+	Printboard(game->visualboard);
+	sprintf(fmt, "%%%ds",MAX_COMMAND_LEN);
+
+	printf("Perdiste! ¿Hacer Undo? (Ingresar undo o quit\n");
+	
+	do
+	{
+		int valid;
+		scanf(fmt, input);
+
+		valid = (!strcmp(input, "quit") || (undo = !strcmp(input, "undo")));
+
+		if (!valid)
+			printf ("Ingresar quit o undo.\n");
+
+	} while(!valid);
+
+	if (undo)
+	{
+		//ToDo: Call Undo
+		return TRUE;
+	}
+	else
+	{
+		game->gamestate = GAMESTATE_LOSE;
+		return FALSE;
+	}
 
 }

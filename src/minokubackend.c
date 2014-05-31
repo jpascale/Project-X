@@ -1,6 +1,7 @@
 #include "minokubackend.h"
 
 static void freeBoard(char ** Board, int rows);
+static void CopyBoard(tBoard * board_from, tBoard * board_to);
 
 void setGameMinesNumber(tGame * game)
 {
@@ -141,7 +142,8 @@ int CreateVisualBoard(tBoard * structboard)
 }
 
 int Query(tBoard * hiddenboard, tArray * pquery, int element, char isrow)
-{ //ToDo: Use realloc directly
+{
+   //ToDo: Free array after use
   //ToDo: Modularize??
   //ToDo: Think what is going to return this
 
@@ -171,7 +173,7 @@ int Query(tBoard * hiddenboard, tArray * pquery, int element, char isrow)
 						{
 							if (j != 0)
 								free(results);
-							return -1;
+							return MALLOC_ERR;
 						}
 
 						results = aux;
@@ -197,6 +199,7 @@ int Query(tBoard * hiddenboard, tArray * pquery, int element, char isrow)
 		results = realloc(results, (j + (state == FOUND_MINE)) * sizeof(*results));
 	pquery->dim = j + (state == FOUND_MINE);
 	pquery->results = results;
+	
 	return (results != NULL);
 }
 
@@ -207,36 +210,38 @@ int Query(tBoard * hiddenboard, tArray * pquery, int element, char isrow)
 **	Returns TRUE if visualboard is modified.
 */
 
-int DoFlagUnflag(tGame * game, tPos * pos, char task)
+int DoFlagUnflag(tGame * game, tCommand * command, char task)
 {
-	int i = pos->i;
-	int j = pos->j;
-
-	// Not possible to flag/unflag sweeped pos
-	if (game->visualboard.board[i][j] == VISUAL_EMPTY)
-		return FALSE;
+	int i = command->flag.first_pos.i;
+	int j = command->flag.first_pos.j;
+	
+	if(!command->flag.is_range)
+		SaveLastState(game, &command->undo);
 
 	game->visualboard.board[i][j] = (task == DO_FLAG? VISUAL_FLAGGED:VISUAL_UNFLAGGED);
 
 	if (game->hiddenboard.board[i][j] == HIDDEN_MINE)
 		(task == DO_FLAG? game->mines_left-- : game->mines_left++);
-
+	
 	return TRUE;
 }
 
 int
-Sweep(tGame * game, tPos * pos)
+Sweep(tGame * game, tPos * pos, tCommand * command)
 {
 	int i = pos->i;
 	int j = pos->j;
 	
 	if (game->hiddenboard.board[i][j] == HIDDEN_MINE)
+	{
+		game->visualboard.board[i][j] = HIDDEN_MINE;
 		return SWEEP_MINE;
-	
-	game->visualboard.board[i][j] = VISUAL_EMPTY;
-	
-	game->sweeps_left--;
+	}
 
+	SaveLastState(game, &command->undo);
+	game->visualboard.board[i][j] = VISUAL_EMPTY;
+	game->sweeps_left--;
+	
 	return TRUE;
 }
 
@@ -252,35 +257,41 @@ LegalPos(tBoard * structboard, tPos * pos)
 	return TRUE;
 }
 
-int ExecCommand(tGame *game, tCommand *command)
+int ExecCommand(tGame *game, tCommand * command)
 {
-	//ToDo: tidy.
+	//ToDo: tidy. front.
+
 	int i = command->command_ref; 
 	int res;
 
 	switch (i)
 	{
 		case COMMAND_SWEEP:
-			printf("%d %d\n", command->sweep.i, command->sweep.j);
-			res = Sweep(game, &command->sweep);
+			printf("En ejecutar: %d %d\n", command->sweep.i, command->sweep.j);
+			res = Sweep(game, &command->sweep, command);
 			break;
 		
 		case COMMAND_FLAG:
 			if (!(command->flag.is_range))
-				res=DoFlagUnflag(game, &(command->flag.first_pos), DO_FLAG);
+				res=DoFlagUnflag(game, command, DO_FLAG);
 			else
-				res=FlagRange(game, &(command->flag), DO_FLAG);
+				res=FlagRange(game, command, DO_FLAG);
 			break;
 		
 		case COMMAND_UNFLAG:
 			if (!(command->flag.is_range))
-				res = DoFlagUnflag(game, &(command->flag.first_pos), DO_UNFLAG);
+				res = DoFlagUnflag(game, command, DO_UNFLAG);
 			else
-				res=FlagRange(game, &(command->flag), DO_UNFLAG);
+				res=FlagRange(game, command, DO_UNFLAG);
 			break;
 		
 		case COMMAND_QUERY:
-			res=Query(&(game->hiddenboard), &(command->query.results), command->query.index, command->query.is_row);
+			res = Query(&(game->hiddenboard), &(command->query.results), command->query.index, command->query.is_row);
+			if (res)
+				PrintQuery(&command->query);
+			else
+				printf("0\n");
+			//Free vec
 			break;
 
 		case COMMAND_SAVE:
@@ -299,25 +310,354 @@ int ExecCommand(tGame *game, tCommand *command)
 	}
 	if (i == COMMAND_SWEEP || i == COMMAND_FLAG || i == COMMAND_UNFLAG)
 		game->moves--;
+
+	if (res = SWEEP_MINE && i == COMMAND_SWEEP && game->undos)
+		if (game->moves > 0)
+			AskUndo(game);
+		else
+			game->gamestate = GAMESTATE_LOSE;
+
 	return res;
 }
 
-int FlagRange(tGame *game, tFlag *flag, char task)
+int FlagRange(tGame *game, tCommand * command, char task)
 {
+	//ToDo: Tidy 
 	int k;
-	int res=FALSE;
-	char isrow = flag->is_row;
-	tPos auxpos = flag->first_pos;
-	tPos finalpos = flag->last_pos;
+	int res = FALSE;
+	char isrow = command->flag.is_row;
+	tPos auxpos = command->flag.first_pos;
+	tPos finalpos = command->flag.last_pos;
+	SaveLastState(game, &command->undo); //Cambiar (Recorrer primero y ver si cambias algo, despues guardar, despues cambiar)
+	
 	if (isrow)
-	{
+	{ //ToDo: Improve
 		for(k = auxpos.j; auxpos.j<=finalpos.j; auxpos.j = ++k)
-			res = DoFlagUnflag(game, &auxpos, task) || res;
+		{
+			command->flag.first_pos.j = k;
+			res = DoFlagUnflag(game, command, task) || res;
+		}
 	}
 	else
 	{
 		for(k = auxpos.i; auxpos.i<=finalpos.i; auxpos.i = ++k)
-			res = DoFlagUnflag(game, &auxpos, task) || res;
+		{
+			command->flag.first_pos.i = k;
+			res = DoFlagUnflag(game, command, task) || res;
+		}
 	}
+	
 	return res;
+}
+
+int WriteSaveFile(tGame *game, char *name)
+{
+	int i;
+	FILE * savefile;
+	int data[6];
+	char ** hiddenboard = game->hiddenboard.board;
+	char ** visualboard = game->visualboard.board;
+	data[SAVEFILE_LEVEL] = game->campaign_level;
+	data[SAVEFILE_ROWS] = game->hiddenboard.rows;
+	data[SAVEFILE_COLUMNS] = game->hiddenboard.columns;
+	data[SAVEFILE_UNDOS] = game->undos;
+	data[SAVEFILE_MOVES] = game->gametype? game->moves : UNLIMITED_MOVES;
+	data[SAVEFILE_ISCAMPAIGN] = game->gametype == GAMETYPE_CAMPAIGN ? 1 : 0;
+
+	if ((savefile = fopen(name, "wb")) == NULL)
+		return FALSE;
+
+	if ( fwrite(data, sizeof(*data), sizeof(data)/sizeof(*data), savefile) !=  sizeof(data)/sizeof(*data) )
+	{
+		fclose(savefile);
+		return FALSE;
+	}
+	// ToDo: Use aux function or macro
+
+	for (i = 0; i < data[SAVEFILE_ROWS]; i++)
+		if (fwrite(hiddenboard[i], sizeof(char), data[SAVEFILE_COLUMNS], savefile) != data[SAVEFILE_COLUMNS])
+		{
+			fclose(savefile);
+			return FALSE;
+		}
+
+	for (i = 0; i < data[SAVEFILE_ROWS]; i++)
+		if (fwrite(visualboard[i], sizeof(char), data[SAVEFILE_COLUMNS], savefile) != data[SAVEFILE_COLUMNS])
+		{
+			fclose(savefile);
+			return FALSE;
+		}
+	
+	if (data[SAVEFILE_ISCAMPAIGN])
+		if( fputs(game->campaign_name, savefile) == EOF)
+		{
+			fclose(savefile);
+			return FALSE;
+		}
+	
+	fclose(savefile);
+	return TRUE;
+
+}
+
+int LoadFile(tGame *game, char *name)
+{
+	//ToDo: Modularize
+	//ToDo: Finish
+	FILE * loadfile;
+	int auxrows, auxcols;
+	int num;
+	int mines=0;
+	char elem;
+	char ** board;
+	int i;
+	int campaign_len;
+	int sweeps_left;
+	int flags_left;
+	int mines_left;
+	char campaign_name[MAX_FILENAME_LEN];
+	
+	if ((loadfile = fopen(name, "rb")) == NULL)
+		return FALSE;
+
+	if (fread(&num, sizeof(num), 1, loadfile) != 1 )
+	{
+		fclose(loadfile);
+		return FALSE;
+	}
+
+	game->campaign_level = num;
+
+	if (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < MINIMUM_ROWS))
+	{
+
+		fclose(loadfile);
+		return FALSE;
+	}
+
+	game->hiddenboard.rows = game->visualboard.rows = auxrows = num;
+
+
+	if (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < MINIMUM_COLUMNS))
+	{
+
+		fclose(loadfile);
+		return FALSE;
+	}
+	
+	game->hiddenboard.columns = game->visualboard.columns = auxcols = num;
+
+
+	if (fread(&num, sizeof(num), 1, loadfile) > get_undos(game->level))
+	{
+
+		fclose(loadfile);
+		return FALSE;
+	}
+	game->undos = num;
+
+
+	if (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < 0))
+	{
+
+		fclose(loadfile);
+		return FALSE;
+	}
+
+	game->moves = num;
+	game->gametype = game->moves? GAMETYPE_INDIVIDUAL_LIMIT : GAMETYPE_INDIVIDUAL_NOLIMIT;
+
+
+	if (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < 0 || num > 1 || (num == 1 && !game->moves)))
+	{
+
+		fclose(loadfile);
+		return FALSE;
+	}
+	
+	game->gametype = num? GAMETYPE_CAMPAIGN : game->gametype;
+
+
+
+	if (CreateBoard(&game->hiddenboard)==FALSE)
+	{
+
+		fclose(loadfile);
+		return MALLOC_ERR;
+	}
+	board = game->hiddenboard.board;
+
+	for (i = 0; i < auxcols * auxrows; i++)
+	{
+		elem = fgetc(loadfile);
+		if (elem != HIDDEN_MINE && elem != HIDDEN_EMPTY)
+		{
+	
+			freeBoard(game->hiddenboard.board, auxrows);
+			fclose(loadfile);
+			return FALSE;
+		}
+		if (elem == HIDDEN_MINE)
+			mines++;
+		board[i/auxcols][i%auxcols] = elem;
+	}
+
+	game->mines = mines_left = flags_left = mines;
+	sweeps_left = auxcols * auxrows - mines;
+
+	if (CreateBoard(&game->visualboard)==FALSE)
+	{
+
+		fclose(loadfile);
+		return MALLOC_ERR;
+	}
+	board = game->visualboard.board;
+
+	for (i = 0; i < auxcols * auxrows; i++)
+	{
+		elem = fgetc(loadfile);
+		if ((elem != VISUAL_UNFLAGGED && elem != VISUAL_EMPTY && elem != VISUAL_UNFLAGGED) || (elem == VISUAL_EMPTY && game->hiddenboard.board[i/auxcols][i%auxcols] == HIDDEN_MINE))
+		{
+
+			freeBoard(game->hiddenboard.board, auxrows);
+			freeBoard(game->visualboard.board, auxrows);
+			fclose(loadfile);
+			return FALSE;
+		}
+		board[i/auxcols][i%auxcols] = elem;
+		flags_left -= (elem == VISUAL_FLAGGED);
+		sweeps_left -= (elem == VISUAL_EMPTY);
+		mines_left -= (elem == VISUAL_FLAGGED && game->hiddenboard.board[i/auxcols][i%auxcols] == HIDDEN_MINE);
+	}
+	game->flags_left = flags_left;
+	game->sweeps_left = sweeps_left;
+	game->mines_left = mines_left;
+
+	if (game->gametype == GAMETYPE_CAMPAIGN)
+	{
+		if (fgets(campaign_name, MAX_FILENAME_LEN, loadfile) == NULL || (campaign_len = strlen(campaign_name)) < FORMAT_LENGTH + 1)
+		{
+				freeBoard(game->hiddenboard.board, auxrows);
+				freeBoard(game->visualboard.board, auxrows);
+				fclose(loadfile);
+				return FALSE;
+		}
+		
+		if (strstr(&(campaign_name[campaign_len-FORMAT_LENGTH]), FILE_FORMAT) == NULL)
+		{
+				freeBoard(game->hiddenboard.board, auxrows);
+				freeBoard(game->visualboard.board, auxrows);
+				fclose(loadfile);
+				return FALSE;
+		}
+		strcpy(game->campaign_name, campaign_name);
+	}
+	if (fgetc(loadfile) != EOF)
+	{
+		freeBoard(game->hiddenboard.board, auxrows);
+		freeBoard(game->visualboard.board, auxrows);
+		fclose(loadfile);
+		return FALSE;
+	}
+
+	game->gamestate=GAMESTATE_DEFAULT;
+
+	fclose(loadfile);
+	return TRUE;
+
+}
+
+
+void SaveLastState(tGame * game, tUndo * undo )
+{
+	CopyBoard(&game->visualboard, &undo->lastboard);
+	undo->mines_left = game->mines_left;
+	undo->sweeps_left = game->sweeps_left;
+	//undo->flags_left = game->flags_left; 
+}
+
+static void CopyBoard(tBoard * board_from, tBoard * board_to)
+{
+	int i,j;
+	int dimi, dimj;
+	char ** from;
+	char ** to;
+
+	dimi = board_from->rows;
+	dimj = board_from->columns;
+
+	from = board_from->board;
+	to = board_to->board;
+	
+
+	for (i = 0; i < dimi; i++)
+		for (j = 0; j < dimj; j++)
+			to[i][j] = from[i][j];
+
+}
+
+void CheckGameState(tGame * game)
+{
+	// Campaign or limited
+	if (game->gametype =! GAMETYPE_INDIVIDUAL_NOLIMIT)
+	{
+		/* This ends the game before end of moves, as the
+			task says, but if the player flags more than one
+			mine using FlagRange, it still has the oportunity
+			to win and that is not taken into account */
+		if (game->moves < game->sweeps_left && \
+			game->moves < game->mines_left)
+			game->gamestate = GAMESTATE_LOSE; 
+	}
+
+	if (!game->mines_left || !game->sweeps_left)
+		game->gamestate = GAMESTATE_WIN;
+
+
+	return;
+}
+
+int LoadCampaignLevel(tGame * game)
+{
+	FILE * campaign_file;
+	int i;
+	int level = game->campaign_level;
+	char line[MAX_CAMPAIGN_LINE_LENGTH];
+	if ((campaign_file = fopen(game->campaign_name, "rt")) == NULL)
+		return FALSE;
+	for (i = 0; i < level; i++)
+		fgets(line, MAX_CAMPAIGN_LINE_LENGTH, campaign_file);
+	if (sscanf(line, "%d\t%dx%d", &game->level, &game->hiddenboard.rows, &game->hiddenboard.columns) != 3)
+	{
+		fclose(campaign_file);
+		return FALSE;
+	}
+	game->visualboard.rows = game->hiddenboard.rows;
+	game->visualboard.columns = game->hiddenboard.columns;
+	fclose(campaign_file);
+	return TRUE;
+
+}
+
+int ValidateCampaignFile(char * filename)
+{
+	FILE * campaign_file;
+	int level, rows, columns;
+	char line[MAX_CAMPAIGN_LINE_LENGTH];
+	char error = FALSE;
+	if ((campaign_file = fopen(filename, "rt")) == NULL)
+		return FALSE;
+
+	while (fgets(line, MAX_CAMPAIGN_LINE_LENGTH, campaign_file) != NULL && !error)
+	{
+		if (sscanf(line, "%d\t%dx%d", &level, &rows, &columns) != 3)
+			error = TRUE;
+		else
+		{
+			if (rows < MINIMUM_ROWS || columns < MINIMUM_ROWS || level < EASY || level > NIGHTMARE)
+				error = TRUE;
+		}
+	}
+	fclose(campaign_file);
+	return !error;
 }

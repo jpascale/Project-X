@@ -39,6 +39,10 @@
 #define HARD 		3
 #define NIGHTMARE	4
 
+
+//Campaign
+#define INDIVIDUAL_GAME 0
+
 // Query States
 #define NOT_FOUND_MINE 	0
 #define FOUND_MINE 		1
@@ -60,6 +64,12 @@
 #define GAMETYPE_CAMPAIGN 			2
 
 #define UNLIMITED_MOVES 0
+
+//Minimum and maximum dim
+#define MINIMUM_ROWS 5
+#define MINIMUM_COLUMNS 5
+#define MAXIMUM_ROWS 19
+#define MAXIMUM_COLUMNS 19
 
 // Level mines percentage
 #define PERCENT_EASY 		0.2
@@ -85,8 +95,25 @@
 #define DO_FLAG		0
 #define DO_UNFLAG 	1
 
-//Block
+// Malloc constants
 #define BLOCK 5
+#define MALLOC_ERR -1
+
+//Savefile constants
+#define SAVEFILE_LEVEL 0
+#define SAVEFILE_ROWS 1
+#define SAVEFILE_COLUMNS 2
+#define SAVEFILE_UNDOS 3
+#define SAVEFILE_MOVES 4
+#define SAVEFILE_ISCAMPAIGN 5
+
+#define GAMESTATE_DEFAULT 	0
+#define GAMESTATE_WIN 		1
+#define GAMESTATE_LOSE 		2
+
+//Campaign Format
+#define FILE_FORMAT ".txt"
+#define FORMAT_LENGTH 4
 
 // map undos quantity
 #define get_undos(level) (((level)==NIGHTMARE)?1: \
@@ -97,7 +124,7 @@
 #define get_moves(mines, undos) ((mines) + (undos))
 
 // Maps letter reference to board row number
-#define get_row_pos_byref(row) (toupper(row) - 'A')
+#define get_row_pos_byref(row) ( (row) - 'A')
 
 // Number to upper letter
 #define toupperalpha(x) ((x)+'A')
@@ -108,6 +135,15 @@
 
 // Delete buffer
 #define DELBFF() while(getchar() != '\n')
+
+
+#define CLEAR_SCREEN() printf("\e[1;1H\e[2J")
+
+//Campaign Format
+#define FILE_FORMAT ".txt"
+#define FORMAT_LENGTH 4
+#define MAX_CAMPAIGN_LINE_LENGTH 8
+
 
 /*
 **		Structs
@@ -131,6 +167,10 @@ typedef struct
 	int mines;
 	int mines_left; //number of mines not flagged
 	int sweeps_left; //number of positions without sweep
+	int flags_left;
+	char campaign_name[MAX_FILENAME_LEN];
+	int campaign_level;
+	int gamestate;
 
 } tGame;
 
@@ -143,9 +183,9 @@ typedef struct
 
 typedef struct
 {
-	tPos lastpos;
-	int last_play;
-	char last_was_undo;
+	tBoard lastboard;
+	int mines_left; 
+	int sweeps_left;
 
 } tUndo;
 
@@ -158,7 +198,6 @@ typedef struct
 
 typedef struct
 {
-	int scanned_number;
 	char command[MAX_COMMAND_LEN];
 	char params[MAX_PARAMS_LEN];
 
@@ -176,7 +215,7 @@ typedef struct
 typedef struct 
 {
 	tArray results; //ToDo: Change
-	char index;
+	int index;
 	char is_row;
 
 } tQuery;
@@ -187,6 +226,7 @@ typedef struct
 	tPos sweep;
 	tFlag flag;
 	tQuery query;
+	tUndo undo;
 	char save_filename[MAX_FILENAME_LEN];
 
 } tCommand;
@@ -208,9 +248,10 @@ int InputCommand(tScan * scan);
 int CreateHiddenVisualBoard(tGame * game); //ToDo: Change name
 int LegalParams(tBoard * visualboard, tCommand * command, tScan * scan);
 int LegalSweep(tBoard * visualboard, tCommand * command, char * params);
-int LegalFlag(tBoard * visualboard, tCommand * command, char * params);
+int LegalFlag(tBoard * visualboard, tCommand * command, char * params, char task);
 int LegalQuery(tBoard * visualboard, tCommand * structcommand, char * params);
-
+void PrintQuery (tQuery * query);
+int AskUndo(tGame * game);
 
 
 /*
@@ -223,10 +264,17 @@ void InitBoard(tBoard * structboard, char initchar);
 int CreateVisualBoard(tBoard * structboard);
 int CreateHiddenBoard(tBoard * structboard, int mines);
 int Query(tBoard * structboard, tArray * pquery, int element, char isrow);
-int DoFlagUnflag(tGame * game, tPos * pos, char task);
-int Sweep(tGame * game, tPos * position);
+int DoFlagUnflag(tGame * game, tCommand * command, char task);
+int Sweep(tGame * game, tPos * position, tCommand * command);
 int LegalPos(tBoard * structboard, tPos * position);
 int ExecCommand(tGame *game, tCommand *command);
-int FlagRange(tGame *game, tFlag *flag, char task);
+int FlagRange(tGame *game, tCommand * command, char task);
+int WriteSaveFile(tGame *game, char *name);
+void SaveLastState(tGame * game, tUndo * undo);
+void CheckGameState(tGame * game);
+int ValidateCampaignFile(char * filename);
+int LoadCampaignLevel(tGame * game);
+
+
 
 #endif
