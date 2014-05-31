@@ -243,17 +243,17 @@ int InputCommand(tScan * scan)
 	char * rinput; //Result input
 	char input[MAX_COMMAND_LEN + MAX_PARAMS_LEN + 2];
 	
-	printf("Introducir un comando:\n");
+	printf("Introducir un comando: ");
 
 	rinput = fgets(input, MAX_COMMAND_LEN + MAX_PARAMS_LEN + 2, stdin); //+2 0 and blank
-	puts(input); //DEBUG
+	
 	if (rinput == NULL)
 		return FALSE;
 
 	// Exit if no scan
 	if (input[0] == '\n')
 		return FALSE;
-	printf("Leggar a voooos\n");
+
 	for (i = 0, j = 0, k = 0; input[i] && !endfor; i++)
 	{
 		if (input[i] == ' ')
@@ -272,7 +272,8 @@ int InputCommand(tScan * scan)
 
 	scan->command[j] = '\0';
 	scan->params[k] = '\0';
-	puts(scan->command); puts(scan->params);
+	//DEBUG
+	//puts(scan->command); puts(scan->params);
 
 	return TRUE;
 }
@@ -313,7 +314,7 @@ int LegalCommand(tScan * scan, tCommand * command)
 
 int
 LegalParams(tBoard * visualboard, tCommand * structcommand, tScan * scan)
-{	printf("LEGAL PARAMS\n");
+{	
 	switch(structcommand->command_ref)
 	{
 		case COMMAND_SWEEP:
@@ -350,7 +351,7 @@ LegalSweep(tBoard * visualboard, tCommand * structcommand, char * params)
 
 	if (sscanf(params, "(%c,%d)%c", &i_scan, &aux.j, &new_line) != 3)
 		return FALSE;
-	printf("Char: %c, Dentero: %d\n, Char: %c", i_scan, aux.j, new_line);
+	printf("Char: %c, Dentero: %d, Char: %c\n", i_scan, aux.j, new_line);
 	if (new_line != '\n')
 		return FALSE;
 	
@@ -358,9 +359,7 @@ LegalSweep(tBoard * visualboard, tCommand * structcommand, char * params)
 	i_scan = get_row_pos_byref(i_scan);
 	aux.i = (int)i_scan;
 	aux.j--;
-	//DEBUG
-	//printf("AFTER SCAN %d %d\n", aux.i, aux.j);
-	//printf("%s\n", LegalPos(visualboard, &aux)?"Si":"No" );
+	printf("I: %d, J: %d\n", aux.i, aux.j );
 	if (!isupper('A' + aux.i)) // If Column is not a letter return false
 		legal = FALSE;
 
@@ -391,19 +390,13 @@ LegalFlag(tBoard * visualboard, tCommand * structcommand, char * params, char ta
 	tPos l_aux;
 	char f_scan;
 	char l_scan;
-	
-
-	char * closepos;
-
-		if ((closepos = strchr(params,')')) == NULL)
-			return FALSE;
-		else
-			if (*(closepos +1) != '\n')
-				return FALSE;
+	char new_line;
 
 	// Checks if range is legal
-	if (sscanf(params, "(%c,%d:%c,%d", &f_scan, &f_aux.j, &l_scan, &l_aux.j) == 4)
-	{
+	if (sscanf(params, "(%c,%d:%c,%d)%c", &f_scan, &f_aux.j, &l_scan, &l_aux.j, &new_line) == 5)
+	{	
+		if (new_line != '\n')
+			return FALSE;
 		f_scan = get_row_pos_byref(f_scan);
 		f_aux.i = f_scan;
 		l_scan = get_row_pos_byref(l_scan);
@@ -435,40 +428,47 @@ LegalFlag(tBoard * visualboard, tCommand * structcommand, char * params, char ta
 		}	
 		else
 			legal = FALSE;
-		
-		if(structcommand->flag.is_row)
+		printf("ISROW: %d\n", structcommand->flag.is_row);
+		printf("AUX.i: %d, AUX.j: %d\n", f_aux.j, l_aux.j);
+		printf("FilaI: %d, FilaF: %d\n", f_aux.i, l_aux.i);
+
+		if(legal && structcommand->flag.is_row)
 		{
-			for(i=f_aux.j; i<l_aux.j; i++)
+			for(i=f_aux.j; i<=l_aux.j && !legal_range; i++)
 			{	
-				if ((task == DO_FLAG) && (visualboard->board[f_aux.i][i] == VISUAL_FLAGGED))
+				if ((task == DO_FLAG) && (visualboard->board[f_aux.i][i] == VISUAL_UNFLAGGED))
 					legal_range = TRUE;
 				else if( (task == DO_UNFLAG) && (visualboard->board[f_aux.i][i] == VISUAL_FLAGGED))
 					legal_range = TRUE;
 			}	
 		}
-		else
+		else if (legal)
 		{
-			for(i=f_aux.i; i<l_aux.i; i++)
+			for(i=f_aux.i; i<=l_aux.i && !legal_range; i++)
 			{	
-				if ((task == DO_FLAG) && (visualboard->board[i][f_aux.j] == VISUAL_FLAGGED))
+				if ((task == DO_FLAG) && (visualboard->board[i][f_aux.j] == VISUAL_UNFLAGGED))
 					legal_range = TRUE;
 				else if( (task == DO_UNFLAG) && (visualboard->board[i][f_aux.j] == VISUAL_FLAGGED))
 					legal_range = TRUE;
 			}		
 		}	
 		
-		if (legal && legal_range)
-		{
+		if (!legal_range)
+			legal = FALSE;
+		if (legal)
+		{	
 			structcommand->flag.is_range = TRUE;
 			structcommand->flag.first_pos.i = f_aux.i;
 			structcommand->flag.first_pos.j = f_aux.j;
 			structcommand->flag.last_pos.i 	= l_aux.i;
-			structcommand->flag.last_pos.j 	= l_aux.i;
+			structcommand->flag.last_pos.j 	= l_aux.j;
 		}
 
 	}
-	else if (sscanf(params, "(%c,%d)", &f_scan, &f_aux.j) == 2)
+	else if (sscanf(params, "(%c,%d)%c", &f_scan, &f_aux.j, &new_line) == 3)
 	{
+		if (new_line != '\n')
+			return FALSE;	
 		f_scan = get_row_pos_byref(f_scan);
 		f_aux.i = f_scan;
 		f_aux.j--;
@@ -490,7 +490,11 @@ LegalFlag(tBoard * visualboard, tCommand * structcommand, char * params, char ta
 			structcommand->flag.first_pos.i = f_aux.i;
 			structcommand->flag.first_pos.j = f_aux.j;
 		}			
-	} 	
+	}
+	else
+		legal = FALSE; 	
+	//DEBUG
+	printf("LEGAL(RETURN): %d\n",legal );
 	return legal;
 }
 
@@ -503,10 +507,12 @@ LegalQuery(tBoard * visualboard, tCommand * structcommand, char * params)
 	char legal = TRUE;
 
 	
-	if(sscanf(params, "%d%c", &index_column, &new_line) == 1)
+	if(sscanf(params, "%d%c", &index_column, &new_line) == 2)
 	{	
 		index_column--;
-		if (index_column < 0 || index_column > visualboard->columns)
+		if (new_line != '\n')
+			return FALSE;
+		if (index_column < 0 || index_column >= visualboard->columns)
 			legal = FALSE;
 		if (legal)
 		{
@@ -514,12 +520,14 @@ LegalQuery(tBoard * visualboard, tCommand * structcommand, char * params)
 			structcommand->query.index = index_column;
 		}	
 	}
-	else if (sscanf(params, "%c", &index_row) == 1 )
+	else if (sscanf(params, "%c%c", &index_row, &new_line) == 2 )
 	{	
 		index_row = get_row_pos_byref(index_row);
+		if (new_line != '\n')
+			return FALSE;
 		if (!isupper('A' + index_row))
 			legal = FALSE;
-		else if (index_row < 0 || index_row > visualboard->rows)
+		else if (index_row < 0 || index_row >= visualboard->rows)
 			legal = FALSE;
 		if(legal)
 		{	
@@ -527,6 +535,8 @@ LegalQuery(tBoard * visualboard, tCommand * structcommand, char * params)
 			structcommand->query.index = index_row;
 		}
 	}
+	else
+		legal = FALSE;
 	
 	return legal;	
 

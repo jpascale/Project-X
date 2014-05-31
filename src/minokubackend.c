@@ -214,7 +214,8 @@ int DoFlagUnflag(tGame * game, tCommand * command, char task)
 {
 	int i = command->flag.first_pos.i;
 	int j = command->flag.first_pos.j;
-	
+	//DEBUG
+	//printf("Flag i: %d, Flag j: %d\n", i, j);
 	if(!command->flag.is_range)
 		SaveLastState(game, &command->undo);
 
@@ -251,7 +252,7 @@ LegalPos(tBoard * structboard, tPos * pos)
 	int i = pos->i;
 	int j = pos->j;
 	
-	if (i < 0 || j < 0 || i > structboard->rows || j > structboard->columns)
+	if (i < 0 || j < 0 || i >= structboard->rows || j >= structboard->columns)
 		return FALSE;
 
 	return TRUE;
@@ -267,22 +268,25 @@ int ExecCommand(tGame *game, tCommand * command)
 	switch (i)
 	{
 		case COMMAND_SWEEP:
+			//DEBUG
 			printf("En ejecutar: %d %d\n", command->sweep.i, command->sweep.j);
 			res = Sweep(game, &command->sweep, command);
 			break;
 		
 		case COMMAND_FLAG:
-			if (!(command->flag.is_range))
-				res=DoFlagUnflag(game, command, DO_FLAG);
+			if (!(command->flag.is_range))	
+					res=DoFlagUnflag(game, command, DO_FLAG);
 			else
+			{	
 				res=FlagRange(game, command, DO_FLAG);
+			}	
 			break;
 		
 		case COMMAND_UNFLAG:
 			if (!(command->flag.is_range))
-				res = DoFlagUnflag(game, command, DO_UNFLAG);
+				DoFlagUnflag(game, command, DO_UNFLAG);
 			else
-				res=FlagRange(game, command, DO_UNFLAG);
+				FlagRange(game, command, DO_UNFLAG);
 			break;
 		
 		case COMMAND_QUERY:
@@ -322,32 +326,35 @@ int ExecCommand(tGame *game, tCommand * command)
 
 int FlagRange(tGame *game, tCommand * command, char task)
 {
-	//ToDo: Tidy 
+	//ToDo: Tidy
 	int k;
-	int res = FALSE;
 	char isrow = command->flag.is_row;
 	tPos auxpos = command->flag.first_pos;
 	tPos finalpos = command->flag.last_pos;
+	printf("LA POS FINAL ES: %d\n", command->flag.last_pos.j );
 	SaveLastState(game, &command->undo); //Cambiar (Recorrer primero y ver si cambias algo, despues guardar, despues cambiar)
 	
 	if (isrow)
 	{ //ToDo: Improve
-		for(k = auxpos.j; auxpos.j<=finalpos.j; auxpos.j = ++k)
+		for(k = auxpos.j; k<=finalpos.j; k++)
 		{
+			
 			command->flag.first_pos.j = k;
-			res = DoFlagUnflag(game, command, task) || res;
+			DoFlagUnflag(game, command, task);
+			//command->flag.first_pos.j++;
+			printf("first_pos: %d, K: %d, finalpos: %d\n", command->flag.first_pos.j, k, finalpos.j);
 		}
 	}
 	else
 	{
-		for(k = auxpos.i; auxpos.i<=finalpos.i; auxpos.i = ++k)
+		for(k = auxpos.i; k<=finalpos.i; k++)
 		{
 			command->flag.first_pos.i = k;
-			res = DoFlagUnflag(game, command, task) || res;
+			DoFlagUnflag(game, command, task);
 		}
 	}
 	
-	return res;
+	return TRUE;
 }
 
 int WriteSaveFile(tGame *game, char *name)
