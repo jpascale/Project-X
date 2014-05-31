@@ -243,7 +243,6 @@ typedef struct
 } tCommand;
 
 
-
 /*
 **		Function prototypes (front) 
 **		TODO: Put this in frontend. Backend does not need this.
