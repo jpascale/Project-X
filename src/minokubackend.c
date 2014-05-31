@@ -236,8 +236,8 @@ int DoFlagUnflag(tGame * game, tCommand * command, char task)
 
 	if (game->hiddenboard.board[i][j] == HIDDEN_MINE)
 		(task == DO_FLAG? game->mines_left-- : game->mines_left++);
-	
-	if (!command->flag.is_range)
+	//ToDo ERAAAAAAASE
+	//if (!command->flag.is_range)
 		(task == DO_FLAG)? game->flags_left-- : game->flags_left++;
 		
 	return TRUE;
@@ -331,7 +331,15 @@ int ExecCommand(tGame *game, tCommand * command)
 			break;
 		
 		case COMMAND_UNDO:
-			/*undo*/
+			if (command->undo.can_undo && game->undos)
+			{
+				Undo(game, &command->undo);
+				game->undos--;
+				if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
+					game->moves--;
+			}
+			else
+				printf("CANT UNDO\n");
 			break;
 
 
@@ -368,7 +376,7 @@ int FlagRange(tGame *game, tCommand * command, char task)
 	char isrow = command->flag.is_row;
 	tPos auxpos = command->flag.first_pos;
 	tPos finalpos = command->flag.last_pos;
-	SaveLastState(game, &command->undo);
+	//SaveLastState(game, &command->undo);
 	
 	if (isrow)
 	{ //ToDo: Improve
@@ -388,7 +396,8 @@ int FlagRange(tGame *game, tCommand * command, char task)
 				flag_count++;
 		}
 	}
-	((task == DO_FLAG)? (game->flags_left-= flag_count) : (game->flags_left+= flag_count));
+	//ToDo ERASE SPAAAAAAAAAAAAAAAAAAAAACCE
+	//((task == DO_FLAG)? (game->flags_left-= flag_count) : (game->flags_left+= flag_count));
 	return flag_count;
 }
 

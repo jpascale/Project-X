@@ -288,5 +288,6 @@ void SaveLastState(tGame * game, tUndo * undo);
 void CheckGameState(tGame * game);
 int LoadCampaign(tGame * game);
 int LoadFile(tGame *game, char *name);
+int Undo(tGame * game, tUndo * undo);
 
 #endif
