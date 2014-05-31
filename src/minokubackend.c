@@ -324,7 +324,8 @@ int ExecCommand(tGame *game, tCommand * command)
 			break;
 
 		case COMMAND_SAVE:
-			//res=WriteSaveFile(game, command->save_filename);
+			printf("Nombre de archivo: %s\n",command->save_filename);
+			res=WriteSaveFile(game, command->save_filename);
 			break;
 		
 		case COMMAND_QUIT:
@@ -743,6 +744,11 @@ int LoadCampaign(tGame * game)
 				}
 			}
 		}
+	}
+	if (!error)
+	{
+		game->campaign = realloc (game->campaign, k * sizeof(*(game->campaign)));
+		game->levels_amount = k;
 	}
 	return !error;
 }
