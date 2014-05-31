@@ -265,7 +265,8 @@ int LegalQuery(tBoard * visualboard, tCommand * structcommand, char * params);
 void PrintQuery (tQuery * query);
 int AskUndo(tGame * game, tUndo * undo);
 void getLoadName(char * name);
-
+//ToDo Remove
+void PrintearTodo(tGame * game);
 
 /*
 **		Function prototypes (back)
