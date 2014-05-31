@@ -161,11 +161,29 @@ void getDim(tGame * game)
 void getLevel(tGame * game){
 	
 	int level;
+	int can_nightmare = ((game->visualboard.rows * game->visualboard.columns) >= 100);
+	printf("Can NIGHT: %d\n", can_nightmare);
+	int can = FALSE;
 
 	do
 	{
 		level = getint("Ingrese dificultad:\n1.Facil\n2.Medio\n3.Dificil\n4.Pesadilla\n");
-	} while (level < 1 || level > 4);
+		
+		printf("Level: %d\n", level);
+		if (level == 4)
+		{
+			if (can_nightmare){
+				can = TRUE;
+			}
+			else
+				can = FALSE;
+		}else
+			can = TRUE;
+
+		if (!can)
+			printf("No es posible elegir pesadilla con menos de 100 casilleros.\n");
+
+	} while(level < 1 || level > 4 || !can);
 
 	game->level = level;
 
@@ -574,31 +592,34 @@ void PrintQuery (tQuery * query)
 
 int AskUndo(tGame * game, tUndo * undo)
 {
-	char fmt[6]; //ToDo: Constant
 	char input[MAX_COMMAND_LEN];
+	char * pinput;
 
-	int wasundo;
+	int wasundo = FALSE;
+	int wasquit = FALSE;
 	int valid;
 
 	PrintBoard(&game->visualboard);
-	sprintf(fmt, "%%%ds",MAX_COMMAND_LEN);
 
 	printf("Perdiste! ¿Hacer Undo? (Ingresar undo o quit)\n");
-	
-	do
-	{
-		scanf(fmt, input);
 
-		valid = (strcmp(input, "quit") == 0 || (wasundo = !strcmp(input, "undo")) == 0);
+	do{
+		pinput = fgets(input, MAX_COMMAND_LEN, stdin);
+		if (pinput != NULL)
+		{
+			wasundo = (strcmp(input,"undo\n") == 0);
+			wasquit = (strcmp(input,"quit\n") == 0);
+		}
 
-		if (!valid)
-			printf ("Ingresar quit o undo.\n");
+		if (!wasundo && !wasquit)
+			printf("Ingresar quit o undo.");
+	}
+	while (!wasundo && !wasquit);
 
-	} while(!valid);
 
 	if (wasundo)
 	{
-		//ToDo: Call Undo
+		Undo(game, undo);
 		return TRUE;
 	}
 	else

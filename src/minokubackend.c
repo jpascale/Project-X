@@ -295,7 +295,7 @@ int ExecCommand(tGame *game, tCommand * command)
 			}	
 			else
 			{
-				res=FlagRange(game, command, DO_FLAG);
+				res = FlagRange(game, command, DO_FLAG);
 				if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
 					game->moves-= res;
 			}	
@@ -346,7 +346,7 @@ int ExecCommand(tGame *game, tCommand * command)
 		{	
 			if (game->gametype == GAMETYPE_INDIVIDUAL_NOLIMIT)
 				AskUndo(game, &command->undo);
-			else if (game->moves > 0)
+			else if (game->moves && game->undos)
 				AskUndo(game, &command->undo);
 			else
 			{
