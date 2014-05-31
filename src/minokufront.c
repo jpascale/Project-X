@@ -207,10 +207,11 @@ void Play(tGame * game)
 			{	
 				if((legal = LegalCommand(&scan, &command)))
 					if ( command.command_ref < 5)
-						legal = LegalParams(&game->visualboard, &command, &scan);
+						legal = LegalParams(game, &command, &scan);
 				
 			}
 		//printf("SCANNED NUMB: %d\n", scan.scanned_number);
+		//DEBUG
 		if (!legal)
 			printf("Commando invalidOO\n");
 		} while (!legal);
@@ -313,22 +314,22 @@ int LegalCommand(tScan * scan, tCommand * command)
 }
 
 int
-LegalParams(tBoard * visualboard, tCommand * structcommand, tScan * scan)
+LegalParams(tGame * game, tCommand * structcommand, tScan * scan)
 {	
 	switch(structcommand->command_ref)
 	{
 		case COMMAND_SWEEP:
 			//printf("EN el switch: %s\n", scan->params);
-			return LegalSweep(visualboard, structcommand, scan->params);
+			return LegalSweep(&game->visualboard, structcommand, scan->params);
 		
 		case COMMAND_FLAG:
-			return LegalFlag(visualboard, structcommand, scan->params, DO_FLAG);
+			return LegalFlag(game, structcommand, scan->params, DO_FLAG);
 
 		case COMMAND_UNFLAG:
-			return LegalFlag(visualboard, structcommand, scan->params, DO_UNFLAG);
+			return LegalFlag(game, structcommand, scan->params, DO_UNFLAG);
 
 		case COMMAND_QUERY:	
-			return LegalQuery(visualboard, structcommand, scan->params);
+			return LegalQuery(&game->visualboard, structcommand, scan->params);
 		
 		case COMMAND_SAVE:
 			//return LegalSave(scan);
@@ -380,7 +381,7 @@ LegalSweep(tBoard * visualboard, tCommand * structcommand, char * params)
 }			
 
 int
-LegalFlag(tBoard * visualboard, tCommand * structcommand, char * params, char task) /*No valida si ya esta flaggeado*/
+LegalFlag(tGame * game, tCommand * structcommand, char * params, char task) /*No valida si ya esta flaggeado*/
 {	//Tidy
 	//int fposi, fposj, lposi, lposj;
 	int i;
@@ -408,7 +409,7 @@ LegalFlag(tBoard * visualboard, tCommand * structcommand, char * params, char ta
 		if (!isupper('A' + f_aux.i)|| !isupper('A' + l_aux.i))
 			legal = FALSE;
 		
-		else if (!LegalPos(visualboard, &f_aux) || !LegalPos(visualboard, &l_aux))
+		else if (!LegalPos(&game->visualboard, &f_aux) || !LegalPos(&game->visualboard, &l_aux))
 			legal = FALSE;
 
 		// Legal move check
@@ -428,6 +429,7 @@ LegalFlag(tBoard * visualboard, tCommand * structcommand, char * params, char ta
 		}	
 		else
 			legal = FALSE;
+		//DEBUG
 		printf("ISROW: %d\n", structcommand->flag.is_row);
 		printf("AUX.i: %d, AUX.j: %d\n", f_aux.j, l_aux.j);
 		printf("FilaI: %d, FilaF: %d\n", f_aux.i, l_aux.i);
@@ -436,9 +438,9 @@ LegalFlag(tBoard * visualboard, tCommand * structcommand, char * params, char ta
 		{
 			for(i=f_aux.j; i<=l_aux.j && !legal_range; i++)
 			{	
-				if ((task == DO_FLAG) && (visualboard->board[f_aux.i][i] == VISUAL_UNFLAGGED))
+				if ((task == DO_FLAG) && (game->visualboard.board[f_aux.i][i] == VISUAL_UNFLAGGED))
 					legal_range = TRUE;
-				else if( (task == DO_UNFLAG) && (visualboard->board[f_aux.i][i] == VISUAL_FLAGGED))
+				else if( (task == DO_UNFLAG) && (game->visualboard.board[f_aux.i][i] == VISUAL_FLAGGED))
 					legal_range = TRUE;
 			}	
 		}
@@ -446,9 +448,9 @@ LegalFlag(tBoard * visualboard, tCommand * structcommand, char * params, char ta
 		{
 			for(i=f_aux.i; i<=l_aux.i && !legal_range; i++)
 			{	
-				if ((task == DO_FLAG) && (visualboard->board[i][f_aux.j] == VISUAL_UNFLAGGED))
+				if ((task == DO_FLAG) && (game->visualboard.board[i][f_aux.j] == VISUAL_UNFLAGGED))
 					legal_range = TRUE;
-				else if( (task == DO_UNFLAG) && (visualboard->board[i][f_aux.j] == VISUAL_FLAGGED))
+				else if( (task == DO_UNFLAG) && (game->visualboard.board[i][f_aux.j] == VISUAL_FLAGGED))
 					legal_range = TRUE;
 			}		
 		}	
@@ -476,12 +478,12 @@ LegalFlag(tBoard * visualboard, tCommand * structcommand, char * params, char ta
 		if (!isupper('A' + f_aux.i))
 			legal = FALSE;
 
-		else if(!LegalPos(visualboard, &f_aux))
+		else if(!LegalPos(&game->visualboard, &f_aux))
 			legal = FALSE;
 		
-		else if ( (task == DO_FLAG) && (visualboard->board[f_aux.i][f_aux.j] != VISUAL_UNFLAGGED))
+		else if ( (task == DO_FLAG) && (game->visualboard.board[f_aux.i][f_aux.j] != VISUAL_UNFLAGGED))
 			legal = FALSE;
-		else if( (task == DO_UNFLAG) && (visualboard->board[f_aux.i][f_aux.j] != VISUAL_FLAGGED))
+		else if( (task == DO_UNFLAG) && (game->visualboard.board[f_aux.i][f_aux.j] != VISUAL_FLAGGED))
 			legal = FALSE;
 		
 		if (legal)

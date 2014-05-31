@@ -215,10 +215,19 @@ int DoFlagUnflag(tGame * game, tCommand * command, char task)
 	int i = command->flag.first_pos.i;
 	int j = command->flag.first_pos.j;
 	//DEBUG
-	//printf("Flag i: %d, Flag j: %d\n", i, j);
-	if(!command->flag.is_range)
+	// If a normal flag is made saveLastState
+	/*if(!command->flag.is_range )*/
 		SaveLastState(game, &command->undo);
+	
+	//If its a range flag, only saveLastState before Doing Last Flag
+	/*else (command->flag.is_range)
+	{
+		if (command->flag.is_row && (command->flag.first_pos.j == command->flag.last_pos.j))
+			SaveLastState(game, &command->undo);
 
+		else if (!command->flag.is_row && (command->flag.first_pos.i == command->flag.last_pos.i))
+			SaveLastState(game, &command->undo);
+	}*/
 	game->visualboard.board[i][j] = (task == DO_FLAG? VISUAL_FLAGGED:VISUAL_UNFLAGGED);
 
 	if (game->hiddenboard.board[i][j] == HIDDEN_MINE)
@@ -262,7 +271,7 @@ int ExecCommand(tGame *game, tCommand * command)
 {
 	//ToDo: tidy. front.
 
-	int i = command->command_ref; 
+	int i = command->command_ref;
 	int res;
 
 	switch (i)
@@ -274,17 +283,29 @@ int ExecCommand(tGame *game, tCommand * command)
 			break;
 		
 		case COMMAND_FLAG:
-			if (!(command->flag.is_range))	
-				res=DoFlagUnflag(game, command, DO_FLAG);
+			if (!(command->flag.is_range))
+			{	
+				DoFlagUnflag(game, command, DO_FLAG);
+				game->moves--;
+			}	
 			else
+			{
 				res=FlagRange(game, command, DO_FLAG);
+				game->moves-= res;
+			}	
 			break;
 		
 		case COMMAND_UNFLAG:
 			if (!(command->flag.is_range))
+			{
 				DoFlagUnflag(game, command, DO_UNFLAG);
+				game->moves--;
+			}	
 			else
+			{
 				FlagRange(game, command, DO_UNFLAG);
+				game->moves-= res;
+			}	
 			break;
 		
 		case COMMAND_QUERY:
@@ -310,12 +331,15 @@ int ExecCommand(tGame *game, tCommand * command)
 
 
 	}
-	if (i == COMMAND_SWEEP || i == COMMAND_FLAG || i == COMMAND_UNFLAG)
-		game->moves--;
+	//DEBUG(Codigo)
+	/*if (i == COMMAND_SWEEP || i == COMMAND_FLAG || i == COMMAND_UNFLAG)
+		game->moves--;*/
 
 	if (res == SWEEP_MINE && i == COMMAND_SWEEP && (game->undos))
 	{
-		if (game->moves > 0)
+		if (game->gametype == GAMETYPE_INDIVIDUAL_NOLIMIT)
+			AskUndo(game, &command->undo);
+		else if (game->moves > 0)
 			AskUndo(game, &command->undo);
 		else
 			game->gamestate = GAMESTATE_LOSE;
@@ -327,6 +351,7 @@ int FlagRange(tGame *game, tCommand * command, char task)
 {
 	//ToDo: Tidy
 	int k;
+	int flag_count = 0;
 	char isrow = command->flag.is_row;
 	tPos auxpos = command->flag.first_pos;
 	tPos finalpos = command->flag.last_pos;
@@ -339,7 +364,8 @@ int FlagRange(tGame *game, tCommand * command, char task)
 		{
 			
 			command->flag.first_pos.j = k;
-			DoFlagUnflag(game, command, task);
+			if (DoFlagUnflag(game, command, task))
+				flag_count++;
 			//command->flag.first_pos.j++;
 			printf("first_pos: %d, K: %d, finalpos: %d\n", command->flag.first_pos.j, k, finalpos.j);
 		}
@@ -349,11 +375,12 @@ int FlagRange(tGame *game, tCommand * command, char task)
 		for(k = auxpos.i; k<=finalpos.i; k++)
 		{
 			command->flag.first_pos.i = k;
-			DoFlagUnflag(game, command, task);
+			if (DoFlagUnflag(game, command, task))
+				flag_count++;
 		}
 	}
 	
-	return TRUE;
+	return flag_count;
 }
 
 int WriteSaveFile(tGame *game, char *name)
