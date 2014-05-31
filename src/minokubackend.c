@@ -402,6 +402,9 @@ int LoadFile(tGame *game, char *name)
 	char ** board;
 	int i;
 	int campaign_len;
+	int sweeps_left;
+	int flags_left;
+	int mines_left;
 	char campaign_name[MAX_FILENAME_LEN];
 	
 	if ((loadfile = fopen(name, "rb")) == NULL)
@@ -489,7 +492,8 @@ int LoadFile(tGame *game, char *name)
 		board[i/auxcols][i%auxcols] = elem;
 	}
 
-	game->mines=mines;
+	game->mines = mines_left = flags_left = mines;
+	sweeps_left = auxcols * auxrows - mines;
 
 	if (CreateBoard(&game->visualboard)==FALSE)
 	{
@@ -511,7 +515,13 @@ int LoadFile(tGame *game, char *name)
 			return FALSE;
 		}
 		board[i/auxcols][i%auxcols] = elem;
+		flags_left -= (elem == VISUAL_FLAGGED);
+		sweeps_left -= (elem == VISUAL_EMPTY);
+		mines_left -= (elem == VISUAL_FLAGGED && game->hiddenboard.board[i/auxcols][i%auxcols] == HIDDEN_MINE);
 	}
+	game->flags_left = flags_left;
+	game->sweeps_left = sweeps_left;
+	game->mines_left = mines_left;
 
 	if (game->gametype == GAMETYPE_CAMPAIGN)
 	{
