@@ -562,10 +562,13 @@ void PrintQuery (tQuery * query)
 	int i;
 	int dim = query->results.dim;
 
-	for (i = 0; i < dim; i++)
-		printf("%d%s", query->results.results[i], (i != (dim-1))? " - ": "");	
-	putchar('\n');
-
+	if (dim)
+	{
+		for (i = 0; i < dim; i++)
+			printf("%d%s", query->results.results[i], (i != (dim-1))? " - ": "\n");	
+	}else
+		printf("0\n");
+		
 	return;
 }
 

@@ -145,7 +145,6 @@ int Query(tBoard * hiddenboard, tArray * pquery, int element, char isrow)
 {
    //ToDo: Free array after use
   //ToDo: Modularize??
-  //ToDo: Think what is going to return this
 
 	int i, j;
 	int boarddim = isrow ? hiddenboard->columns : hiddenboard->rows;
@@ -319,11 +318,8 @@ int ExecCommand(tGame *game, tCommand * command)
 		
 		case COMMAND_QUERY:
 			res = Query(&(game->hiddenboard), &(command->query.results), command->query.index, command->query.is_row);
-			if (res)
-				PrintQuery(&command->query);
-			else
-				printf("0\n");
-			//Free vec
+			PrintQuery(&command->query);
+			free(command->query.results.results);
 			break;
 
 		case COMMAND_SAVE:
