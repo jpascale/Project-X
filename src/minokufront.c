@@ -31,7 +31,7 @@ main(void)
 			Play(&game);
 			}
 			else
-				printf("No hay suficiente memoria para seguir jugando.");
+				printf("No hay suficiente memoria para seguir jugando.\n");
 			
 			break;
 
@@ -206,11 +206,11 @@ void Play(tGame * game)
 			if ((legal = InputCommand(&scan)))
 			{	
 				if((legal = LegalCommand(&scan, &command)))
-					if (scan.scanned_number == 2)
+					if ( command.command_ref < 5)
 						legal = LegalParams(&game->visualboard, &command, &scan);
 				
 			}
-
+		//printf("SCANNED NUMB: %d\n", scan.scanned_number);
 		if (!legal)
 			printf("Commando invalidOO\n");
 		} while (!legal);
@@ -232,7 +232,6 @@ void Play(tGame * game)
 
 int InputCommand(tScan * scan)
 {	//ToDo: tidy
-	int scanned_number = 1;
 	int i, j, k;
 	int found_space = FALSE;
 	int endfor = FALSE;
@@ -241,13 +240,10 @@ int InputCommand(tScan * scan)
 	
 	printf("Introducir un comando:\n");
 
-	rinput = fgets(input, MAX_COMMAND_LEN + MAX_PARAMS_LEN + 2, stdin);
+	rinput = fgets(input, MAX_COMMAND_LEN + MAX_PARAMS_LEN + 2, stdin); //+2 0 and blank
 	puts(input); //DEBUG
 	if (rinput == NULL)
 		return FALSE;
-
-	//scanned_number = scanf(fmt, scan->command, scan->params);
-	DELBFF();
 
 	// Exit if no scan
 	if (input[0] == '\n')
@@ -257,14 +253,12 @@ int InputCommand(tScan * scan)
 	{
 		if (input[i] == ' ')
 		{	
-			if (input[i+1] != '\n')
-				scanned_number++;
-			
-			if (scanned_number > 2)
+			if (!found_space && input[i+1] != '\n')
+				found_space = TRUE;
+			else
 				endfor = TRUE;
-			
-			found_space = TRUE;
 		}
+
 		else if (!found_space)
 			scan->command[j++] = input[i];
 		else
@@ -273,7 +267,6 @@ int InputCommand(tScan * scan)
 
 	scan->command[j] = '\0';
 	scan->params[k] = '\0';
-	scan->scanned_number = scanned_number;
 	puts(scan->command); puts(scan->params);
 
 	return TRUE;
@@ -289,7 +282,7 @@ int LegalCommand(tScan * scan, tCommand * command)
 {
 	//ToDo: Reduce mem access in for
 	/* Hardcoded commands respecting the COMMAND_ defines order */
-	static char * commandlist[] = {"s", "flag", "unflag", "query", "save", "quit", "undo"};
+	static char * commandlist[] = {"s", "flag", "unflag", "query", "save", "quit\n", "undo\n"};
 	
 	char found = FALSE;
 	int commandindex;
@@ -315,7 +308,7 @@ int LegalCommand(tScan * scan, tCommand * command)
 
 int
 LegalParams(tBoard * visualboard, tCommand * structcommand, tScan * scan)
-{	
+{	printf("LEGAL PARAMS\n");
 	switch(structcommand->command_ref)
 	{
 		case COMMAND_SWEEP:
@@ -343,24 +336,19 @@ int
 LegalSweep(tBoard * visualboard, tCommand * structcommand, char * params)
 {//todo: tidy
 	tPos aux;
+	char new_line;
 	char * closepos;
 	char legal = TRUE;
 	char i_scan;
 	int i;
-	//DEBUG
-	//printf("ENTRE\n");
-	//printf("%s\n", params);
+	int auxnum;
 
-	if (sscanf(params, "(%c,%d", &i_scan, &aux.j) != 2)
+	if (sscanf(params, "(%c,%d)%c", &i_scan, &aux.j, &new_line) != 3)
 		return FALSE;
-
-	if ((closepos = strchr(params,')')) == NULL)
+	printf("Char: %c, Dentero: %d\n, Char: %c", i_scan, aux.j, new_line);
+	if (new_line != '\n')
 		return FALSE;
-	else
-		if (*(closepos +1) != '\n')
-			return FALSE;
-
-	//printf ("%d\n", *(strchr(params, ')')+1));
+	
 	//ToDo: Modularize
 	i_scan = get_row_pos_byref(i_scan);
 	aux.i = (int)i_scan;
@@ -388,7 +376,6 @@ LegalSweep(tBoard * visualboard, tCommand * structcommand, char * params)
 }			
 
 int
-
 LegalFlag(tBoard * visualboard, tCommand * structcommand, char * params, char task) /*No valida si ya esta flaggeado*/
 {	//Tidy
 	//int fposi, fposj, lposi, lposj;
@@ -507,9 +494,11 @@ LegalQuery(tBoard * visualboard, tCommand * structcommand, char * params)
 {	//ToDo: tidy
 	char index_row;
 	int index_column;
+	char new_line;
 	char legal = TRUE;
+
 	
-	if(sscanf(params, "%d", &index_column) == 1)
+	if(sscanf(params, "%d%c", &index_column, &new_line) == 1)
 	{	
 		index_column--;
 		if (index_column < 0 || index_column > visualboard->columns)

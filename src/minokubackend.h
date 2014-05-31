@@ -116,7 +116,7 @@
 #define get_moves(mines, undos) ((mines) + (undos))
 
 // Maps letter reference to board row number
-#define get_row_pos_byref(row) (toupper(row) - 'A')
+#define get_row_pos_byref(row) ( (row) - 'A')
 
 // Number to upper letter
 #define toupperalpha(x) ((x)+'A')
@@ -185,7 +185,6 @@ typedef struct
 
 typedef struct
 {
-	int scanned_number;
 	char command[MAX_COMMAND_LEN];
 	char params[MAX_PARAMS_LEN];
 
