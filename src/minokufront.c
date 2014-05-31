@@ -28,7 +28,6 @@ main(void)
 			*/
 			//ToDo: Dont print hiddenboard
 			PrintearTodo(&game);
-			PrintBoard(&game.visualboard);
 			PrintBoard(&game.hiddenboard);
 
 			Play(&game);
@@ -222,7 +221,7 @@ void Play(tGame * game)
 
 	tScan scan;
 	tCommand command;
-	command.command_ref = COMMAND_UNDO;
+	command.undo.can_undo = FALSE;
 	command.undo.lastboard.rows = game->visualboard.rows; 
 	command.undo.lastboard.columns = game->visualboard.columns;
 	CreateBoard(&command.undo.lastboard);
