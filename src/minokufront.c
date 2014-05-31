@@ -6,6 +6,7 @@ main(void)
 	//ToDo: tidy this, replace cases with constants
 	int option;
 	tGame game;
+	char loadname[MAX_FILENAME_LEN];
 	
 	randomize();
 	option = Menu();
@@ -25,17 +26,24 @@ main(void)
 			printf("mines_left: %d\n", game.mines_left);
 			printf("sweeps left: %d\n", game.sweeps_left);	
 			*/
-			PrintBoard(&game.visualboard);
+			//ToDo: Dont print hiddenboard
+			PrintearTodo(&game);
 			PrintBoard(&game.hiddenboard);
 
 			Play(&game);
 			}
 			else
 				printf("No hay suficiente memoria para seguir jugando.\n");
-			
 			break;
 
 		case 2:	/* Load */
+			do
+			{
+				getLoadName(loadname);
+
+			} while (!LoadFile(&game, loadname));
+
+			Play(&game);
 			break;		
 	}
 
@@ -82,7 +90,7 @@ setGametypeMenu(tGame * game)
 		
 	} while(option > 3 || option < 1);
 
-	game->gametype = option;
+	game->gametype = option-1;
 
 	return;
 }
@@ -91,8 +99,11 @@ setGametypeMenu(tGame * game)
 int setNewGame(tGame * game)
 {
 	setGametypeMenu(game);
-	getDim(game);
-	getLevel(game);
+	if (game->gametype != GAMETYPE_CAMPAIGN)
+	{
+		getDim(game);
+		getLevel(game);
+	}
 	setGameMinesNumber(game);
 
  	game->undos = get_undos(game->level);
@@ -102,10 +113,10 @@ int setNewGame(tGame * game)
  	else
  		game->moves = get_moves(game->undos, game->mines);
  	
+ 	game->mines_left = game->mines;
+ 	game->sweeps_left = (game->visualboard.rows * game->visualboard.columns) - game->mines;
  	game->flags_left = game->mines;
-
  	game->gamestate = GAMESTATE_DEFAULT;
-
  	if (!CreateHiddenVisualBoard(game))
  		return FALSE;
 
@@ -149,11 +160,29 @@ void getDim(tGame * game)
 void getLevel(tGame * game){
 	
 	int level;
+	int can_nightmare = ((game->visualboard.rows * game->visualboard.columns) >= 100);
+	printf("Can NIGHT: %d\n", can_nightmare);
+	int can = FALSE;
 
 	do
 	{
 		level = getint("Ingrese dificultad:\n1.Facil\n2.Medio\n3.Dificil\n4.Pesadilla\n");
-	} while (level < 1 || level > 4);
+		
+		printf("Level: %d\n", level);
+		if (level == 4)
+		{
+			if (can_nightmare){
+				can = TRUE;
+			}
+			else
+				can = FALSE;
+		}else
+			can = TRUE;
+
+		if (!can)
+			printf("No es posible elegir pesadilla con menos de 100 casilleros.\n");
+
+	} while(level < 1 || level > 4 || !can);
 
 	game->level = level;
 
@@ -192,33 +221,33 @@ void Play(tGame * game)
 
 	tScan scan;
 	tCommand command;
-	command.command_ref = COMMAND_UNDO;
+	command.undo.can_undo = FALSE;
 	command.undo.lastboard.rows = game->visualboard.rows; 
 	command.undo.lastboard.columns = game->visualboard.columns;
 	CreateBoard(&command.undo.lastboard);
-	
 	do
 	{
 		PrintBoard(&game->visualboard); //ToDo: Print all
-
+		
 		do
 		{	
 			if ((legal = InputCommand(&scan)))
 			{	
 				if((legal = LegalCommand(&scan, &command)))
-					if ( command.command_ref < 5)
-						legal = LegalParams(&game->visualboard, &command, &scan);
+					if (command.command_ref < 5)
+						legal = LegalParams(game, &command, &scan);
 				
 			}
-		//printf("SCANNED NUMB: %d\n", scan.scanned_number);
+		//DEBUG
 		if (!legal)
 			printf("Commando invalidOO\n");
 		} while (!legal);
-
-		//DEBUG
-		//printf("Antes de ejecutar (%s): %d\n", command.query.is_row? "Fila":"Columna", command.query.index);
 		ExecCommand(game, &command);
+		printf("Despues de Ejecutar:\n");
+		PrintearTodo(game);
 		CheckGameState(game);
+		printf("Despues de check:\n");
+		PrintearTodo(game);
 	} while(game->gamestate == GAMESTATE_DEFAULT);
 
 	if (game->gamestate == GAMESTATE_WIN)
@@ -243,17 +272,17 @@ int InputCommand(tScan * scan)
 	char * rinput; //Result input
 	char input[MAX_COMMAND_LEN + MAX_PARAMS_LEN + 2];
 	
-	printf("Introducir un comando:\n");
+	printf("Introducir un comando: ");
 
 	rinput = fgets(input, MAX_COMMAND_LEN + MAX_PARAMS_LEN + 2, stdin); //+2 0 and blank
-	puts(input); //DEBUG
+	
 	if (rinput == NULL)
 		return FALSE;
 
 	// Exit if no scan
 	if (input[0] == '\n')
 		return FALSE;
-	printf("Leggar a voooos\n");
+
 	for (i = 0, j = 0, k = 0; input[i] && !endfor; i++)
 	{
 		if (input[i] == ' ')
@@ -272,7 +301,8 @@ int InputCommand(tScan * scan)
 
 	scan->command[j] = '\0';
 	scan->params[k] = '\0';
-	puts(scan->command); puts(scan->params);
+	//DEBUG
+	//puts(scan->command); puts(scan->params);
 
 	return TRUE;
 }
@@ -301,7 +331,7 @@ int LegalCommand(tScan * scan, tCommand * command)
 			command->command_ref = commandindex;
 			found = TRUE;
 			//DEBUG
-			printf("DEBUG: LEGALCOMMAND FOUND: REF: %d\n",command->command_ref);
+			printf("Command Ref: %d\n",command->command_ref);
 		}
 	}
 
@@ -312,22 +342,22 @@ int LegalCommand(tScan * scan, tCommand * command)
 }
 
 int
-LegalParams(tBoard * visualboard, tCommand * structcommand, tScan * scan)
-{	printf("LEGAL PARAMS\n");
+LegalParams(tGame * game, tCommand * structcommand, tScan * scan)
+{	
 	switch(structcommand->command_ref)
 	{
 		case COMMAND_SWEEP:
 			//printf("EN el switch: %s\n", scan->params);
-			return LegalSweep(visualboard, structcommand, scan->params);
+			return LegalSweep(&game->visualboard, structcommand, scan->params);
 		
 		case COMMAND_FLAG:
-			return LegalFlag(visualboard, structcommand, scan->params, DO_FLAG);
+			return LegalFlag(game, structcommand, scan->params, DO_FLAG);
 
 		case COMMAND_UNFLAG:
-			return LegalFlag(visualboard, structcommand, scan->params, DO_UNFLAG);
+			return LegalFlag(game, structcommand, scan->params, DO_UNFLAG);
 
 		case COMMAND_QUERY:	
-			return LegalQuery(visualboard, structcommand, scan->params);
+			return LegalQuery(&game->visualboard, structcommand, scan->params);
 		
 		case COMMAND_SAVE:
 			//return LegalSave(scan);
@@ -350,7 +380,6 @@ LegalSweep(tBoard * visualboard, tCommand * structcommand, char * params)
 
 	if (sscanf(params, "(%c,%d)%c", &i_scan, &aux.j, &new_line) != 3)
 		return FALSE;
-	printf("Char: %c, Dentero: %d\n, Char: %c", i_scan, aux.j, new_line);
 	if (new_line != '\n')
 		return FALSE;
 	
@@ -358,9 +387,6 @@ LegalSweep(tBoard * visualboard, tCommand * structcommand, char * params)
 	i_scan = get_row_pos_byref(i_scan);
 	aux.i = (int)i_scan;
 	aux.j--;
-	//DEBUG
-	//printf("AFTER SCAN %d %d\n", aux.i, aux.j);
-	//printf("%s\n", LegalPos(visualboard, &aux)?"Si":"No" );
 	if (!isupper('A' + aux.i)) // If Column is not a letter return false
 		legal = FALSE;
 
@@ -373,7 +399,6 @@ LegalSweep(tBoard * visualboard, tCommand * structcommand, char * params)
 	if (legal){
 		structcommand->sweep.i = aux.i;
 		structcommand->sweep.j = aux.j;
-		printf("AFTER SAVE STRUCT %d %d\n", structcommand->sweep.i, structcommand->sweep.j);
 	}
 
 	return legal;
@@ -381,29 +406,24 @@ LegalSweep(tBoard * visualboard, tCommand * structcommand, char * params)
 }			
 
 int
-LegalFlag(tBoard * visualboard, tCommand * structcommand, char * params, char task) /*No valida si ya esta flaggeado*/
-{	//Tidy
+LegalFlag(tGame * game, tCommand * structcommand, char * params, char task) /*No valida si ya esta flaggeado*/
+{	//ToDo Borraar comment
+	//Tidy
 	//int fposi, fposj, lposi, lposj;
 	int i;
 	char legal = TRUE;
-	char legal_range = FALSE;
+	char range_count = 0;
 	tPos f_aux;
 	tPos l_aux;
 	char f_scan;
 	char l_scan;
-	
-
-	char * closepos;
-
-		if ((closepos = strchr(params,')')) == NULL)
-			return FALSE;
-		else
-			if (*(closepos +1) != '\n')
-				return FALSE;
+	char new_line;
 
 	// Checks if range is legal
-	if (sscanf(params, "(%c,%d:%c,%d", &f_scan, &f_aux.j, &l_scan, &l_aux.j) == 4)
-	{
+	if (sscanf(params, "(%c,%d:%c,%d)%c", &f_scan, &f_aux.j, &l_scan, &l_aux.j, &new_line) == 5)
+	{	
+		if (new_line != '\n')
+			return FALSE;
 		f_scan = get_row_pos_byref(f_scan);
 		f_aux.i = f_scan;
 		l_scan = get_row_pos_byref(l_scan);
@@ -415,7 +435,7 @@ LegalFlag(tBoard * visualboard, tCommand * structcommand, char * params, char ta
 		if (!isupper('A' + f_aux.i)|| !isupper('A' + l_aux.i))
 			legal = FALSE;
 		
-		else if (!LegalPos(visualboard, &f_aux) || !LegalPos(visualboard, &l_aux))
+		else if (!LegalPos(&game->visualboard, &f_aux) || !LegalPos(&game->visualboard, &l_aux))
 			legal = FALSE;
 
 		// Legal move check
@@ -436,39 +456,50 @@ LegalFlag(tBoard * visualboard, tCommand * structcommand, char * params, char ta
 		else
 			legal = FALSE;
 		
-		if(structcommand->flag.is_row)
+		if(legal && structcommand->flag.is_row)
 		{
-			for(i=f_aux.j; i<l_aux.j; i++)
+			for(i=f_aux.j; i<=l_aux.j; i++)
 			{	
-				if ((task == DO_FLAG) && (visualboard->board[f_aux.i][i] == VISUAL_FLAGGED))
-					legal_range = TRUE;
-				else if( (task == DO_UNFLAG) && (visualboard->board[f_aux.i][i] == VISUAL_FLAGGED))
-					legal_range = TRUE;
+				if ((task == DO_FLAG) && (game->visualboard.board[f_aux.i][i] == VISUAL_UNFLAGGED))
+					range_count++;
+				else if( (task == DO_UNFLAG) && (game->visualboard.board[f_aux.i][i] == VISUAL_FLAGGED))
+					range_count++;
 			}	
 		}
-		else
+		else if (legal)
 		{
-			for(i=f_aux.i; i<l_aux.i; i++)
+			for(i=f_aux.i; i<=l_aux.i; i++)
 			{	
-				if ((task == DO_FLAG) && (visualboard->board[i][f_aux.j] == VISUAL_FLAGGED))
-					legal_range = TRUE;
-				else if( (task == DO_UNFLAG) && (visualboard->board[i][f_aux.j] == VISUAL_FLAGGED))
-					legal_range = TRUE;
+				if ((task == DO_FLAG) && (game->visualboard.board[i][f_aux.j] == VISUAL_UNFLAGGED))
+					range_count++;
+				else if( (task == DO_UNFLAG) && (game->visualboard.board[i][f_aux.j] == VISUAL_FLAGGED))
+					range_count++;
 			}		
 		}	
-		
-		if (legal && legal_range)
+		//If there nothing to flag in the range or you have enough moves or flags left
+		if (legal)
 		{
+			if (range_count == 0)
+				legal = FALSE;
+			else if ( (task == DO_FLAG) && (range_count>game->flags_left) )
+				legal = FALSE;
+			else if( (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT && range_count>game->moves))
+				legal = FALSE;	
+		}
+		if (legal)
+		{	
 			structcommand->flag.is_range = TRUE;
 			structcommand->flag.first_pos.i = f_aux.i;
 			structcommand->flag.first_pos.j = f_aux.j;
 			structcommand->flag.last_pos.i 	= l_aux.i;
-			structcommand->flag.last_pos.j 	= l_aux.i;
+			structcommand->flag.last_pos.j 	= l_aux.j;
 		}
 
 	}
-	else if (sscanf(params, "(%c,%d)", &f_scan, &f_aux.j) == 2)
+	else if (sscanf(params, "(%c,%d)%c", &f_scan, &f_aux.j, &new_line) == 3)
 	{
+		if (new_line != '\n')
+			return FALSE;	
 		f_scan = get_row_pos_byref(f_scan);
 		f_aux.i = f_scan;
 		f_aux.j--;
@@ -476,21 +507,26 @@ LegalFlag(tBoard * visualboard, tCommand * structcommand, char * params, char ta
 		if (!isupper('A' + f_aux.i))
 			legal = FALSE;
 
-		else if(!LegalPos(visualboard, &f_aux))
+		else if(!LegalPos(&game->visualboard, &f_aux))
 			legal = FALSE;
 		
-		else if ( (task == DO_FLAG) && (visualboard->board[f_aux.i][f_aux.j] != VISUAL_UNFLAGGED))
+		else if ( (task == DO_FLAG) && (game->visualboard.board[f_aux.i][f_aux.j] != VISUAL_UNFLAGGED))
 			legal = FALSE;
-		else if( (task == DO_UNFLAG) && (visualboard->board[f_aux.i][f_aux.j] != VISUAL_FLAGGED))
+		else if( (task == DO_UNFLAG) && (game->visualboard.board[f_aux.i][f_aux.j] != VISUAL_FLAGGED))
 			legal = FALSE;
-		
+		else if( task == DO_FLAG && game->flags_left == 0)
+			legal = FALSE;
 		if (legal)
 		{	
 			structcommand->flag.is_range 	= FALSE;
 			structcommand->flag.first_pos.i = f_aux.i;
 			structcommand->flag.first_pos.j = f_aux.j;
 		}			
-	} 	
+	}
+	else
+		legal = FALSE; 	
+	//DEBUG
+	printf("LEGAL(RETURN): %d\n",legal );
 	return legal;
 }
 
@@ -503,10 +539,12 @@ LegalQuery(tBoard * visualboard, tCommand * structcommand, char * params)
 	char legal = TRUE;
 
 	
-	if(sscanf(params, "%d%c", &index_column, &new_line) == 1)
+	if(sscanf(params, "%d%c", &index_column, &new_line) == 2)
 	{	
 		index_column--;
-		if (index_column < 0 || index_column > visualboard->columns)
+		if (new_line != '\n')
+			return FALSE;
+		if (index_column < 0 || index_column >= visualboard->columns)
 			legal = FALSE;
 		if (legal)
 		{
@@ -514,12 +552,14 @@ LegalQuery(tBoard * visualboard, tCommand * structcommand, char * params)
 			structcommand->query.index = index_column;
 		}	
 	}
-	else if (sscanf(params, "%c", &index_row) == 1 )
+	else if (sscanf(params, "%c%c", &index_row, &new_line) == 2 )
 	{	
 		index_row = get_row_pos_byref(index_row);
+		if (new_line != '\n')
+			return FALSE;
 		if (!isupper('A' + index_row))
 			legal = FALSE;
-		else if (index_row < 0 || index_row > visualboard->rows)
+		else if (index_row < 0 || index_row >= visualboard->rows)
 			legal = FALSE;
 		if(legal)
 		{	
@@ -527,6 +567,8 @@ LegalQuery(tBoard * visualboard, tCommand * structcommand, char * params)
 			structcommand->query.index = index_row;
 		}
 	}
+	else
+		legal = FALSE;
 	
 	return legal;	
 
@@ -537,41 +579,49 @@ void PrintQuery (tQuery * query)
 	int i;
 	int dim = query->results.dim;
 
-	for (i = 0; i < dim; i++)
-		printf("%d%s", query->results.results[i], (i != (dim-1))? " - ": "");	
-	putchar('\n');
-
+	if (dim)
+	{
+		for (i = 0; i < dim; i++)
+			printf("%d%s", query->results.results[i], (i != (dim-1))? " - ": "\n");	
+	}else
+		printf("0\n");
+		
 	return;
 }
 
-int AskUndo(tGame * game)
+int AskUndo(tGame * game, tUndo * undo)
 {
-	char fmt[6]; //ToDo: Constant
 	char input[MAX_COMMAND_LEN];
+	char * pinput;
 
-	int quit;
-	int undo;
+	int wasundo = FALSE;
+	int wasquit = FALSE;
+	int valid;
 
-	Printboard(game->visualboard);
-	sprintf(fmt, "%%%ds",MAX_COMMAND_LEN);
+	PrintBoard(&game->visualboard);
 
-	printf("Perdiste! ¿Hacer Undo? (Ingresar undo o quit\n");
-	
-	do
+	printf("Perdiste! ¿Hacer Undo? (Ingresar undo o quit)\n");
+
+	do{
+		pinput = fgets(input, MAX_COMMAND_LEN, stdin);
+		if (pinput != NULL)
+		{
+			wasundo = (strcmp(input,"undo\n") == 0);
+			wasquit = (strcmp(input,"quit\n") == 0);
+		}
+
+		if (!wasundo && !wasquit)
+			printf("Ingresar quit o undo.");
+	}
+	while (!wasundo && !wasquit);
+
+
+	if (wasundo)
 	{
-		int valid;
-		scanf(fmt, input);
-
-		valid = (!strcmp(input, "quit") || (undo = !strcmp(input, "undo")));
-
-		if (!valid)
-			printf ("Ingresar quit o undo.\n");
-
-	} while(!valid);
-
-	if (undo)
-	{
-		//ToDo: Call Undo
+		Undo(game, undo);
+		game->undos--;
+		if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
+			game->moves--;
 		return TRUE;
 	}
 	else
@@ -580,4 +630,19 @@ int AskUndo(tGame * game)
 		return FALSE;
 	}
 
+}
+
+void PrintearTodo(tGame * game)
+{
+	printf("%s", KRED);
+	printf("Gametype: %d\n", game->gametype);
+	printf("Moves: %d\n", game->moves);
+	printf("Undos: %d\n", game->undos);
+	printf("Mines: %d\n", game->mines);
+	printf("Mines left: %d\n", game->mines_left);
+	printf("Sweeps left: %d\n", game->sweeps_left);
+	printf("Flags left: %d\n", game->flags_left);
+	printf("Gamestate: %d\n", game->gamestate);
+	printf("%s", KNRM);
+	return;
 }

@@ -40,7 +40,7 @@ int CreateBoard(tBoard * structboard)
 	char ** auxboard;
 	auxrows = structboard->rows;
 	auxcolumns = structboard->columns;
-	auxboard = malloc(auxrows*sizeof(char*));
+	auxboard = malloc(auxrows * sizeof(char *));
 	if (auxboard == NULL)
 	{	
 		free(auxboard);
@@ -145,7 +145,6 @@ int Query(tBoard * hiddenboard, tArray * pquery, int element, char isrow)
 {
    //ToDo: Free array after use
   //ToDo: Modularize??
-  //ToDo: Think what is going to return this
 
 	int i, j;
 	int boarddim = isrow ? hiddenboard->columns : hiddenboard->rows;
@@ -214,44 +213,61 @@ int DoFlagUnflag(tGame * game, tCommand * command, char task)
 {
 	int i = command->flag.first_pos.i;
 	int j = command->flag.first_pos.j;
-	
-	if(!command->flag.is_range)
+	//DEBUG
+	// If a normal flag is made saveLastState
+	/*if(!command->flag.is_range )*/
 		SaveLastState(game, &command->undo);
+	
+	//If its a range flag, only saveLastState before Doing Last Flag
+	/*else (command->flag.is_range)
+	{
+		if (command->flag.is_row && (command->flag.first_pos.j == command->flag.last_pos.j))
+			SaveLastState(game, &command->undo);
+
+		else if (!command->flag.is_row && (command->flag.first_pos.i == command->flag.last_pos.i))
+			SaveLastState(game, &command->undo);
+	}*/
+	if ( (task == DO_FLAG) && (game->visualboard.board[i][j] != VISUAL_UNFLAGGED))
+		return FALSE;
+	else if( (task == DO_UNFLAG) && (game->visualboard.board[i][j] != VISUAL_FLAGGED))	
+		return FALSE;
 
 	game->visualboard.board[i][j] = (task == DO_FLAG? VISUAL_FLAGGED:VISUAL_UNFLAGGED);
 
 	if (game->hiddenboard.board[i][j] == HIDDEN_MINE)
 		(task == DO_FLAG? game->mines_left-- : game->mines_left++);
-	
+	//ToDo ERAAAAAAASE
+	//if (!command->flag.is_range)
+		(task == DO_FLAG)? game->flags_left-- : game->flags_left++;
+		
 	return TRUE;
 }
 
-int
-Sweep(tGame * game, tPos * pos, tCommand * command)
+int Sweep(tGame * game, tPos * pos, tCommand * command)
 {
 	int i = pos->i;
 	int j = pos->j;
 	
+	SaveLastState(game, &command->undo);
+
 	if (game->hiddenboard.board[i][j] == HIDDEN_MINE)
 	{
 		game->visualboard.board[i][j] = HIDDEN_MINE;
 		return SWEEP_MINE;
 	}
 
-	SaveLastState(game, &command->undo);
 	game->visualboard.board[i][j] = VISUAL_EMPTY;
 	game->sweeps_left--;
 	
 	return TRUE;
 }
 
-int
-LegalPos(tBoard * structboard, tPos * pos)
+int LegalPos(tBoard * structboard, tPos * pos)
 {
 	int i = pos->i;
 	int j = pos->j;
 	
-	if (i < 0 || j < 0 || i > structboard->rows || j > structboard->columns)
+	if (i < 0 || j < 0 || i >= structboard->rows || j >= structboard->columns)
 		return FALSE;
 
 	return TRUE;
@@ -260,38 +276,51 @@ LegalPos(tBoard * structboard, tPos * pos)
 int ExecCommand(tGame *game, tCommand * command)
 {
 	//ToDo: tidy. front.
-
-	int i = command->command_ref; 
-	int res;
+	int i = command->command_ref;
+	int res; //Result
 
 	switch (i)
 	{
 		case COMMAND_SWEEP:
-			printf("En ejecutar: %d %d\n", command->sweep.i, command->sweep.j);
 			res = Sweep(game, &command->sweep, command);
+			if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
+				game->moves--;
 			break;
 		
 		case COMMAND_FLAG:
 			if (!(command->flag.is_range))
-				res=DoFlagUnflag(game, command, DO_FLAG);
+			{	
+				DoFlagUnflag(game, command, DO_FLAG);
+				if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
+					game->moves--;
+			}	
 			else
-				res=FlagRange(game, command, DO_FLAG);
+			{
+				res = FlagRange(game, command, DO_FLAG);
+				if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
+					game->moves-= res;
+			}	
 			break;
 		
 		case COMMAND_UNFLAG:
 			if (!(command->flag.is_range))
-				res = DoFlagUnflag(game, command, DO_UNFLAG);
+			{
+				DoFlagUnflag(game, command, DO_UNFLAG);
+				if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
+					game->moves--;
+			}	
 			else
-				res=FlagRange(game, command, DO_UNFLAG);
+			{
+				FlagRange(game, command, DO_UNFLAG);
+				if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
+					game->moves-= res;
+			}	
 			break;
 		
 		case COMMAND_QUERY:
 			res = Query(&(game->hiddenboard), &(command->query.results), command->query.index, command->query.is_row);
-			if (res)
-				PrintQuery(&command->query);
-			else
-				printf("0\n");
-			//Free vec
+			PrintQuery(&command->query);
+			free(command->query.results.results);
 			break;
 
 		case COMMAND_SAVE:
@@ -303,51 +332,74 @@ int ExecCommand(tGame *game, tCommand * command)
 			break;
 		
 		case COMMAND_UNDO:
-			/*undo*/
+			if (command->undo.can_undo && game->undos)
+			{
+				Undo(game, &command->undo);
+				game->undos--;
+				if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
+					game->moves--;
+			}
+			else
+				printf("CANT UNDO\n");
 			break;
 
 
 	}
-	if (i == COMMAND_SWEEP || i == COMMAND_FLAG || i == COMMAND_UNFLAG)
-		game->moves--;
+	//DEBUG(Codigo)
+	/*if (i == COMMAND_SWEEP || i == COMMAND_FLAG || i == COMMAND_UNFLAG)
+		game->moves--;*/
 
-	if (res = SWEEP_MINE && i == COMMAND_SWEEP && game->undos)
-		if (game->moves > 0)
-			AskUndo(game);
+	if (res == SWEEP_MINE && i == COMMAND_SWEEP)
+	{
+		if (game->undos)
+		{	
+			if (game->gametype == GAMETYPE_INDIVIDUAL_NOLIMIT)
+				AskUndo(game, &command->undo);
+			else if (game->moves && game->undos)
+				AskUndo(game, &command->undo);
+			else
+			{
+				game->gamestate = GAMESTATE_LOSE;
+			}	
+		}
+		//ToDo Merge
 		else
 			game->gamestate = GAMESTATE_LOSE;
-
+	}	
 	return res;
 }
 
 int FlagRange(tGame *game, tCommand * command, char task)
 {
-	//ToDo: Tidy 
+	//ToDo: Tidy
 	int k;
-	int res = FALSE;
+	int flag_count = 0;
 	char isrow = command->flag.is_row;
 	tPos auxpos = command->flag.first_pos;
 	tPos finalpos = command->flag.last_pos;
-	SaveLastState(game, &command->undo); //Cambiar (Recorrer primero y ver si cambias algo, despues guardar, despues cambiar)
+	//SaveLastState(game, &command->undo);
 	
 	if (isrow)
 	{ //ToDo: Improve
-		for(k = auxpos.j; auxpos.j<=finalpos.j; auxpos.j = ++k)
+		for(k = auxpos.j; k<=finalpos.j; k++)
 		{
 			command->flag.first_pos.j = k;
-			res = DoFlagUnflag(game, command, task) || res;
+			if (DoFlagUnflag(game, command, task))
+				flag_count++;
 		}
 	}
 	else
 	{
-		for(k = auxpos.i; auxpos.i<=finalpos.i; auxpos.i = ++k)
+		for(k = auxpos.i; k<=finalpos.i; k++)
 		{
 			command->flag.first_pos.i = k;
-			res = DoFlagUnflag(game, command, task) || res;
+			if (DoFlagUnflag(game, command, task))
+				flag_count++;
 		}
 	}
-	
-	return res;
+	//ToDo ERASE SPAAAAAAAAAAAAAAAAAAAAACCE
+	//((task == DO_FLAG)? (game->flags_left-= flag_count) : (game->flags_left+= flag_count));
+	return flag_count;
 }
 
 int WriteSaveFile(tGame *game, char *name)
@@ -428,7 +480,7 @@ int LoadFile(tGame *game, char *name)
 
 	game->campaign_level = num;
 
-	if (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < MINIMUM_ROWS))
+	if (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < MIN_ROWS))
 	{
 
 		fclose(loadfile);
@@ -438,7 +490,7 @@ int LoadFile(tGame *game, char *name)
 	game->hiddenboard.rows = game->visualboard.rows = auxrows = num;
 
 
-	if (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < MINIMUM_COLUMNS))
+	if (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < MIN_COLUMNS))
 	{
 
 		fclose(loadfile);
@@ -573,7 +625,8 @@ void SaveLastState(tGame * game, tUndo * undo )
 	CopyBoard(&game->visualboard, &undo->lastboard);
 	undo->mines_left = game->mines_left;
 	undo->sweeps_left = game->sweeps_left;
-	//undo->flags_left = game->flags_left; 
+	undo->flags_left = game->flags_left; 
+	undo->can_undo = TRUE;
 }
 
 static void CopyBoard(tBoard * board_from, tBoard * board_to)
@@ -596,68 +649,100 @@ static void CopyBoard(tBoard * board_from, tBoard * board_to)
 
 }
 
+int Undo(tGame * game, tUndo * undo)
+{
+	undo->can_undo = FALSE;
+	game->mines_left = undo->mines_left;
+	game->sweeps_left = undo->sweeps_left;
+	game->flags_left = undo->flags_left;
+	CopyBoard(&undo->lastboard, &game->visualboard);
+
+	return TRUE;
+}
+
 void CheckGameState(tGame * game)
 {
+
+	if (!game->mines_left || !game->sweeps_left)
+		game->gamestate = GAMESTATE_WIN;
+
 	// Campaign or limited
-	if (game->gametype =! GAMETYPE_INDIVIDUAL_NOLIMIT)
+	if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
 	{
-		/* This ends the game before end of moves, as the
-			task says, but if the player flags more than one
-			mine using FlagRange, it still has the oportunity
-			to win and that is not taken into account */
+		//DEBUG
+		printf("moves: %d, sweeps left: %d, mines left: %d\n", game->moves, game->sweeps_left, game->mines_left);
 		if (game->moves < game->sweeps_left && \
 			game->moves < game->mines_left)
 			game->gamestate = GAMESTATE_LOSE; 
 	}
 
-	if (!game->mines_left || !game->sweeps_left)
-		game->gamestate = GAMESTATE_WIN;
-
-
 	return;
 }
 
-int LoadCampaignLevel(tGame * game)
-{
-	FILE * campaign_file;
-	int i;
-	int level = game->campaign_level;
-	char line[MAX_CAMPAIGN_LINE_LENGTH];
-	if ((campaign_file = fopen(game->campaign_name, "rt")) == NULL)
-		return FALSE;
-	for (i = 0; i < level; i++)
-		fgets(line, MAX_CAMPAIGN_LINE_LENGTH, campaign_file);
-	if (sscanf(line, "%d\t%dx%d", &game->level, &game->hiddenboard.rows, &game->hiddenboard.columns) != 3)
+void getLoadName(char * name)
+{	
+	int res = 0;
+
+	do
 	{
-		fclose(campaign_file);
-		return FALSE;
-	}
-	game->visualboard.rows = game->hiddenboard.rows;
-	game->visualboard.columns = game->hiddenboard.columns;
-	fclose(campaign_file);
-	return TRUE;
+		printf("Introducir nombre de archivo\n");
+		res = scanf("%s", name);
+	
+	} while(!res);
+
+	return;
 
 }
 
-int ValidateCampaignFile(char * filename)
+int LoadCampaign(tGame * game)
 {
 	FILE * campaign_file;
+	tCampaign * aux;
 	int level, rows, columns;
+	int k=0;
 	char line[MAX_CAMPAIGN_LINE_LENGTH];
-	char error = FALSE;
-	if ((campaign_file = fopen(filename, "rt")) == NULL)
+	int error = FALSE;
+	int len;
+	game->campaign=NULL;
+	
+	if ((campaign_file = fopen(game->campaign_name, "rt")) == NULL)
 		return FALSE;
-
-	while (fgets(line, MAX_CAMPAIGN_LINE_LENGTH, campaign_file) != NULL && !error)
+	
+	while (!error && fgets(line, MAX_CAMPAIGN_LINE_LENGTH, campaign_file) != NULL)
 	{
-		if (sscanf(line, "%d\t%dx%d", &level, &rows, &columns) != 3)
+		len=strlen(line);
+
+		if (line[len-1] != '\n')
 			error = TRUE;
 		else
 		{
-			if (rows < MINIMUM_ROWS || columns < MINIMUM_ROWS || level < EASY || level > NIGHTMARE)
+			if (sscanf(line, "%d\t%dx%d", &level, &rows, &columns) != 3)
 				error = TRUE;
+			else
+			{
+				if (level < EASY || level > NIGHTMARE || rows < MIN_ROWS || columns < MIN_COLUMNS || (level == NIGHTMARE && rows * columns < 100))
+					error = TRUE;
+				else
+				{
+					if (k % BLOCK == 0)
+					{
+						aux = realloc (game->campaign, (k + BLOCK) * sizeof(*(game->campaign)));
+						
+						if (aux == NULL)
+						{
+							free(game->campaign);
+							return MALLOC_ERR;
+						}
+						game->campaign = aux;
+						
+					}
+					game->campaign[k].level = level;
+					game->campaign[k].rows = rows;
+					game->campaign[k].columns = columns;
+					k++;
+				}
+			}
 		}
 	}
-	fclose(campaign_file);
 	return !error;
 }
