@@ -40,6 +40,7 @@ main(void)
 			do
 			{
 				getLoadName(loadname);
+
 			} while (!LoadFile(&game, loadname));
 			Play(&game);
 			break;		
@@ -108,8 +109,8 @@ int setNewGame(tGame * game)
  	else
  		game->moves = get_moves(game->undos, game->mines);
  	
+ 	game->sweeps_left = (game->visualboard.rows * game->visualboard.columns) - game->mines;
  	game->flags_left = game->mines;
-
  	game->gamestate = GAMESTATE_DEFAULT;
 
  	if (!CreateHiddenVisualBoard(game))
@@ -392,7 +393,7 @@ LegalFlag(tGame * game, tCommand * structcommand, char * params, char task) /*No
 	//int fposi, fposj, lposi, lposj;
 	int i;
 	char legal = TRUE;
-	char legal_range = FALSE;
+	char range_count = 0;
 	tPos f_aux;
 	tPos l_aux;
 	char f_scan;
@@ -442,27 +443,28 @@ LegalFlag(tGame * game, tCommand * structcommand, char * params, char task) /*No
 
 		if(legal && structcommand->flag.is_row)
 		{
-			for(i=f_aux.j; i<=l_aux.j && !legal_range; i++)
+			for(i=f_aux.j; i<=l_aux.j; i++)
 			{	
 				if ((task == DO_FLAG) && (game->visualboard.board[f_aux.i][i] == VISUAL_UNFLAGGED))
-					legal_range = TRUE;
+					range_count++;
 				else if( (task == DO_UNFLAG) && (game->visualboard.board[f_aux.i][i] == VISUAL_FLAGGED))
-					legal_range = TRUE;
+					range_count++;
 			}	
 		}
 		else if (legal)
 		{
-			for(i=f_aux.i; i<=l_aux.i && !legal_range; i++)
+			for(i=f_aux.i; i<=l_aux.i; i++)
 			{	
 				if ((task == DO_FLAG) && (game->visualboard.board[i][f_aux.j] == VISUAL_UNFLAGGED))
-					legal_range = TRUE;
+					range_count++;
 				else if( (task == DO_UNFLAG) && (game->visualboard.board[i][f_aux.j] == VISUAL_FLAGGED))
-					legal_range = TRUE;
+					range_count++;
 			}		
 		}	
 		
-		if (!legal_range)
+		if (legal && (range_count == 0 || range_count>game->moves))
 			legal = FALSE;
+		
 		if (legal)
 		{	
 			structcommand->flag.is_range = TRUE;
