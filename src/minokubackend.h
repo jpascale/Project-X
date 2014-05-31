@@ -136,7 +136,13 @@
 // Delete buffer
 #define DELBFF() while(getchar() != '\n')
 
+
 #define CLEAR_SCREEN() printf("\e[1;1H\e[2J")
+
+//Campaign Format
+#define FILE_FORMAT ".txt"
+#define FORMAT_LENGTH 4
+#define MAX_CAMPAIGN_LINE_LENGTH 8
 
 
 /*
@@ -266,6 +272,9 @@ int FlagRange(tGame *game, tCommand * command, char task);
 int WriteSaveFile(tGame *game, char *name);
 void SaveLastState(tGame * game, tUndo * undo);
 void CheckGameState(tGame * game);
+int ValidateCampaignFile(char * filename);
+int LoadCampaignLevel(tGame * game);
+
 
 
 #endif

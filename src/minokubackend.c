@@ -560,6 +560,7 @@ int LoadFile(tGame *game, char *name)
 		return FALSE;
 	}
 
+	game->gamestate=GAMESTATE_DEFAULT;
 
 	fclose(loadfile);
 	return TRUE;
@@ -614,4 +615,49 @@ void CheckGameState(tGame * game)
 
 
 	return;
+}
+
+int LoadCampaignLevel(tGame * game)
+{
+	FILE * campaign_file;
+	int i;
+	int level = game->campaign_level;
+	char line[MAX_CAMPAIGN_LINE_LENGTH];
+	if ((campaign_file = fopen(game->campaign_name, "rt")) == NULL)
+		return FALSE;
+	for (i = 0; i < level; i++)
+		fgets(line, MAX_CAMPAIGN_LINE_LENGTH, campaign_file);
+	if (sscanf(line, "%d\t%dx%d", &game->level, &game->hiddenboard.rows, &game->hiddenboard.columns) != 3)
+	{
+		fclose(campaign_file);
+		return FALSE;
+	}
+	game->visualboard.rows = game->hiddenboard.rows;
+	game->visualboard.columns = game->hiddenboard.columns;
+	fclose(campaign_file);
+	return TRUE;
+
+}
+
+int ValidateCampaignFile(char * filename)
+{
+	FILE * campaign_file;
+	int level, rows, columns;
+	char line[MAX_CAMPAIGN_LINE_LENGTH];
+	char error = FALSE;
+	if ((campaign_file = fopen(filename, "rt")) == NULL)
+		return FALSE;
+
+	while (fgets(line, MAX_CAMPAIGN_LINE_LENGTH, campaign_file) != NULL && !error)
+	{
+		if (sscanf(line, "%d\t%dx%d", &level, &rows, &columns) != 3)
+			error = TRUE;
+		else
+		{
+			if (rows < MINIMUM_ROWS || columns < MINIMUM_ROWS || level < EASY || level > NIGHTMARE)
+				error = TRUE;
+		}
+	}
+	fclose(campaign_file);
+	return !error;
 }
