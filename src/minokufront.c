@@ -554,7 +554,7 @@ void PrintQuery (tQuery * query)
 	return;
 }
 
-int AskUndo(tGame * game)
+int AskUndo(tGame * game, tUndo * undo)
 {
 	char fmt[6]; //ToDo: Constant
 	char input[MAX_COMMAND_LEN];
@@ -582,6 +582,7 @@ int AskUndo(tGame * game)
 	if (undo)
 	{
 		//ToDo: Call Undo
+
 		return TRUE;
 	}
 	else

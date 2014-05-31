@@ -186,6 +186,8 @@ typedef struct
 	tBoard lastboard;
 	int mines_left; 
 	int sweeps_left;
+	int flags_left;
+	char can_undo;
 
 } tUndo;
 

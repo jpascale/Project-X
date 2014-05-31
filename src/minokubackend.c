@@ -580,7 +580,8 @@ void SaveLastState(tGame * game, tUndo * undo )
 	CopyBoard(&game->visualboard, &undo->lastboard);
 	undo->mines_left = game->mines_left;
 	undo->sweeps_left = game->sweeps_left;
-	//undo->flags_left = game->flags_left; 
+	undo->flags_left = game->flags_left; 
+	undo->can_undo = TRUE;
 }
 
 static void CopyBoard(tBoard * board_from, tBoard * board_to)
@@ -601,6 +602,17 @@ static void CopyBoard(tBoard * board_from, tBoard * board_to)
 		for (j = 0; j < dimj; j++)
 			to[i][j] = from[i][j];
 
+}
+
+int Undo(tGame * game, tUndo * undo)
+{
+	undo->can_undo = FALSE;
+	game->mines_left = undo->mines_left;
+	game->sweeps_left = undo->sweeps_left;
+	game->flags_left = undo->flags_left;
+	CopyBoard(undo->lastboard, game->visualboard);
+
+	return TRUE;
 }
 
 void CheckGameState(tGame * game)
