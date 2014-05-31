@@ -104,6 +104,8 @@ int setNewGame(tGame * game)
  	
  	game->flags_left = game->mines;
 
+ 	game->gamestate = GAMESTATE_DEFAULT;
+
  	if (!CreateHiddenVisualBoard(game))
  		return FALSE;
 

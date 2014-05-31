@@ -107,6 +107,10 @@
 #define SAVEFILE_MOVES 4
 #define SAVEFILE_ISCAMPAIGN 5
 
+#define GAMESTATE_DEFAULT 	0
+#define GAMESTATE_WIN 		1
+#define GAMESTATE_LOSE 		2
+
 // map undos quantity
 #define get_undos(level) (((level)==NIGHTMARE)?1: \
 						  ((level)==HARD)?3: \
@@ -158,6 +162,7 @@ typedef struct
 	int flags_left;
 	char campaign_name[MAX_FILENAME_LEN];
 	int campaign_level;
+	int gamestate;
 
 } tGame;
 
