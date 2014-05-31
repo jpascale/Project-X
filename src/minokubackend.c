@@ -16,6 +16,7 @@ void setGameMinesNumber(tGame * game)
 			break;
 
 		case MEDIUM:
+		
 			mines = dim * PERCENT_MEDIUM;
 			break;
 		
@@ -434,7 +435,7 @@ int LoadFile(tGame *game, char *name)
 
 	game->campaign_level = num;
 
-	if (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < MINIMUM_ROWS))
+	if (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < MIN_ROWS))
 	{
 
 		fclose(loadfile);
@@ -444,7 +445,7 @@ int LoadFile(tGame *game, char *name)
 	game->hiddenboard.rows = game->visualboard.rows = auxrows = num;
 
 
-	if (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < MINIMUM_COLUMNS))
+	if (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < MIN_COLUMNS))
 	{
 
 		fclose(loadfile);
@@ -616,21 +617,17 @@ int Undo(tGame * game, tUndo * undo)
 
 void CheckGameState(tGame * game)
 {
-	// Campaign or limited
-	if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
-	{
-		/* This ends the game before end of moves, as the
-			task says, but if the player flags more than one
-			mine using FlagRange, it still has the oportunity
-			to win and that is not taken into account */
-		if (game->moves < game->sweeps_left && \
-			game->moves < game->mines_left)
-			game->gamestate = GAMESTATE_LOSE; 
-	}
 
 	if (!game->mines_left || !game->sweeps_left)
 		game->gamestate = GAMESTATE_WIN;
 
+	// Campaign or limited
+	if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
+	{
+		if (game->moves < game->sweeps_left && \
+			game->moves < game->mines_left)
+			game->gamestate = GAMESTATE_LOSE; 
+	}
 
 	return;
 }
@@ -672,11 +669,26 @@ int ValidateCampaignFile(char * filename)
 			error = TRUE;
 		else
 		{
-			if (rows < MINIMUM_ROWS || columns < MINIMUM_ROWS || level < EASY || level > NIGHTMARE)
+			if (rows < MIN_ROWS || columns < MIN_ROWS || level < EASY || level > NIGHTMARE)
 				error = TRUE;
 		}
 	}
 	fclose(campaign_file);
 	
 	return !error;
+}
+
+void getLoadName(char * name)
+{	
+	int res = 0;
+
+	do
+	{
+		printf("Introducir nombre de archivo\n");
+		res = scanf("%s", name);
+	
+	} while(!res);
+
+	return;
+
 }

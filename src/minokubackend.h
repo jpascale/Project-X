@@ -18,8 +18,6 @@
 /*
 **		Macros
 */
-#define DEBUG
-
 #define FALSE 0
 #define TRUE 1
 
@@ -66,10 +64,10 @@
 #define UNLIMITED_MOVES 0
 
 //Minimum and maximum dim
-#define MINIMUM_ROWS 5
-#define MINIMUM_COLUMNS 5
-#define MAXIMUM_ROWS 19
-#define MAXIMUM_COLUMNS 19
+#define MIN_ROWS 5
+#define MIN_COLUMNS 5
+#define MAX_ROWS 19 //ToDo: not using
+#define MAX_COLUMNS 19 //ToDo: not using
 
 // Level mines percentage
 #define PERCENT_EASY 		0.2
@@ -254,6 +252,7 @@ int LegalFlag(tBoard * visualboard, tCommand * command, char * params, char task
 int LegalQuery(tBoard * visualboard, tCommand * structcommand, char * params);
 void PrintQuery (tQuery * query);
 int AskUndo(tGame * game, tUndo * undo);
+void getLoadName(char * name);
 
 
 /*
@@ -276,7 +275,6 @@ void SaveLastState(tGame * game, tUndo * undo);
 void CheckGameState(tGame * game);
 int ValidateCampaignFile(char * filename);
 int LoadCampaignLevel(tGame * game);
-
-
+int LoadFile(tGame *game, char *name);
 
 #endif

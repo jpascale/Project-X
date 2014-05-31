@@ -6,6 +6,7 @@ main(void)
 	//ToDo: tidy this, replace cases with constants
 	int option;
 	tGame game;
+	char loadname[MAX_FILENAME_LEN];
 	
 	randomize();
 	option = Menu();
@@ -36,6 +37,11 @@ main(void)
 			break;
 
 		case 2:	/* Load */
+			do
+			{
+				getLoadName(loadname);
+			} while (!LoadFile(&game, loadname));
+			Play(&game);
 			break;		
 	}
 
@@ -581,7 +587,6 @@ int AskUndo(tGame * game, tUndo * undo)
 	if (wasundo)
 	{
 		//ToDo: Call Undo
-
 		return TRUE;
 	}
 	else
