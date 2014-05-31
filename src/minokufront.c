@@ -559,27 +559,26 @@ int AskUndo(tGame * game, tUndo * undo)
 	char fmt[6]; //ToDo: Constant
 	char input[MAX_COMMAND_LEN];
 
-	int quit;
-	int undo;
+	int wasundo;
+	int valid;
 
-	Printboard(game->visualboard);
+	PrintBoard(&game->visualboard);
 	sprintf(fmt, "%%%ds",MAX_COMMAND_LEN);
 
 	printf("Perdiste! ¿Hacer Undo? (Ingresar undo o quit\n");
 	
 	do
 	{
-		int valid;
 		scanf(fmt, input);
 
-		valid = (!strcmp(input, "quit") || (undo = !strcmp(input, "undo")));
+		valid = (strcmp(input, "quit") == 0 || (wasundo = !strcmp(input, "undo")) == 0);
 
 		if (!valid)
 			printf ("Ingresar quit o undo.\n");
 
 	} while(!valid);
 
-	if (undo)
+	if (wasundo)
 	{
 		//ToDo: Call Undo
 

@@ -253,7 +253,7 @@ int LegalSweep(tBoard * visualboard, tCommand * command, char * params);
 int LegalFlag(tBoard * visualboard, tCommand * command, char * params, char task);
 int LegalQuery(tBoard * visualboard, tCommand * structcommand, char * params);
 void PrintQuery (tQuery * query);
-int AskUndo(tGame * game);
+int AskUndo(tGame * game, tUndo * undo);
 
 
 /*

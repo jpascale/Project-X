@@ -275,11 +275,9 @@ int ExecCommand(tGame *game, tCommand * command)
 		
 		case COMMAND_FLAG:
 			if (!(command->flag.is_range))	
-					res=DoFlagUnflag(game, command, DO_FLAG);
+				res=DoFlagUnflag(game, command, DO_FLAG);
 			else
-			{	
 				res=FlagRange(game, command, DO_FLAG);
-			}	
 			break;
 		
 		case COMMAND_UNFLAG:
@@ -315,12 +313,13 @@ int ExecCommand(tGame *game, tCommand * command)
 	if (i == COMMAND_SWEEP || i == COMMAND_FLAG || i == COMMAND_UNFLAG)
 		game->moves--;
 
-	if (res = SWEEP_MINE && i == COMMAND_SWEEP && game->undos)
+	if (res == SWEEP_MINE && i == COMMAND_SWEEP && (game->undos))
+	{
 		if (game->moves > 0)
-			AskUndo(game);
+			AskUndo(game, &command->undo);
 		else
 			game->gamestate = GAMESTATE_LOSE;
-
+	}
 	return res;
 }
 
@@ -610,7 +609,7 @@ int Undo(tGame * game, tUndo * undo)
 	game->mines_left = undo->mines_left;
 	game->sweeps_left = undo->sweeps_left;
 	game->flags_left = undo->flags_left;
-	CopyBoard(undo->lastboard, game->visualboard);
+	CopyBoard(&undo->lastboard, &game->visualboard);
 
 	return TRUE;
 }
@@ -618,7 +617,7 @@ int Undo(tGame * game, tUndo * undo)
 void CheckGameState(tGame * game)
 {
 	// Campaign or limited
-	if (game->gametype =! GAMETYPE_INDIVIDUAL_NOLIMIT)
+	if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
 	{
 		/* This ends the game before end of moves, as the
 			task says, but if the player flags more than one
@@ -678,5 +677,6 @@ int ValidateCampaignFile(char * filename)
 		}
 	}
 	fclose(campaign_file);
+	
 	return !error;
 }
