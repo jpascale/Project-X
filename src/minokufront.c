@@ -189,8 +189,6 @@ void PrintBoard(tBoard * structboard)
 void Play(tGame * game)
 {	
 	int legal;
-	char won = FALSE; //ToDo: put in tGame
-	char end = FALSE;
 
 	tScan scan;
 	tCommand command;
@@ -220,8 +218,13 @@ void Play(tGame * game)
 		//DEBUG
 		//printf("Antes de ejecutar (%s): %d\n", command.query.is_row? "Fila":"Columna", command.query.index);
 		ExecCommand(game, &command);
+		CheckGameState(game);
+	} while(game->gamestate == GAMESTATE_DEFAULT);
 
-	} while(!won && !end);
+	if (game->gamestate == GAMESTATE_WIN)
+		printf ("GANO\n");
+	else
+		printf("PERDIO\n");
 
 	return;
 }
@@ -539,4 +542,42 @@ void PrintQuery (tQuery * query)
 	putchar('\n');
 
 	return;
+}
+
+int AskUndo(tGame * game)
+{
+	char fmt[6]; //ToDo: Constant
+	char input[MAX_COMMAND_LEN];
+
+	int quit;
+	int undo;
+
+	Printboard(game->visualboard);
+	sprintf(fmt, "%%%ds",MAX_COMMAND_LEN);
+
+	printf("Perdiste! ¿Hacer Undo? (Ingresar undo o quit\n");
+	
+	do
+	{
+		int valid;
+		scanf(fmt, input);
+
+		valid = (!strcmp(input, "quit") || (undo = !strcmp(input, "undo")));
+
+		if (!valid)
+			printf ("Ingresar quit o undo.\n");
+
+	} while(!valid);
+
+	if (undo)
+	{
+		//ToDo: Call Undo
+		return TRUE;
+	}
+	else
+	{
+		game->gamestate = GAMESTATE_LOSE;
+		return FALSE;
+	}
+
 }

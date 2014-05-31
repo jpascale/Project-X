@@ -233,8 +233,11 @@ Sweep(tGame * game, tPos * pos, tCommand * command)
 	int j = pos->j;
 	
 	if (game->hiddenboard.board[i][j] == HIDDEN_MINE)
+	{
+		game->visualboard.board[i][j] = HIDDEN_MINE;
 		return SWEEP_MINE;
-	
+	}
+
 	SaveLastState(game, &command->undo);
 	game->visualboard.board[i][j] = VISUAL_EMPTY;
 	game->sweeps_left--;
@@ -307,6 +310,13 @@ int ExecCommand(tGame *game, tCommand * command)
 	}
 	if (i == COMMAND_SWEEP || i == COMMAND_FLAG || i == COMMAND_UNFLAG)
 		game->moves--;
+
+	if (res = SWEEP_MINE && i == COMMAND_SWEEP && game->undos)
+		if (game->moves > 0)
+			AskUndo(game);
+		else
+			game->gamestate = GAMESTATE_LOSE;
+
 	return res;
 }
 
@@ -583,5 +593,25 @@ static void CopyBoard(tBoard * board_from, tBoard * board_to)
 		for (j = 0; j < dimj; j++)
 			to[i][j] = from[i][j];
 
+}
 
+void CheckGameState(tGame * game)
+{
+	// Campaign or limited
+	if (game->gametype =! GAMETYPE_INDIVIDUAL_NOLIMIT)
+	{
+		/* This ends the game before end of moves, as the
+			task says, but if the player flags more than one
+			mine using FlagRange, it still has the oportunity
+			to win and that is not taken into account */
+		if (game->moves < game->sweeps_left && \
+			game->moves < game->mines_left)
+			game->gamestate = GAMESTATE_LOSE; 
+	}
+
+	if (!game->mines_left || !game->sweeps_left)
+		game->gamestate = GAMESTATE_WIN;
+
+
+	return;
 }

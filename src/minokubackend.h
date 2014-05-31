@@ -111,6 +111,10 @@
 #define GAMESTATE_WIN 		1
 #define GAMESTATE_LOSE 		2
 
+//Campaign Format
+#define FILE_FORMAT ".txt"
+#define FORMAT_LENGTH 4
+
 // map undos quantity
 #define get_undos(level) (((level)==NIGHTMARE)?1: \
 						  ((level)==HARD)?3: \
@@ -132,9 +136,7 @@
 // Delete buffer
 #define DELBFF() while(getchar() != '\n')
 
-//Campaign Format
-#define FILE_FORMAT ".txt"
-#define FORMAT_LENGTH 4
+#define CLEAR_SCREEN() printf("\e[1;1H\e[2J")
 
 
 /*
@@ -243,6 +245,7 @@ int LegalSweep(tBoard * visualboard, tCommand * command, char * params);
 int LegalFlag(tBoard * visualboard, tCommand * command, char * params, char task);
 int LegalQuery(tBoard * visualboard, tCommand * structcommand, char * params);
 void PrintQuery (tQuery * query);
+int AskUndo(tGame * game);
 
 
 /*
@@ -261,7 +264,8 @@ int LegalPos(tBoard * structboard, tPos * position);
 int ExecCommand(tGame *game, tCommand *command);
 int FlagRange(tGame *game, tCommand * command, char task);
 int WriteSaveFile(tGame *game, char *name);
-void SaveLastState(tGame * game, tUndo * undo );
+void SaveLastState(tGame * game, tUndo * undo);
+void CheckGameState(tGame * game);
 
 
 #endif
