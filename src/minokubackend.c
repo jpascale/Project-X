@@ -660,52 +660,6 @@ void CheckGameState(tGame * game)
 	return;
 }
 
-int LoadCampaignLevel(tGame * game)
-{
-	FILE * campaign_file;
-	int i;
-	int level = game->campaign_level;
-	char line[MAX_CAMPAIGN_LINE_LENGTH];
-	if ((campaign_file = fopen(game->campaign_name, "rt")) == NULL)
-		return FALSE;
-	for (i = 0; i < level; i++)
-		fgets(line, MAX_CAMPAIGN_LINE_LENGTH, campaign_file);
-	if (sscanf(line, "%d\t%dx%d", &game->level, &game->hiddenboard.rows, &game->hiddenboard.columns) != 3)
-	{
-		fclose(campaign_file);
-		return FALSE;
-	}
-	game->visualboard.rows = game->hiddenboard.rows;
-	game->visualboard.columns = game->hiddenboard.columns;
-	fclose(campaign_file);
-	return TRUE;
-
-}
-
-int ValidateCampaignFile(char * filename)
-{
-	FILE * campaign_file;
-	int level, rows, columns;
-	char line[MAX_CAMPAIGN_LINE_LENGTH];
-	char error = FALSE;
-	if ((campaign_file = fopen(filename, "rt")) == NULL)
-		return FALSE;
-
-	while (fgets(line, MAX_CAMPAIGN_LINE_LENGTH, campaign_file) != NULL && !error)
-	{
-		if (sscanf(line, "%d\t%dx%d", &level, &rows, &columns) != 3)
-			error = TRUE;
-		else
-		{
-			if (rows < MIN_ROWS || columns < MIN_ROWS || level < EASY || level > NIGHTMARE)
-				error = TRUE;
-		}
-	}
-	fclose(campaign_file);
-	
-	return !error;
-}
-
 void getLoadName(char * name)
 {	
 	int res = 0;
@@ -719,4 +673,57 @@ void getLoadName(char * name)
 
 	return;
 
+}
+
+int LoadCampaign(tGame * game)
+{
+	FILE * campaign_file;
+	tCampaign * aux;
+	int level, rows, columns;
+	int k=0;
+	char line[MAX_CAMPAIGN_LINE_LENGTH];
+	int error = FALSE;
+	int len;
+	game->campaign=NULL;
+	
+	if ((campaign_file = fopen(game->campaign_name, "rt")) == NULL)
+		return FALSE;
+	
+	while (!error && fgets(line, MAX_CAMPAIGN_LINE_LENGTH, campaign_file) != NULL)
+	{
+		len=strlen(line);
+
+		if (line[len-1] != '\n')
+			error = TRUE;
+		else
+		{
+			if (sscanf(line, "%d\t%dx%d", &level, &rows, &columns) != 3)
+				error = TRUE;
+			else
+			{
+				if (level < EASY || level > NIGHTMARE || rows < MIN_ROWS || columns < MIN_COLUMNS || (level == NIGHTMARE && rows * columns < 100))
+					error = TRUE;
+				else
+				{
+					if (k % BLOCK == 0)
+					{
+						aux = realloc (game->campaign, (k + BLOCK) * sizeof(*(game->campaign)));
+						
+						if (aux == NULL)
+						{
+							free(game->campaign);
+							return MALLOC_ERR;
+						}
+						game->campaign = aux;
+						
+					}
+					game->campaign[k].level = level;
+					game->campaign[k].rows = rows;
+					game->campaign[k].columns = columns;
+					k++;
+				}
+			}
+		}
+	}
+	return !error;
 }

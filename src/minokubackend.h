@@ -140,7 +140,7 @@
 //Campaign Format
 #define FILE_FORMAT ".txt"
 #define FORMAT_LENGTH 4
-#define MAX_CAMPAIGN_LINE_LENGTH 8
+#define MAX_CAMPAIGN_LINE_LENGTH 9
 
 
 /*
@@ -153,6 +153,15 @@ typedef struct
 	int columns;
 
 } tBoard;
+
+typedef struct
+{
+	int level;
+	int rows;
+	int columns;
+
+} tCampaign;
+
 
 typedef struct 
 {
@@ -169,6 +178,7 @@ typedef struct
 	char campaign_name[MAX_FILENAME_LEN];
 	int campaign_level;
 	int gamestate;
+	tCampaign * campaign;
 
 } tGame;
 
@@ -231,6 +241,8 @@ typedef struct
 
 } tCommand;
 
+
+
 /*
 **		Function prototypes (front) 
 **		TODO: Put this in frontend. Backend does not need this.
@@ -273,8 +285,7 @@ int FlagRange(tGame *game, tCommand * command, char task);
 int WriteSaveFile(tGame *game, char *name);
 void SaveLastState(tGame * game, tUndo * undo);
 void CheckGameState(tGame * game);
-int ValidateCampaignFile(char * filename);
-int LoadCampaignLevel(tGame * game);
+int LoadCampaign(tGame * game);
 int LoadFile(tGame *game, char *name);
 
 #endif
