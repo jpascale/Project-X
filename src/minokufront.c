@@ -109,6 +109,7 @@ int setNewGame(tGame * game)
  	else
  		game->moves = get_moves(game->undos, game->mines);
  	
+ 	game->mines_left = game->mines;
  	game->sweeps_left = (game->visualboard.rows * game->visualboard.columns) - game->mines;
  	game->flags_left = game->mines;
  	game->gamestate = GAMESTATE_DEFAULT;
@@ -203,7 +204,8 @@ void Play(tGame * game)
 	command.undo.lastboard.rows = game->visualboard.rows; 
 	command.undo.lastboard.columns = game->visualboard.columns;
 	CreateBoard(&command.undo.lastboard);
-	
+	//debug
+	printf("gamestate: %d\n", game->gamestate);
 	do
 	{
 		PrintBoard(&game->visualboard); //ToDo: Print all
@@ -213,7 +215,7 @@ void Play(tGame * game)
 			if ((legal = InputCommand(&scan)))
 			{	
 				if((legal = LegalCommand(&scan, &command)))
-					if ( command.command_ref < 5)
+					if (command.command_ref < 5)
 						legal = LegalParams(game, &command, &scan);
 				
 			}
@@ -222,11 +224,16 @@ void Play(tGame * game)
 		if (!legal)
 			printf("Commando invalidOO\n");
 		} while (!legal);
-
+		//debug
+		printf("gamestate: %d\n", game->gamestate);
 		//DEBUG
 		//printf("Antes de ejecutar (%s): %d\n", command.query.is_row? "Fila":"Columna", command.query.index);
 		ExecCommand(game, &command);
+		//debug
+		printf("gamestate: %d\n", game->gamestate);
 		CheckGameState(game);
+		//debug
+		printf("gamestate: %s\n", (game->gamestate==2)?"ACA":"ACA NO");
 	} while(game->gamestate == GAMESTATE_DEFAULT);
 
 	if (game->gamestate == GAMESTATE_WIN)

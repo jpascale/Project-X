@@ -16,7 +16,6 @@ void setGameMinesNumber(tGame * game)
 			break;
 
 		case MEDIUM:
-		
 			mines = dim * PERCENT_MEDIUM;
 			break;
 		
@@ -651,6 +650,8 @@ void CheckGameState(tGame * game)
 	// Campaign or limited
 	if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
 	{
+		//DEBUG
+		printf("moves: %d, sweeps left: %d, mines left: %d\n",game->moves, game->sweeps_left, game->mines_left);
 		if (game->moves < game->sweeps_left && \
 			game->moves < game->mines_left)
 			game->gamestate = GAMESTATE_LOSE; 
