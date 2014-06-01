@@ -57,7 +57,7 @@ main(void)
 			}
 			else
 				if (!setCampaign(&game))
-					printf("Error en la campaña.\n");
+					printf("Archivo invalido o inexistente.\n");
 			break;
 
 		case 2:	/* Load */
@@ -70,7 +70,7 @@ main(void)
 			if (game.gametype == GAMETYPE_CAMPAIGN)
 			{
 				if (!resumeCampaign(&game))
-					printf("Campaña invalida.\n");
+					printf("Archivo invalido o inexistente.\n");
 			}
 			else
 				Play(&game);
