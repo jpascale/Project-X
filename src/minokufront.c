@@ -203,7 +203,7 @@ int setNewGame(tGame * game)
 		int campaign_columns = game->campaign[game->campaign_level].columns;
 		int campaign_level = game->campaign[game->campaign_level].level;
 
-		if campaign_rows > MAX_ROWS || campaign_columns > MAX_COLUMNS)
+		if (campaign_rows > MAX_ROWS || campaign_columns > MAX_COLUMNS)
 			return FALSE;
 		
 		game->visualboard.rows = game->hiddenboard.rows = campaign_rows;
@@ -788,14 +788,16 @@ int AskUndo(tGame * game, tUndo * undo)
 void PrintearTodo(tGame * game)
 {
 	printf("%s", KRED);
-	printf("Gametype: %d\n", game->gametype);
-	printf("Moves: %d\n", game->moves);
+	//printf("Gametype: %d\n", game->gametype);
+	if (game->gametype)
+		printf("Moves: %d\n", game->moves);
 	printf("Undos: %d\n", game->undos);
-	printf("Mines: %d\n", game->mines);
-	printf("Mines left: %d\n", game->mines_left);
-	printf("Sweeps left: %d\n", game->sweeps_left);
+	//printf("Mines: %d\n", game->mines);
+	//printf("Mines left: %d\n", game->mines_left);
+	//printf("Sweeps left: %d\n", game->sweeps_left);
 	printf("Flags left: %d\n", game->flags_left);
-	printf("Gamestate: %d\n", game->gamestate);
+	PrintBoard(&game->visualboard);
+	//printf("Gamestate: %d\n", game->gamestate);
 	printf("%s", KNRM);
 	return;
 }
@@ -926,4 +928,22 @@ int ExecCommand(tGame *game, tCommand * command)
 			game->gamestate = GAMESTATE_LOSE;
 	}	
 	return res;
+}
+
+void getName(char * name)
+{	
+	int res = 0;
+	char fmt[6];
+	sprintf(fmt, "%%%ds", MAX_FILENAME_LEN);
+	do
+	{
+		printf("Introducir nombre de archivo\n");
+		res = scanf(fmt, name);
+	
+	} while(!res);
+
+	DELBFF();
+
+	return;
+
 }

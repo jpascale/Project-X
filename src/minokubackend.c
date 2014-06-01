@@ -587,21 +587,7 @@ void CheckGameState(tGame * game)
 	return;
 }
 
-void getName(char * name)
-{	
-	int res = 0;
-	char fmt[6];
-	sprintf(fmt, "%%%ds", MAX_FILENAME_LEN);
-	do
-	{
-		printf("Introducir nombre de archivo\n");
-		res = scanf(fmt, name);
-	
-	} while(!res);
 
-	return;
-
-}
 
 int LoadCampaign(tGame * game)
 {
