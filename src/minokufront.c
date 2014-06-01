@@ -517,7 +517,7 @@ int LegalSave(tCommand * structcommand, char * params)
 
 int
 LegalSweep(tBoard * visualboard, tCommand * structcommand, char * params)
-{//todo: tidy
+{
 	tPos aux;
 	char new_line;
 	char * closepos;
@@ -526,15 +526,19 @@ LegalSweep(tBoard * visualboard, tCommand * structcommand, char * params)
 	int i;
 	int auxnum;
 
+	/*	Used &i_scan because we cannot use int pointer,
+	**	we use char pointer and cast it instead
+	*/
 	if (sscanf(params, "(%c,%d)%c", &i_scan, &aux.j, &new_line) != 3)
 		return FALSE;
+
 	if (new_line != '\n')
 		return FALSE;
 	
 	//ToDo: Modularize
-	i_scan = get_row_pos_byref(i_scan);
 	aux.i = (int)i_scan;
-	aux.j--;
+	TranslateCoords(&aux);
+	
 	if (!isupper('A' + aux.i)) // If Column is not a letter return false
 		legal = FALSE;
 
@@ -942,3 +946,10 @@ void getName(char * name)
 	return;
 
 }
+
+void TranslateCoords(tPos * pos)
+{
+	pos->i = get_row_pos_byref(pos->i);
+	pos->j--;
+}
+
