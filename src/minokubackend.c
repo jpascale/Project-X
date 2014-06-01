@@ -267,12 +267,11 @@ int LegalPos(tBoard * structboard, tPos * pos)
 	int i = pos->i;
 	int j = pos->j;
 	
-	if (i < 0 || j < 0 || i >= structboard->rows || j >= structboard->columns)
+	if ( (i < 0) || (j < 0) || (i >= structboard->rows) || (j >= structboard->columns))
 		return FALSE;
 
 	return TRUE;
 }
-
 
 int FlagRange(tGame *game, tCommand * command, char task)
 {
@@ -649,6 +648,11 @@ int LoadCampaign(tGame * game)
 				}
 			}
 		}
+	}
+	if (!error)
+	{
+		game->campaign = realloc (game->campaign, k * sizeof(*(game->campaign)));
+		game->levels_amount = k;
 	}
 	return !error;
 }

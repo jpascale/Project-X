@@ -66,8 +66,8 @@
 //Minimum and maximum dim
 #define MIN_ROWS 5
 #define MIN_COLUMNS 5
-#define MAX_ROWS 19 //ToDo: not using
-#define MAX_COLUMNS 19 //ToDo: not using
+#define MAX_ROWS 19
+#define MAX_COLUMNS 19
 
 // Level mines percentage
 #define PERCENT_EASY 		0.2
@@ -178,6 +178,7 @@ typedef struct
 	char campaign_name[MAX_FILENAME_LEN];
 	int campaign_level;
 	int gamestate;
+	int levels_amount;
 	tCampaign * campaign;
 
 } tGame;

@@ -24,6 +24,7 @@ int ExecCommand(tGame *game, tCommand *command);
 void getName(char * name);
 //ToDo Remove
 void PrintearTodo(tGame * game);
+void getCampaignName(tGame *game);
 
 int
 main(void)
@@ -35,30 +36,27 @@ main(void)
 	
 	randomize();
 	option = Menu();
-	
+	game.campaign_level = 0;
 	switch (option)
 	{
 		case 1: /* New Game */
-			if (setNewGame(&game)){
-			/* DEBUG 
-			printf("hidden F C : %d %d\n", game.hiddenboard.rows, game.hiddenboard.columns);
-			printf("visual F C : %d %d\n", game.visualboard.rows, game.visualboard.columns);
-			printf("gametype: %d\n", game.gametype);
-			printf("level: %d\n", game.level);
-			printf("moves: %d\n", game.moves);
-			printf("undos: %d\n", game.undos);
-			printf("mines: %d\n", game.mines);
-			printf("mines_left: %d\n", game.mines_left);
-			printf("sweeps left: %d\n", game.sweeps_left);	
-			*/
-			//ToDo: Dont print hiddenboard
-			PrintearTodo(&game);
-			PrintBoard(&game.hiddenboard);
-
-			Play(&game);
+			setGametypeMenu(&game);
+			if (game.gametype != GAMETYPE_CAMPAIGN)
+			{
+				if (setNewGame(&game))
+				{
+					PrintearTodo(&game);
+					PrintBoard(&game.hiddenboard);
+					Play(&game);
+				}
+				else
+					printf("No hay suficiente memoria para seguir jugando.\n");
 			}
 			else
-				printf("No hay suficiente memoria para seguir jugando.\n");
+			{
+				if (!setCampaign(&game))
+					printf("Error en la campaña\n");
+			}
 			break;
 
 		case 2:	/* Load */
@@ -67,14 +65,71 @@ main(void)
 				getName(loadname);
 
 			} while (!LoadFile(&game, loadname));
-
-			Play(&game);
+			if (game.gametype == GAMETYPE_CAMPAIGN)
+			{
+				if (!setCampaign(&game))
+				{
+					printf("campaña invalida\n");
+				}
+			}
+			else
+				Play(&game);
 			break;		
 	}
 
 	return 0;
 }
 
+int setCampaign(tGame * game)
+{
+	int i, valid;
+
+	getCampaignName(game);
+	if (!LoadCampaign(game))
+		return FALSE;
+	for (i = 0; i < game->levels_amount; i++)
+	{
+		if ((valid = setNewGame(game)) == MALLOC_ERR)
+		{
+			printf("No hay memoria\n");
+			return FALSE;
+		}
+		else if (valid)
+		{					
+			PrintearTodo(game);
+			PrintBoard(&game->visualboard);
+			PrintBoard(&game->hiddenboard);
+			Play(game);
+		}
+	}
+	return TRUE;
+}
+
+int resumeCampaign(tGame * game)
+{
+	int i, valid;
+	if (!LoadCampaign(game))
+		return FALSE;
+	if (game->campaign[game->campaign_level].rows != game->hiddenboard.rows || game->campaign[game->campaign_level].columns != game->hiddenboard.columns)
+		return FALSE;
+	Play(game);
+	for (i = game->campaign_level; i < game->levels_amount; i++)
+	{
+		if ((valid = setNewGame(game)) == MALLOC_ERR)
+		{
+			printf("No hay memoria\n");
+			return FALSE;
+		}
+		else if (valid)
+		{					
+			PrintearTodo(game);
+			PrintBoard(&game->visualboard);
+			PrintBoard(&game->hiddenboard);
+			Play(game);
+		}
+	}
+	return TRUE;
+}
 int
 Menu(void)
 {
@@ -123,11 +178,19 @@ setGametypeMenu(tGame * game)
 /* Sets ONLY gameplay config */
 int setNewGame(tGame * game)
 {
-	setGametypeMenu(game);
+	
 	if (game->gametype != GAMETYPE_CAMPAIGN)
 	{
 		getDim(game);
 		getLevel(game);
+	}
+	else
+	{
+		if (game->campaign[game->campaign_level].rows > MAX_ROWS || game->campaign[game->campaign_level].columns > MAX_COLUMNS)
+			return FALSE;
+		game->visualboard.rows = game->hiddenboard.rows = game->campaign[game->campaign_level].rows;
+		game->visualboard.columns = game->hiddenboard.columns = game->campaign[game->campaign_level].columns;
+		game->level = game->campaign[game->campaign_level].level;
 	}
 	setGameMinesNumber(game);
 
@@ -143,12 +206,38 @@ int setNewGame(tGame * game)
  	game->flags_left = game->mines;
  	game->gamestate = GAMESTATE_DEFAULT;
  	if (!CreateHiddenVisualBoard(game))
- 		return FALSE;
+ 		return MALLOC_ERR;
 
  	//Ready to play
  	return TRUE;
 }
-
+void getCampaignName(tGame *game)
+{
+	char name[MAX_FILENAME_LEN];
+	int valid;
+	int len;
+	do
+	{
+		printf("Escriba nombre de campaña\n");
+		if (gets(name) == NULL)
+			valid = FALSE;
+		else
+		{	
+			len = strlen(name);
+			if (len < FORMAT_LENGTH + 1)
+				valid = FALSE;
+			else
+			{
+				if (strstr(&(name[len-FORMAT_LENGTH]), FILE_FORMAT) == NULL)
+					valid = FALSE;
+				valid = TRUE;
+			}
+		}
+	} while (!valid);
+	
+	strcpy(game->campaign_name, name);	
+	return;
+}
 /*
 **	CreateHiddenVisualBoard - Creates both hidden
 **	and visual board. Returns FALSE when there´s 
@@ -186,14 +275,12 @@ void getLevel(tGame * game){
 	
 	int level;
 	int can_nightmare = ((game->visualboard.rows * game->visualboard.columns) >= 100);
-	printf("Can NIGHT: %d\n", can_nightmare);
 	int can = FALSE;
 
 	do
 	{
 		level = getint("Ingrese dificultad:\n1.Facil\n2.Medio\n3.Dificil\n4.Pesadilla\n");
-		
-		printf("Level: %d\n", level);
+	
 		if (level == 4)
 		{
 			if (can_nightmare){
@@ -276,7 +363,11 @@ void Play(tGame * game)
 	} while(game->gamestate == GAMESTATE_DEFAULT);
 
 	if (game->gamestate == GAMESTATE_WIN)
+	{
 		printf ("GANO\n");
+		if (game->gametype == GAMETYPE_CAMPAIGN)
+			game->campaign_level++;
+	}
 	else
 		printf("PERDIO\n");
 
@@ -385,10 +476,20 @@ LegalParams(tGame * game, tCommand * structcommand, tScan * scan)
 			return LegalQuery(&game->visualboard, structcommand, scan->params);
 		
 		case COMMAND_SAVE:
-			//return LegalSave(scan);
+			return LegalSave(structcommand, scan->params);
 		return TRUE;
 	
 	}
+	return TRUE;
+}
+
+int LegalSave(tCommand * structcommand, char * params)
+{
+	params[strlen(params)-1] = '\0';
+	
+	if (! *params)
+		return FALSE;
+	strcpy(structcommand->save_filename, params);
 	return TRUE;
 }
 
@@ -754,13 +855,12 @@ int ExecCommand(tGame *game, tCommand * command)
 			break;
 
 		case COMMAND_SAVE:
-			getName(command->save_filename);
 			res=WriteSaveFile(game, command->save_filename);
-			exit(0);
 			break;
 		
 		case COMMAND_QUIT:
 			Quit(game, command);
+			exit(0);
 			break;
 		
 		case COMMAND_UNDO:
@@ -772,7 +872,7 @@ int ExecCommand(tGame *game, tCommand * command)
 					game->moves--;
 			}
 			else
-				printf("CANT UNDO\n");
+				printf("No es posible usar undo\n");
 			break;
 
 
