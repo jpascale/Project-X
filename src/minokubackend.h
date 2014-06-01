@@ -241,33 +241,6 @@ typedef struct
 
 } tCommand;
 
-
-
-/*
-**		Function prototypes (front) 
-**		TODO: Put this in frontend. Backend does not need this.
-**		>>Stays here for now only for clarity.
-*/
-int Menu(void);
-void setGametypeMenu(tGame * game);
-void PrintBoard(tBoard * structboard);
-void getLevel(tGame * game);
-void getDim(tGame * game);
-int setNewGame(tGame * game);
-void Play(tGame * game);
-int LegalCommand(tScan * scan, tCommand * command);
-int InputCommand(tScan * scan);
-int CreateHiddenVisualBoard(tGame * game); //ToDo: Change name
-int LegalParams(tGame * game, tCommand * command, tScan * scan);
-int LegalSweep(tBoard * visualboard, tCommand * command, char * params);
-int LegalFlag(tGame * game, tCommand * command, char * params, char task);
-int LegalQuery(tBoard * visualboard, tCommand * structcommand, char * params);
-void PrintQuery (tQuery * query);
-int AskUndo(tGame * game, tUndo * undo);
-void getLoadName(char * name);
-//ToDo Remove
-void PrintearTodo(tGame * game);
-
 /*
 **		Function prototypes (back)
 */
@@ -281,7 +254,6 @@ int Query(tBoard * structboard, tArray * pquery, int element, char isrow);
 int DoFlagUnflag(tGame * game, tCommand * command, char task);
 int Sweep(tGame * game, tPos * position, tCommand * command);
 int LegalPos(tBoard * structboard, tPos * position);
-int ExecCommand(tGame *game, tCommand *command);
 int FlagRange(tGame *game, tCommand * command, char task);
 int WriteSaveFile(tGame *game, char *name);
 void SaveLastState(tGame * game, tUndo * undo);

@@ -1,5 +1,30 @@
 #include "minokubackend.h"
 
+/*
+**		Function prototypes (front) 
+**		TODO: Put this in frontend. Backend does not need this.
+*/
+int Menu(void);
+void setGametypeMenu(tGame * game);
+void PrintBoard(tBoard * structboard);
+void getLevel(tGame * game);
+void getDim(tGame * game);
+int setNewGame(tGame * game);
+void Play(tGame * game);
+int LegalCommand(tScan * scan, tCommand * command);
+int InputCommand(tScan * scan);
+int CreateHiddenVisualBoard(tGame * game); //ToDo: Change name
+int LegalParams(tGame * game, tCommand * command, tScan * scan);
+int LegalSweep(tBoard * visualboard, tCommand * command, char * params);
+int LegalFlag(tGame * game, tCommand * command, char * params, char task);
+int LegalQuery(tBoard * visualboard, tCommand * structcommand, char * params);
+void PrintQuery (tQuery * query);
+int AskUndo(tGame * game, tUndo * undo);
+int ExecCommand(tGame *game, tCommand *command);
+void getName(char * name);
+//ToDo Remove
+void PrintearTodo(tGame * game);
+
 int
 main(void)
 {
@@ -39,7 +64,7 @@ main(void)
 		case 2:	/* Load */
 			do
 			{
-				getLoadName(loadname);
+				getName(loadname);
 
 			} while (!LoadFile(&game, loadname));
 
@@ -613,7 +638,7 @@ int AskUndo(tGame * game, tUndo * undo)
 		if (!wasundo && !wasquit)
 			printf("Ingresar quit o undo.");
 	}
-	while (!wasundo && !wasquit);
+	while ( (!wasundo && !wasquit) || (pinput == NULL));
 
 
 	if (wasundo)
@@ -645,4 +670,133 @@ void PrintearTodo(tGame * game)
 	printf("Gamestate: %d\n", game->gamestate);
 	printf("%s", KNRM);
 	return;
+}
+
+void Quit(tGame * game, tCommand * command)
+{
+	char * pinput;
+	char input[5];
+	char savename[MAX_FILENAME_LEN];
+	int yes = FALSE;
+	int no = FALSE;
+	printf("?Desea guardar la partida? (Ingrese si o no)\n");
+	do
+	{
+		pinput = fgets(input, 5, stdin);
+		if (pinput != NULL)
+		{
+			yes = strcmp(input, "si\n") == 0;
+			no = strcmp(input, "no\n") == 0;
+		}
+		if (!yes && !no)
+			printf("Ingresar si o no\n");
+
+	}while((!yes && !no) || (pinput == NULL));
+
+	if(yes)
+	{	//ToDo: Call Save.
+		
+		getName(savename);
+		WriteSaveFile(game, savename);
+	}
+	else
+		exit(0);	
+}
+
+int ExecCommand(tGame *game, tCommand * command)
+{
+	//ToDo: tidy. front.
+	int i = command->command_ref;
+	int res; //Result
+
+	switch (i)
+	{
+		case COMMAND_SWEEP:
+			res = Sweep(game, &command->sweep, command);
+			if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
+				game->moves--;
+			break;
+		
+		case COMMAND_FLAG:
+			if (!(command->flag.is_range))
+			{	
+				DoFlagUnflag(game, command, DO_FLAG);
+				if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
+					game->moves--;
+			}	
+			else
+			{
+				res = FlagRange(game, command, DO_FLAG);
+				if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
+					game->moves-= res;
+			}	
+			break;
+		
+		case COMMAND_UNFLAG:
+			if (!(command->flag.is_range))
+			{
+				DoFlagUnflag(game, command, DO_UNFLAG);
+				if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
+					game->moves--;
+			}	
+			else
+			{
+				FlagRange(game, command, DO_UNFLAG);
+				if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
+					game->moves-= res;
+			}	
+			break;
+		
+		case COMMAND_QUERY:
+			res = Query(&(game->hiddenboard), &(command->query.results), command->query.index, command->query.is_row);
+			PrintQuery(&command->query);
+			free(command->query.results.results);
+			break;
+
+		case COMMAND_SAVE:
+			getName(command->save_filename);
+			res=WriteSaveFile(game, command->save_filename);
+			exit(0);
+			break;
+		
+		case COMMAND_QUIT:
+			Quit(game, command);
+			break;
+		
+		case COMMAND_UNDO:
+			if (command->undo.can_undo && game->undos)
+			{
+				Undo(game, &command->undo);
+				game->undos--;
+				if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
+					game->moves--;
+			}
+			else
+				printf("CANT UNDO\n");
+			break;
+
+
+	}
+	//DEBUG(Codigo)
+	/*if (i == COMMAND_SWEEP || i == COMMAND_FLAG || i == COMMAND_UNFLAG)
+		game->moves--;*/
+
+	if (res == SWEEP_MINE && i == COMMAND_SWEEP)
+	{
+		if (game->undos)
+		{	
+			if (game->gametype == GAMETYPE_INDIVIDUAL_NOLIMIT)
+				AskUndo(game, &command->undo);
+			else if (game->moves && game->undos)
+				AskUndo(game, &command->undo);
+			else
+			{
+				game->gamestate = GAMESTATE_LOSE;
+			}	
+		}
+		//ToDo Merge
+		else
+			game->gamestate = GAMESTATE_LOSE;
+	}	
+	return res;
 }

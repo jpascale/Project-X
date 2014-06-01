@@ -273,101 +273,6 @@ int LegalPos(tBoard * structboard, tPos * pos)
 	return TRUE;
 }
 
-int ExecCommand(tGame *game, tCommand * command)
-{
-	//ToDo: tidy. front.
-	int i = command->command_ref;
-	int res; //Result
-
-	switch (i)
-	{
-		case COMMAND_SWEEP:
-			res = Sweep(game, &command->sweep, command);
-			if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
-				game->moves--;
-			break;
-		
-		case COMMAND_FLAG:
-			if (!(command->flag.is_range))
-			{	
-				DoFlagUnflag(game, command, DO_FLAG);
-				if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
-					game->moves--;
-			}	
-			else
-			{
-				res = FlagRange(game, command, DO_FLAG);
-				if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
-					game->moves-= res;
-			}	
-			break;
-		
-		case COMMAND_UNFLAG:
-			if (!(command->flag.is_range))
-			{
-				DoFlagUnflag(game, command, DO_UNFLAG);
-				if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
-					game->moves--;
-			}	
-			else
-			{
-				FlagRange(game, command, DO_UNFLAG);
-				if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
-					game->moves-= res;
-			}	
-			break;
-		
-		case COMMAND_QUERY:
-			res = Query(&(game->hiddenboard), &(command->query.results), command->query.index, command->query.is_row);
-			PrintQuery(&command->query);
-			free(command->query.results.results);
-			break;
-
-		case COMMAND_SAVE:
-			//res=WriteSaveFile(game, command->save_filename);
-			break;
-		
-		case COMMAND_QUIT:
-			/*exit*/
-			break;
-		
-		case COMMAND_UNDO:
-			if (command->undo.can_undo && game->undos)
-			{
-				Undo(game, &command->undo);
-				game->undos--;
-				if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
-					game->moves--;
-			}
-			else
-				printf("CANT UNDO\n");
-			break;
-
-
-	}
-	//DEBUG(Codigo)
-	/*if (i == COMMAND_SWEEP || i == COMMAND_FLAG || i == COMMAND_UNFLAG)
-		game->moves--;*/
-
-	if (res == SWEEP_MINE && i == COMMAND_SWEEP)
-	{
-		if (game->undos)
-		{	
-			if (game->gametype == GAMETYPE_INDIVIDUAL_NOLIMIT)
-				AskUndo(game, &command->undo);
-			else if (game->moves && game->undos)
-				AskUndo(game, &command->undo);
-			else
-			{
-				game->gamestate = GAMESTATE_LOSE;
-			}	
-		}
-		//ToDo Merge
-		else
-			game->gamestate = GAMESTATE_LOSE;
-	}	
-	return res;
-}
 
 int FlagRange(tGame *game, tCommand * command, char task)
 {
@@ -679,14 +584,15 @@ void CheckGameState(tGame * game)
 	return;
 }
 
-void getLoadName(char * name)
+void getName(char * name)
 {	
 	int res = 0;
-
+	char fmt[6];
+	sprintf(fmt, "%%%ds", MAX_FILENAME_LEN);
 	do
 	{
 		printf("Introducir nombre de archivo\n");
-		res = scanf("%s", name);
+		res = scanf(fmt, name);
 	
 	} while(!res);
 
