@@ -66,8 +66,8 @@
 //Minimum and maximum dim
 #define MIN_ROWS 5
 #define MIN_COLUMNS 5
-#define MAX_ROWS 19 //ToDo: not using
-#define MAX_COLUMNS 19 //ToDo: not using
+#define MAX_ROWS 19
+#define MAX_COLUMNS 19
 
 // Level mines percentage
 #define PERCENT_EASY 		0.2
@@ -172,12 +172,13 @@ typedef struct
 	int moves;
 	int undos;
 	int mines;
-	int mines_left; //number of mines not flagged
-	int sweeps_left; //number of positions without sweep
-	int flags_left;
+	int mines_left; 	//number of mines not flagged
+	int sweeps_left; 	//Number of not sweeped positions
+	int flags_left;		//Resting flags
 	char campaign_name[MAX_FILENAME_LEN];
 	int campaign_level;
-	int gamestate;
+	int gamestate;		// DEFAULT, WIN or LOSE
+	int levels_amount;	//Number of campaign levels
 	tCampaign * campaign;
 
 } tGame;
@@ -241,33 +242,6 @@ typedef struct
 
 } tCommand;
 
-
-
-/*
-**		Function prototypes (front) 
-**		TODO: Put this in frontend. Backend does not need this.
-**		>>Stays here for now only for clarity.
-*/
-int Menu(void);
-void setGametypeMenu(tGame * game);
-void PrintBoard(tBoard * structboard);
-void getLevel(tGame * game);
-void getDim(tGame * game);
-int setNewGame(tGame * game);
-void Play(tGame * game);
-int LegalCommand(tScan * scan, tCommand * command);
-int InputCommand(tScan * scan);
-int CreateHiddenVisualBoard(tGame * game); //ToDo: Change name
-int LegalParams(tGame * game, tCommand * command, tScan * scan);
-int LegalSweep(tBoard * visualboard, tCommand * command, char * params);
-int LegalFlag(tGame * game, tCommand * command, char * params, char task);
-int LegalQuery(tBoard * visualboard, tCommand * structcommand, char * params);
-void PrintQuery (tQuery * query);
-int AskUndo(tGame * game, tUndo * undo);
-void getLoadName(char * name);
-//ToDo Remove
-void PrintearTodo(tGame * game);
-
 /*
 **		Function prototypes (back)
 */
@@ -281,7 +255,6 @@ int Query(tBoard * structboard, tArray * pquery, int element, char isrow);
 int DoFlagUnflag(tGame * game, tCommand * command, char task);
 int Sweep(tGame * game, tPos * position, tCommand * command);
 int LegalPos(tBoard * structboard, tPos * position);
-int ExecCommand(tGame *game, tCommand *command);
 int FlagRange(tGame *game, tCommand * command, char task);
 int WriteSaveFile(tGame *game, char *name);
 void SaveLastState(tGame * game, tUndo * undo);
@@ -289,5 +262,6 @@ void CheckGameState(tGame * game);
 int LoadCampaign(tGame * game);
 int LoadFile(tGame *game, char *name);
 int Undo(tGame * game, tUndo * undo);
+void freeBoard(char ** Board, int rows);
 
 #endif

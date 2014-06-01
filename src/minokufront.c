@@ -1,5 +1,36 @@
 #include "minokubackend.h"
 
+/*
+**		Function prototypes (front) 
+**		TODO: Put this in frontend. Backend does not need this.
+*/
+int Menu(void);
+void setGametypeMenu(tGame * game);
+void PrintBoard(tBoard * structboard);
+void getLevel(tGame * game);
+void getDim(tGame * game);
+int setNewGame(tGame * game);
+void Play(tGame * game);
+int LegalCommand(tScan * scan, tCommand * command);
+int InputCommand(tScan * scan);
+int CreateHiddenVisualBoard(tGame * game); //ToDo: Change name
+int LegalParams(tGame * game, tCommand * command, tScan * scan);
+int LegalSweep(tBoard * visualboard, tCommand * command, char * params);
+int LegalFlag(tGame * game, tCommand * command, char * params, char task);
+int LegalQuery(tBoard * visualboard, tCommand * structcommand, char * params);
+void PrintQuery (tQuery * query);
+int AskUndo(tGame * game, tUndo * undo);
+int ExecCommand(tGame *game, tCommand *command);
+void getName(char * name);
+//ToDo Remove
+void PrintAll(tGame * game);
+void getCampaignName(tGame *game);
+int setCampaign(tGame * game);
+int resumeCampaign(tGame * game);
+int CheckLegalPos(tBoard * structboard, tPos * pos);
+int LegalSave(tCommand * structcommand, char * params);
+void TranslateCoords(tPos * pos);
+
 int
 main(void)
 {
@@ -9,49 +40,95 @@ main(void)
 	char loadname[MAX_FILENAME_LEN];
 	
 	randomize();
+
 	option = Menu();
+	game.campaign_level = 0;
 	
 	switch (option)
 	{
 		case 1: /* New Game */
-			if (setNewGame(&game)){
-			/* DEBUG 
-			printf("hidden F C : %d %d\n", game.hiddenboard.rows, game.hiddenboard.columns);
-			printf("visual F C : %d %d\n", game.visualboard.rows, game.visualboard.columns);
-			printf("gametype: %d\n", game.gametype);
-			printf("level: %d\n", game.level);
-			printf("moves: %d\n", game.moves);
-			printf("undos: %d\n", game.undos);
-			printf("mines: %d\n", game.mines);
-			printf("mines_left: %d\n", game.mines_left);
-			printf("sweeps left: %d\n", game.sweeps_left);	
-			*/
-			//ToDo: Dont print hiddenboard
-			PrintearTodo(&game);
-			PrintBoard(&game.hiddenboard);
-
-			Play(&game);
+			setGametypeMenu(&game);
+			if (game.gametype != GAMETYPE_CAMPAIGN)
+			{
+				if (setNewGame(&game))
+					Play(&game);
+				else
+					printf("No hay suficiente memoria para seguir jugando.\n");
 			}
 			else
-				printf("No hay suficiente memoria para seguir jugando.\n");
+				if (!setCampaign(&game))
+					printf("Error en la campaña.\n");
 			break;
 
 		case 2:	/* Load */
 			do
 			{
-				getLoadName(loadname);
+				getName(loadname);
 
 			} while (!LoadFile(&game, loadname));
-
-			Play(&game);
+			
+			if (game.gametype == GAMETYPE_CAMPAIGN)
+			{
+				if (!resumeCampaign(&game))
+					printf("Campaña invalida.\n");
+			}
+			else
+				Play(&game);
 			break;		
 	}
 
 	return 0;
 }
 
-int
-Menu(void)
+int setCampaign(tGame * game)
+{
+	int i, valid;
+
+	getCampaignName(game);
+
+	if (!LoadCampaign(game))
+		return FALSE;
+
+	for (i = 0; i < game->levels_amount; i++)
+	{
+		if ((valid = setNewGame(game)) == MALLOC_ERR)
+		{
+			printf("No hay memoria suficiente para seguir jugando.\n");
+			return FALSE;
+		}
+		else if (valid)
+			Play(game);
+	}
+	return TRUE;
+}
+
+int resumeCampaign(tGame * game)
+{
+	int i, valid;
+	int campaign_rows = game->campaign[game->campaign_level].rows;
+	int campaign_columns = game->campaign[game->campaign_level].columns;
+
+	if (!LoadCampaign(game))
+		return FALSE;
+
+	if (campaign_rows != game->hiddenboard.rows || campaign_columns != game->hiddenboard.columns)
+		return FALSE;
+
+	Play(game);
+	
+	for (i = game->campaign_level; i < game->levels_amount; i++)
+	{
+		if ((valid = setNewGame(game)) == MALLOC_ERR)
+		{
+			printf("No hay suficiente memoria para seguir jugando.\n");
+			return FALSE;
+		}
+		else if (valid)				
+			Play(game);
+	}
+	return TRUE;
+}
+int Menu(void)
 {
 	int option;
 	
@@ -72,8 +149,7 @@ Menu(void)
 
 }
 
-void
-setGametypeMenu(tGame * game)
+void setGametypeMenu(tGame * game)
 {
 	int option;
 
@@ -95,19 +171,35 @@ setGametypeMenu(tGame * game)
 	return;
 }
 
-/* Sets ONLY gameplay config */
+/*
+**	setNewGame - Sets All the necesary info to play 
+**	in game structure.  
+*/
 int setNewGame(tGame * game)
 {
-	setGametypeMenu(game);
+
 	if (game->gametype != GAMETYPE_CAMPAIGN)
 	{
 		getDim(game);
 		getLevel(game);
 	}
-	setGameMinesNumber(game);
+	else
+	{
+		int campaign_rows = game->campaign[game->campaign_level].rows;
+		int campaign_columns = game->campaign[game->campaign_level].columns;
+		int campaign_level = game->campaign[game->campaign_level].level;
 
+		if (campaign_rows > MAX_ROWS || campaign_columns > MAX_COLUMNS)
+			return FALSE;
+		
+		game->visualboard.rows = game->hiddenboard.rows = campaign_rows;
+		game->visualboard.columns = game->hiddenboard.columns = campaign_columns;
+		game->level = campaign_level;
+	}
+	setGameMinesNumber(game);
  	game->undos = get_undos(game->level);
  	
+ 	//Moves
  	if (game->gametype == GAMETYPE_INDIVIDUAL_NOLIMIT)
  		game->moves = UNLIMITED_MOVES;
  	else
@@ -116,12 +208,47 @@ int setNewGame(tGame * game)
  	game->mines_left = game->mines;
  	game->sweeps_left = (game->visualboard.rows * game->visualboard.columns) - game->mines;
  	game->flags_left = game->mines;
- 	game->gamestate = GAMESTATE_DEFAULT;
+ 	game->gamestate = GAMESTATE_DEFAULT; 
+
  	if (!CreateHiddenVisualBoard(game))
- 		return FALSE;
+ 		return MALLOC_ERR;
 
  	//Ready to play
  	return TRUE;
+}
+
+/*
+**	getCampaignName - Gets name and checks if it ends with ".txt"
+*/
+void getCampaignName(tGame *game)
+{
+	char name[MAX_FILENAME_LEN];
+	int valid;
+	int len;
+
+	do
+	{
+		printf("Escriba nombre de campaña\n");
+		
+		if (gets(name) == NULL)
+			valid = FALSE;
+		else
+		{	
+			len = strlen(name);
+			if (len < FORMAT_LENGTH + 1)
+				valid = FALSE;
+			else
+			{
+				if (strstr(&(name[len-FORMAT_LENGTH]), FILE_FORMAT) == NULL)
+					valid = FALSE;
+				else
+					valid = TRUE;
+			}
+		}
+	} while (!valid);
+	
+	strcpy(game->campaign_name, name);	
+	return;
 }
 
 /*
@@ -137,6 +264,9 @@ int CreateHiddenVisualBoard(tGame * game)
  	return TRUE;
 }
 
+/*
+**	getDim - Asks for board dim.
+*/
 void getDim(tGame * game)
 {
 	int rowsaux, colaux;
@@ -157,26 +287,22 @@ void getDim(tGame * game)
 	return;
 }
 
-void getLevel(tGame * game){
-	
+/*
+**	getLevel - Asks for level taking into account nightmare restriction.
+*/
+void getLevel(tGame * game)
+{	
 	int level;
 	int can_nightmare = ((game->visualboard.rows * game->visualboard.columns) >= 100);
-	printf("Can NIGHT: %d\n", can_nightmare);
 	int can = FALSE;
 
 	do
 	{
 		level = getint("Ingrese dificultad:\n1.Facil\n2.Medio\n3.Dificil\n4.Pesadilla\n");
-		
-		printf("Level: %d\n", level);
+	
 		if (level == 4)
-		{
-			if (can_nightmare){
-				can = TRUE;
-			}
-			else
-				can = FALSE;
-		}else
+			(can_nightmare? (can = TRUE) : (can = FALSE));
+		else
 			can = TRUE;
 
 		if (!can)
@@ -189,8 +315,11 @@ void getLevel(tGame * game){
 	return;
 }
 
+/*
+**	PrintBoard
+*/
 void PrintBoard(tBoard * structboard)
-{//ToDo: Tidy this
+{
 	int i, j;
 	int rows = structboard->rows;
 	int columns = structboard->columns;
@@ -215,6 +344,9 @@ void PrintBoard(tBoard * structboard)
 	}
 }
 
+/*
+**	Play - Receives gameplay configured structure and starts game.
+*/
 void Play(tGame * game)
 {	
 	int legal;
@@ -227,34 +359,37 @@ void Play(tGame * game)
 	CreateBoard(&command.undo.lastboard);
 	do
 	{
-		PrintBoard(&game->visualboard); //ToDo: Print all
+		PrintAll(game);
 		
 		do
 		{	
 			if ((legal = InputCommand(&scan)))
 			{	
 				if((legal = LegalCommand(&scan, &command)))
-					if (command.command_ref < 5)
+					if (command.command_ref < 5) //All commands but quit or undo
 						legal = LegalParams(game, &command, &scan);
-				
 			}
-		//DEBUG
+
 		if (!legal)
-			printf("Commando invalidOO\n");
+			printf("Commando invalido.\n");
+
 		} while (!legal);
+
 		ExecCommand(game, &command);
-		printf("Despues de Ejecutar:\n");
-		PrintearTodo(game);
 		CheckGameState(game);
-		printf("Despues de check:\n");
-		PrintearTodo(game);
 	} while(game->gamestate == GAMESTATE_DEFAULT);
 
 	if (game->gamestate == GAMESTATE_WIN)
-		printf ("GANO\n");
+	{
+		printf ("Ganaste!\n");
+		if (game->gametype == GAMETYPE_CAMPAIGN)
+			game->campaign_level++;
+	}
 	else
-		printf("PERDIO\n");
+		printf("Perdiste!\n");
 
+	freeBoard(game->hiddenboard.board, game->hiddenboard.rows);
+	freeBoard(game->visualboard.board, game->hiddenboard.rows);
 	return;
 }
 
@@ -270,7 +405,7 @@ int InputCommand(tScan * scan)
 	int found_space = FALSE;
 	int endfor = FALSE;
 	char * rinput; //Result input
-	char input[MAX_COMMAND_LEN + MAX_PARAMS_LEN + 2];
+	char input[MAX_COMMAND_LEN + MAX_PARAMS_LEN + 2]; //Command, params and 2 for space and '\n'
 	
 	printf("Introducir un comando: ");
 
@@ -300,9 +435,7 @@ int InputCommand(tScan * scan)
 	}
 
 	scan->command[j] = '\0';
-	scan->params[k] = '\0';
-	//DEBUG
-	//puts(scan->command); puts(scan->params);
+	scan->params[k]	 = '\0';
 
 	return TRUE;
 }
@@ -330,24 +463,20 @@ int LegalCommand(tScan * scan, tCommand * command)
 			   COMMAND_ defines order */
 			command->command_ref = commandindex;
 			found = TRUE;
-			//DEBUG
-			printf("Command Ref: %d\n",command->command_ref);
 		}
 	}
 
-	if (!found)
-		return FALSE;
-
-	return TRUE;
+	return found;
 }
 
-int
-LegalParams(tGame * game, tCommand * structcommand, tScan * scan)
+/*
+**	LegalParams - Detects command reference and returns command validation.
+*/
+int LegalParams(tGame * game, tCommand * structcommand, tScan * scan)
 {	
 	switch(structcommand->command_ref)
 	{
 		case COMMAND_SWEEP:
-			//printf("EN el switch: %s\n", scan->params);
 			return LegalSweep(&game->visualboard, structcommand, scan->params);
 		
 		case COMMAND_FLAG:
@@ -360,39 +489,49 @@ LegalParams(tGame * game, tCommand * structcommand, tScan * scan)
 			return LegalQuery(&game->visualboard, structcommand, scan->params);
 		
 		case COMMAND_SAVE:
-			//return LegalSave(scan);
-		return TRUE;
-	
+			return LegalSave(structcommand, scan->params);
 	}
 	return TRUE;
 }
 
-int
-LegalSweep(tBoard * visualboard, tCommand * structcommand, char * params)
-{//todo: tidy
+int LegalSave(tCommand * structcommand, char * params)
+{
+	params[strlen(params)-1] = '\0';
+	
+	if (! *params)
+		return FALSE;
+	strcpy(structcommand->save_filename, params);
+	return TRUE;
+}
+
+int LegalSweep(tBoard * visualboard, tCommand * structcommand, char * params)
+{
 	tPos aux;
 	char new_line;
-	char * closepos;
 	char legal = TRUE;
 	char i_scan;
-	int i;
-	int auxnum;
 
+	/*	Used &i_scan because we cannot use int pointer,
+	**	we use char pointer and cast it instead
+	*/
 	if (sscanf(params, "(%c,%d)%c", &i_scan, &aux.j, &new_line) != 3)
 		return FALSE;
+
 	if (new_line != '\n')
 		return FALSE;
 	
 	//ToDo: Modularize
-	i_scan = get_row_pos_byref(i_scan);
 	aux.i = (int)i_scan;
-	aux.j--;
-	if (!isupper('A' + aux.i)) // If Column is not a letter return false
+	/*TranslateCoords(&aux);
+
+	if (!ValidRow(&aux)) //Column is not a letter?
 		legal = FALSE;
 
 	else if (!LegalPos(visualboard, &aux)) // If Position is not on the board return false
 		legal = FALSE;
-	
+	*/
+	if (!CheckLegalPos(visualboard, &aux))
+		legal = FALSE;
 	else if (visualboard->board[aux.i][aux.j] != VISUAL_UNFLAGGED)  // If there's a '&' or '-' on the visual board return false
 		legal = FALSE;
 
@@ -403,13 +542,11 @@ LegalSweep(tBoard * visualboard, tCommand * structcommand, char * params)
 
 	return legal;
 
-}			
+}
 
 int
 LegalFlag(tGame * game, tCommand * structcommand, char * params, char task) /*No valida si ya esta flaggeado*/
-{	//ToDo Borraar comment
-	//Tidy
-	//int fposi, fposj, lposi, lposj;
+{	//ToDo: Tidy
 	int i;
 	char legal = TRUE;
 	char range_count = 0;
@@ -419,26 +556,18 @@ LegalFlag(tGame * game, tCommand * structcommand, char * params, char task) /*No
 	char l_scan;
 	char new_line;
 
-	// Checks if range is legal
+	// Range flag
 	if (sscanf(params, "(%c,%d:%c,%d)%c", &f_scan, &f_aux.j, &l_scan, &l_aux.j, &new_line) == 5)
 	{	
 		if (new_line != '\n')
 			return FALSE;
-		f_scan = get_row_pos_byref(f_scan);
-		f_aux.i = f_scan;
-		l_scan = get_row_pos_byref(l_scan);
-		l_aux.i = l_scan;
-		f_aux.j--;
-		l_aux.j--;
 
-		// Syntax check
-		if (!isupper('A' + f_aux.i)|| !isupper('A' + l_aux.i))
-			legal = FALSE;
+		f_aux.i = (int)f_scan;
+		l_aux.i = (int)l_scan;
 		
-		else if (!LegalPos(&game->visualboard, &f_aux) || !LegalPos(&game->visualboard, &l_aux))
+		if (!CheckLegalPos(&game->visualboard, &f_aux) || !CheckLegalPos(&game->visualboard, &l_aux))
 			legal = FALSE;
 
-		// Legal move check
 		else if (f_aux.i == l_aux.i)
 		{	
 			if(f_aux.j > l_aux.j)
@@ -500,22 +629,18 @@ LegalFlag(tGame * game, tCommand * structcommand, char * params, char task) /*No
 	{
 		if (new_line != '\n')
 			return FALSE;	
-		f_scan = get_row_pos_byref(f_scan);
-		f_aux.i = f_scan;
-		f_aux.j--;
 		
-		if (!isupper('A' + f_aux.i))
-			legal = FALSE;
+		f_aux.i = (int)f_scan;
 
-		else if(!LegalPos(&game->visualboard, &f_aux))
+		if (!CheckLegalPos(&game->visualboard, &f_aux))
 			legal = FALSE;
-		
 		else if ( (task == DO_FLAG) && (game->visualboard.board[f_aux.i][f_aux.j] != VISUAL_UNFLAGGED))
 			legal = FALSE;
 		else if( (task == DO_UNFLAG) && (game->visualboard.board[f_aux.i][f_aux.j] != VISUAL_FLAGGED))
 			legal = FALSE;
 		else if( task == DO_FLAG && game->flags_left == 0)
 			legal = FALSE;
+		
 		if (legal)
 		{	
 			structcommand->flag.is_range 	= FALSE;
@@ -525,14 +650,13 @@ LegalFlag(tGame * game, tCommand * structcommand, char * params, char task) /*No
 	}
 	else
 		legal = FALSE; 	
-	//DEBUG
-	printf("LEGAL(RETURN): %d\n",legal );
+	
 	return legal;
 }
 
 int
 LegalQuery(tBoard * visualboard, tCommand * structcommand, char * params)
-{	//ToDo: tidy
+{
 	char index_row;
 	int index_column;
 	char new_line;
@@ -555,6 +679,7 @@ LegalQuery(tBoard * visualboard, tCommand * structcommand, char * params)
 	else if (sscanf(params, "%c%c", &index_row, &new_line) == 2 )
 	{	
 		index_row = get_row_pos_byref(index_row);
+		
 		if (new_line != '\n')
 			return FALSE;
 		if (!isupper('A' + index_row))
@@ -613,7 +738,7 @@ int AskUndo(tGame * game, tUndo * undo)
 		if (!wasundo && !wasquit)
 			printf("Ingresar quit o undo.");
 	}
-	while (!wasundo && !wasquit);
+	while ( (!wasundo && !wasquit) || (pinput == NULL));
 
 
 	if (wasundo)
@@ -632,17 +757,174 @@ int AskUndo(tGame * game, tUndo * undo)
 
 }
 
-void PrintearTodo(tGame * game)
+void PrintAll(tGame * game)
 {
-	printf("%s", KRED);
-	printf("Gametype: %d\n", game->gametype);
-	printf("Moves: %d\n", game->moves);
-	printf("Undos: %d\n", game->undos);
-	printf("Mines: %d\n", game->mines);
-	printf("Mines left: %d\n", game->mines_left);
-	printf("Sweeps left: %d\n", game->sweeps_left);
-	printf("Flags left: %d\n", game->flags_left);
-	printf("Gamestate: %d\n", game->gamestate);
-	printf("%s", KNRM);
+	PrintBoard(&game->visualboard);
+	if (game->gametype)
+		printf("Movimientos restantes: %d\n", game->moves);
+	printf("Undos restantes: %d\n", game->undos);
+	printf("Flags restantes: %d\n", game->flags_left);
 	return;
+}
+
+void Quit(tGame * game, tCommand * command)
+{
+	char * pinput;
+	char input[5];
+	char savename[MAX_FILENAME_LEN];
+	int yes = FALSE;
+	int no = FALSE;
+
+	printf("?Desea guardar la partida? (Ingrese si o no)\n");
+	do
+	{
+		pinput = fgets(input, 5, stdin);
+		if (pinput != NULL)
+		{
+			yes = strcmp(input, "si\n") == 0;
+			no = strcmp(input, "no\n") == 0;
+		}
+		if (!yes && !no)
+			printf("Ingresar si o no\n");
+
+	}while((!yes && !no) || (pinput == NULL));
+
+	if (yes)
+	{
+		getName(savename);
+		WriteSaveFile(game, savename);
+	}
+	else
+		exit(0);	
+}
+
+int ExecCommand(tGame *game, tCommand * command)
+{
+	int i = command->command_ref;
+	int res; //Result
+
+	switch (i)
+	{
+		case COMMAND_SWEEP:
+			res = Sweep(game, &command->sweep, command);
+			if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
+				game->moves--;
+			break;
+		
+		case COMMAND_FLAG:
+			if (!(command->flag.is_range))
+			{	
+				DoFlagUnflag(game, command, DO_FLAG);
+				if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
+					game->moves--;
+			}	
+			else
+			{
+				res = FlagRange(game, command, DO_FLAG);
+				if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
+					game->moves-= res;
+			}	
+			break;
+		
+		case COMMAND_UNFLAG:
+			if (!(command->flag.is_range))
+			{
+				DoFlagUnflag(game, command, DO_UNFLAG);
+				if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
+					game->moves--;
+			}	
+			else
+			{
+				FlagRange(game, command, DO_UNFLAG);
+				if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
+					game->moves-= res;
+			}	
+			break;
+		
+		case COMMAND_QUERY:
+			res = Query(&game->hiddenboard, &command->query.results, command->query.index, command->query.is_row);
+			PrintQuery(&command->query);
+			free(command->query.results.results);
+			break;
+
+		case COMMAND_SAVE:
+			res = WriteSaveFile(game, command->save_filename);
+			break;
+		
+		case COMMAND_QUIT:
+			Quit(game, command);
+			exit(0);
+			break;
+		
+		case COMMAND_UNDO:
+			if (command->undo.can_undo && game->undos)
+			{
+				Undo(game, &command->undo);
+				game->undos--;
+				if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
+					game->moves--;
+			}
+			else
+				printf("No es posible usar undo.\n");
+			break;
+
+
+	}
+
+	if (res == SWEEP_MINE && i == COMMAND_SWEEP)
+	{
+		if (game->undos)
+		{	
+			if (game->gametype == GAMETYPE_INDIVIDUAL_NOLIMIT)
+				AskUndo(game, &command->undo);
+			else if (game->moves && game->undos)
+				AskUndo(game, &command->undo);
+			else
+			{
+				game->gamestate = GAMESTATE_LOSE;
+			}	
+		}
+		//ToDo Merge
+		else
+			game->gamestate = GAMESTATE_LOSE;
+	}	
+	return res;
+}
+
+void getName(char * name)
+{	
+	int res = 0;
+	char fmt[6];
+	sprintf(fmt, "%%%ds", MAX_FILENAME_LEN);
+	do
+	{
+		printf("Introducir nombre de archivo\n");
+		res = scanf(fmt, name);
+	
+	} while(!res);
+
+	DELBFF();
+
+	return;
+
+}
+
+void TranslateCoords(tPos * pos)
+{
+	pos->i = get_row_pos_byref(pos->i);
+	pos->j--;
+}
+
+int ValidRow(tPos * pos)
+{
+	return isupper('A' + pos->i);
+}
+
+int CheckLegalPos(tBoard * structboard, tPos * pos)
+{
+	int res;
+	TranslateCoords(pos);
+	res = ValidRow(pos);
+	res = res && LegalPos(structboard, pos);
+	return res;
 }
