@@ -262,5 +262,6 @@ void CheckGameState(tGame * game);
 int LoadCampaign(tGame * game);
 int LoadFile(tGame *game, char *name);
 int Undo(tGame * game, tUndo * undo);
+void freeBoard(char ** Board, int rows);
 
 #endif

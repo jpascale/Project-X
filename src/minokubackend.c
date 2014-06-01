@@ -1,6 +1,6 @@
 #include "minokubackend.h"
 
-static void freeBoard(char ** Board, int rows);
+
 static void CopyBoard(tBoard * board_from, tBoard * board_to);
 
 void setGameMinesNumber(tGame * game)
@@ -60,7 +60,7 @@ int CreateBoard(tBoard * structboard)
 
 }
 
-static void freeBoard(char ** board, int rows)
+void freeBoard(char ** board, int rows)
 {
 	int i;
 
@@ -213,20 +213,9 @@ int DoFlagUnflag(tGame * game, tCommand * command, char task)
 {
 	int i = command->flag.first_pos.i;
 	int j = command->flag.first_pos.j;
-	//DEBUG
-	// If a normal flag is made saveLastState
-	/*if(!command->flag.is_range )*/
-		SaveLastState(game, &command->undo);
 	
-	//If its a range flag, only saveLastState before Doing Last Flag
-	/*else (command->flag.is_range)
-	{
-		if (command->flag.is_row && (command->flag.first_pos.j == command->flag.last_pos.j))
-			SaveLastState(game, &command->undo);
-
-		else if (!command->flag.is_row && (command->flag.first_pos.i == command->flag.last_pos.i))
-			SaveLastState(game, &command->undo);
-	}*/
+	SaveLastState(game, &command->undo);
+	
 	if ( (task == DO_FLAG) && (game->visualboard.board[i][j] != VISUAL_UNFLAGGED))
 		return FALSE;
 	else if( (task == DO_UNFLAG) && (game->visualboard.board[i][j] != VISUAL_FLAGGED))	
@@ -236,9 +225,8 @@ int DoFlagUnflag(tGame * game, tCommand * command, char task)
 
 	if (game->hiddenboard.board[i][j] == HIDDEN_MINE)
 		(task == DO_FLAG? game->mines_left-- : game->mines_left++);
-	//ToDo ERAAAAAAASE
-	//if (!command->flag.is_range)
-		(task == DO_FLAG)? game->flags_left-- : game->flags_left++;
+	
+	(task == DO_FLAG)? game->flags_left-- : game->flags_left++;
 		
 	return TRUE;
 }
@@ -301,8 +289,7 @@ int FlagRange(tGame *game, tCommand * command, char task)
 				flag_count++;
 		}
 	}
-	//ToDo ERASE SPAAAAAAAAAAAAAAAAAAAAACCE
-	//((task == DO_FLAG)? (game->flags_left-= flag_count) : (game->flags_left+= flag_count));
+	
 	return flag_count;
 }
 
@@ -577,17 +564,12 @@ void CheckGameState(tGame * game)
 	// Campaign or limited
 	if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
 	{
-		//DEBUG
-		printf("moves: %d, sweeps left: %d, mines left: %d\n", game->moves, game->sweeps_left, game->mines_left);
-		if (game->moves < game->sweeps_left && \
-			game->moves < game->mines_left)
+		if (game->moves < game->sweeps_left && game->moves < game->mines_left)
 			game->gamestate = GAMESTATE_LOSE; 
 	}
 
 	return;
 }
-
-
 
 int LoadCampaign(tGame * game)
 {
