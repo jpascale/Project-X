@@ -140,8 +140,7 @@ int resumeCampaign(tGame * game)
 	}
 	return TRUE;
 }
-int
-Menu(void)
+int Menu(void)
 {
 	int option;
 	
@@ -162,8 +161,7 @@ Menu(void)
 
 }
 
-void
-setGametypeMenu(tGame * game)
+void setGametypeMenu(tGame * game)
 {
 	int option;
 
@@ -278,6 +276,9 @@ int CreateHiddenVisualBoard(tGame * game)
  	return TRUE;
 }
 
+/*
+**	getDim - Asks for board dim.
+*/
 void getDim(tGame * game)
 {
 	int rowsaux, colaux;
@@ -298,6 +299,9 @@ void getDim(tGame * game)
 	return;
 }
 
+/*
+**	getLevel - Asks for level taking into account nightmare restriction.
+*/
 void getLevel(tGame * game){
 	
 	int level;
@@ -309,13 +313,8 @@ void getLevel(tGame * game){
 		level = getint("Ingrese dificultad:\n1.Facil\n2.Medio\n3.Dificil\n4.Pesadilla\n");
 	
 		if (level == 4)
-		{
-			if (can_nightmare){
-				can = TRUE;
-			}
-			else
-				can = FALSE;
-		}else
+			can_nightmare? can = TRUE : can = FALSE;
+		else
 			can = TRUE;
 
 		if (!can)
@@ -328,8 +327,11 @@ void getLevel(tGame * game){
 	return;
 }
 
+/*
+**	PrintBoard
+*/
 void PrintBoard(tBoard * structboard)
-{//ToDo: Tidy this
+{
 	int i, j;
 	int rows = structboard->rows;
 	int columns = structboard->columns;
@@ -354,6 +356,9 @@ void PrintBoard(tBoard * structboard)
 	}
 }
 
+/*
+**	Play - Receives gameplay configured structure and starts game.
+*/
 void Play(tGame * game)
 {	
 	int legal;
@@ -373,20 +378,18 @@ void Play(tGame * game)
 			if ((legal = InputCommand(&scan)))
 			{	
 				if((legal = LegalCommand(&scan, &command)))
-					if (command.command_ref < 5)
+					if (command.command_ref < 5) //All commands but quit or undo
 						legal = LegalParams(game, &command, &scan);
 				
 			}
-		//DEBUG
+
 		if (!legal)
-			printf("Commando invalidOO\n");
+			printf("Commando invalido.\n");
+
 		} while (!legal);
+
 		ExecCommand(game, &command);
-		printf("Despues de Ejecutar:\n");
-		PrintearTodo(game);
 		CheckGameState(game);
-		printf("Despues de check:\n");
-		PrintearTodo(game);
 	} while(game->gamestate == GAMESTATE_DEFAULT);
 
 	if (game->gamestate == GAMESTATE_WIN)
@@ -413,7 +416,7 @@ int InputCommand(tScan * scan)
 	int found_space = FALSE;
 	int endfor = FALSE;
 	char * rinput; //Result input
-	char input[MAX_COMMAND_LEN + MAX_PARAMS_LEN + 2];
+	char input[MAX_COMMAND_LEN + MAX_PARAMS_LEN + 2]; //Command, params and 2 for space and '\n'
 	
 	printf("Introducir un comando: ");
 
@@ -443,9 +446,7 @@ int InputCommand(tScan * scan)
 	}
 
 	scan->command[j] = '\0';
-	scan->params[k] = '\0';
-	//DEBUG
-	//puts(scan->command); puts(scan->params);
+	scan->params[k]	 = '\0';
 
 	return TRUE;
 }
@@ -473,24 +474,20 @@ int LegalCommand(tScan * scan, tCommand * command)
 			   COMMAND_ defines order */
 			command->command_ref = commandindex;
 			found = TRUE;
-			//DEBUG
-			printf("Command Ref: %d\n",command->command_ref);
 		}
 	}
 
-	if (!found)
-		return FALSE;
-
-	return TRUE;
+	return (found?TRUE:FALSE);
 }
 
-int
-LegalParams(tGame * game, tCommand * structcommand, tScan * scan)
+/*
+**	LegalParams - Detects command reference and returns command validation.
+*/
+int LegalParams(tGame * game, tCommand * structcommand, tScan * scan)
 {	
 	switch(structcommand->command_ref)
 	{
 		case COMMAND_SWEEP:
-			//printf("EN el switch: %s\n", scan->params);
 			return LegalSweep(&game->visualboard, structcommand, scan->params);
 		
 		case COMMAND_FLAG:
@@ -504,8 +501,6 @@ LegalParams(tGame * game, tCommand * structcommand, tScan * scan)
 		
 		case COMMAND_SAVE:
 			return LegalSave(structcommand, scan->params);
-		return TRUE;
-	
 	}
 	return TRUE;
 }
