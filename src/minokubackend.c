@@ -359,71 +359,51 @@ int LoadFile(tGame *game, char *name)
 	int flags_left;
 	int mines_left;
 	char campaign_name[MAX_FILENAME_LEN];
+	int error = FALSE;
 	
 	if ((loadfile = fopen(name, "rb")) == NULL)
-		return FALSE;
+		error = TRUE;
 
-	if (fread(&num, sizeof(num), 1, loadfile) != 1 )
-	{	
-		printf("ERROR EN EL NIVEL\n");
-		fclose(loadfile);
-		return FALSE;
-	}
+	if (!error && (fread(&num, sizeof(num), 1, loadfile) != 1))
+		error = TRUE; 
+	else if (!error)
+		game->campaign_level = num;
 
-	game->campaign_level = num;
+	if (!error && (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < MIN_ROWS)))
+		error = TRUE;
+	else if (!error)
+		game->hiddenboard.rows = game->visualboard.rows = auxrows = num;
 
-	if (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < MIN_ROWS))
+
+	if (!error && (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < MIN_COLUMNS)))
+		error = TRUE;
+	else if (!error)
+		game->hiddenboard.columns = game->visualboard.columns = auxcols = num;
+
+
+	if (!error && (fread(&num, sizeof(num), 1, loadfile) > get_undos(game->level)))
+		error = TRUE;
+	else if (!error)
+		game->undos = num;
+
+
+	if (!error && (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < 0)))
+		error = TRUE;
+	else if (!error)
 	{
-		printf("ERROR EN LAS FILAS\n");
-		fclose(loadfile);
-		return FALSE;
+		game->moves = num;
+		game->gametype = game->moves? GAMETYPE_INDIVIDUAL_LIMIT : GAMETYPE_INDIVIDUAL_NOLIMIT;
 	}
 
-	game->hiddenboard.rows = game->visualboard.rows = auxrows = num;
 
-
-	if (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < MIN_COLUMNS))
-	{
-		printf("ERROR EN LAS COLUMNAS\n");
-		fclose(loadfile);
-		return FALSE;
-	}
-	
-	game->hiddenboard.columns = game->visualboard.columns = auxcols = num;
-
-
-	if (fread(&num, sizeof(num), 1, loadfile) > get_undos(game->level))
-	{
-		printf("ERROR EN LOS UNDOS\n");
-		fclose(loadfile);
-		return FALSE;
-	}
-	game->undos = num;
-
-
-	if (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < 0))
-	{
-		printf("ERROR EN LOS MOVES\n");
-		fclose(loadfile);
-		return FALSE;
-	}
-
-	game->moves = num;
-	game->gametype = game->moves? GAMETYPE_INDIVIDUAL_LIMIT : GAMETYPE_INDIVIDUAL_NOLIMIT;
-
-
-	if (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < 0 || num > 1 || (num == 1 && !game->moves)))
-	{
-		printf("ERROR EN LA CAMPAIGN\n");
-		fclose(loadfile);
-		return FALSE;
-	}
-	
-	game->gametype = num? GAMETYPE_CAMPAIGN : game->gametype;
+	if (!error && (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < 0 || num > 1 || (num == 1 && !game->moves))))
+		error = TRUE;
+	else if (!error)
+		game->gametype = num? GAMETYPE_CAMPAIGN : game->gametype;
 
 
 
-	if (CreateBoard(&game->hiddenboard)==FALSE)
+	if (!error && CreateBoard(&game->hiddenboard)==FALSE)
 	{
 
 		fclose(loadfile);
@@ -431,25 +411,24 @@ int LoadFile(tGame *game, char *name)
 	}
 	board = game->hiddenboard.board;
 
-	for (i = 0; i < auxcols * auxrows; i++)
+	for (i = 0; i < auxcols * auxrows && !error; i++)
 	{
 		elem = fgetc(loadfile);
 		if (elem != HIDDEN_MINE && elem != HIDDEN_EMPTY)
-		{
-			printf("ERROR EN EL HIDDENBOARD\n");
-			freeBoard(game->hiddenboard.board, auxrows);
-			fclose(loadfile);
-			return FALSE;
-		}
-		if (elem == HIDDEN_MINE)
+			error = TRUE;
+		else if (elem == HIDDEN_MINE)
 			mines++;
-		board[i/auxcols][i%auxcols] = elem;
+		if (!error)
+			board[i/auxcols][i%auxcols] = elem;
 	}
-
+	
+	if (!error)
+	{
 	game->mines = mines_left = flags_left = mines;
 	sweeps_left = auxcols * auxrows - mines;
+	}
 
-	if (CreateBoard(&game->visualboard)==FALSE)
+	if (!error && CreateBoard(&game->visualboard)==FALSE)
 	{
 		freeBoard(game->hiddenboard.board, auxrows);
 		fclose(loadfile);
@@ -457,60 +436,49 @@ int LoadFile(tGame *game, char *name)
 	}
 	board = game->visualboard.board;
 
-	for (i = 0; i < auxcols * auxrows; i++)
+	for (i = 0; i < auxcols * auxrows && !error; i++)
 	{
 		elem = fgetc(loadfile);
 		if ((elem != VISUAL_UNFLAGGED && elem != VISUAL_EMPTY && elem != VISUAL_FLAGGED) || (elem == VISUAL_EMPTY && game->hiddenboard.board[i/auxcols][i%auxcols] == HIDDEN_MINE))
+			error = TRUE;
+		else
 		{
-			printf("ERROR EN EL VISUALBOARD\n");
-			freeBoard(game->hiddenboard.board, auxrows);
-			freeBoard(game->visualboard.board, auxrows);
-			fclose(loadfile);
-			return FALSE;
+			board[i/auxcols][i%auxcols] = elem;
+			flags_left -= (elem == VISUAL_FLAGGED);
+			sweeps_left -= (elem == VISUAL_EMPTY);
+			mines_left -= (elem == VISUAL_FLAGGED && game->hiddenboard.board[i/auxcols][i%auxcols] == HIDDEN_MINE);
 		}
-		board[i/auxcols][i%auxcols] = elem;
-		flags_left -= (elem == VISUAL_FLAGGED);
-		sweeps_left -= (elem == VISUAL_EMPTY);
-		mines_left -= (elem == VISUAL_FLAGGED && game->hiddenboard.board[i/auxcols][i%auxcols] == HIDDEN_MINE);
 	}
-	game->flags_left = flags_left;
-	game->sweeps_left = sweeps_left;
-	game->mines_left = mines_left;
+	if (!error)
+	{
+		game->flags_left = flags_left;
+		game->sweeps_left = sweeps_left;
+		game->mines_left = mines_left;
+	}
 
-	if (game->gametype == GAMETYPE_CAMPAIGN)
+	if (!error && game->gametype == GAMETYPE_CAMPAIGN)
 	{
 		if (fgets(campaign_name, MAX_FILENAME_LEN, loadfile) == NULL || (campaign_len = strlen(campaign_name)) < FORMAT_LENGTH + 1)
-		{
-				printf("ERROR EN EL NOMBRE DE LA CAMPANA\n");
-				freeBoard(game->hiddenboard.board, auxrows);
-				freeBoard(game->visualboard.board, auxrows);
-				fclose(loadfile);
-				return FALSE;
-		}
+			error = TRUE;
 		
-		if (strstr(&(campaign_name[campaign_len-FORMAT_LENGTH]), FILE_FORMAT) == NULL)
-		{
-				printf("ERROR EN EL FORMATO\n");
-				freeBoard(game->hiddenboard.board, auxrows);
-				freeBoard(game->visualboard.board, auxrows);
-				fclose(loadfile);
-				return FALSE;
-		}
-		strcpy(game->campaign_name, campaign_name);
+		else if (strstr(&(campaign_name[campaign_len-FORMAT_LENGTH]), FILE_FORMAT) == NULL)
+			error = TRUE;
+		else
+			strcpy(game->campaign_name, campaign_name);
 	}
-	if (fgetc(loadfile) != EOF)
+
+	if (!error && fgetc(loadfile) != EOF)
+		error = TRUE;
+
+	else
+		game->gamestate=GAMESTATE_DEFAULT;
+	if (error)
 	{
-		printf("EL ARCHIVO SEGUIA\n");
 		freeBoard(game->hiddenboard.board, auxrows);
 		freeBoard(game->visualboard.board, auxrows);
-		fclose(loadfile);
-		return FALSE;
 	}
-
-	game->gamestate=GAMESTATE_DEFAULT;
-
 	fclose(loadfile);
-	return TRUE;
+	return !error;
 
 }
 

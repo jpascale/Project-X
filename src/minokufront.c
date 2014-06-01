@@ -300,15 +300,15 @@ void getLevel(tGame * game)
 	{
 		level = getint("Ingrese dificultad:\n1.Facil\n2.Medio\n3.Dificil\n4.Pesadilla\n");
 	
-		if (level == 4)
-			(can_nightmare? (can = TRUE) : (can = FALSE));
+		if (level == NIGHTMARE)
+			can_nightmare? (can = TRUE) : (can = FALSE);
 		else
 			can = TRUE;
 
 		if (!can)
 			printf("No es posible elegir pesadilla con menos de 100 casilleros.\n");
 
-	} while(level < 1 || level > 4 || !can);
+	} while(level < EASY || level > NIGHTMARE || !can);
 
 	game->level = level;
 
