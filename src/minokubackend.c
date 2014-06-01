@@ -377,7 +377,8 @@ int LoadFile(tGame *game, char *name)
 		return FALSE;
 
 	if (fread(&num, sizeof(num), 1, loadfile) != 1 )
-	{
+	{	
+		printf("ERROR EN EL NIVEL\n");
 		fclose(loadfile);
 		return FALSE;
 	}
@@ -386,7 +387,7 @@ int LoadFile(tGame *game, char *name)
 
 	if (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < MIN_ROWS))
 	{
-
+		printf("ERROR EN LAS FILAS\n");
 		fclose(loadfile);
 		return FALSE;
 	}
@@ -396,7 +397,7 @@ int LoadFile(tGame *game, char *name)
 
 	if (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < MIN_COLUMNS))
 	{
-
+		printf("ERROR EN LAS COLUMNAS\n");
 		fclose(loadfile);
 		return FALSE;
 	}
@@ -406,7 +407,7 @@ int LoadFile(tGame *game, char *name)
 
 	if (fread(&num, sizeof(num), 1, loadfile) > get_undos(game->level))
 	{
-
+		printf("ERROR EN LOS UNDOS\n");
 		fclose(loadfile);
 		return FALSE;
 	}
@@ -415,7 +416,7 @@ int LoadFile(tGame *game, char *name)
 
 	if (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < 0))
 	{
-
+		printf("ERROR EN LOS MOVES\n");
 		fclose(loadfile);
 		return FALSE;
 	}
@@ -426,7 +427,7 @@ int LoadFile(tGame *game, char *name)
 
 	if (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < 0 || num > 1 || (num == 1 && !game->moves)))
 	{
-
+		printf("ERROR EN LA CAMPAIGN\n");
 		fclose(loadfile);
 		return FALSE;
 	}
@@ -448,7 +449,7 @@ int LoadFile(tGame *game, char *name)
 		elem = fgetc(loadfile);
 		if (elem != HIDDEN_MINE && elem != HIDDEN_EMPTY)
 		{
-	
+			printf("ERROR EN EL HIDDENBOARD\n");
 			freeBoard(game->hiddenboard.board, auxrows);
 			fclose(loadfile);
 			return FALSE;
@@ -463,7 +464,7 @@ int LoadFile(tGame *game, char *name)
 
 	if (CreateBoard(&game->visualboard)==FALSE)
 	{
-
+		freeBoard(game->hiddenboard.board, auxrows);
 		fclose(loadfile);
 		return MALLOC_ERR;
 	}
@@ -472,9 +473,9 @@ int LoadFile(tGame *game, char *name)
 	for (i = 0; i < auxcols * auxrows; i++)
 	{
 		elem = fgetc(loadfile);
-		if ((elem != VISUAL_UNFLAGGED && elem != VISUAL_EMPTY && elem != VISUAL_UNFLAGGED) || (elem == VISUAL_EMPTY && game->hiddenboard.board[i/auxcols][i%auxcols] == HIDDEN_MINE))
+		if ((elem != VISUAL_UNFLAGGED && elem != VISUAL_EMPTY && elem != VISUAL_FLAGGED) || (elem == VISUAL_EMPTY && game->hiddenboard.board[i/auxcols][i%auxcols] == HIDDEN_MINE))
 		{
-
+			printf("ERROR EN EL VISUALBOARD\n");
 			freeBoard(game->hiddenboard.board, auxrows);
 			freeBoard(game->visualboard.board, auxrows);
 			fclose(loadfile);
@@ -493,6 +494,7 @@ int LoadFile(tGame *game, char *name)
 	{
 		if (fgets(campaign_name, MAX_FILENAME_LEN, loadfile) == NULL || (campaign_len = strlen(campaign_name)) < FORMAT_LENGTH + 1)
 		{
+				printf("ERROR EN EL NOMBRE DE LA CAMPANA\n");
 				freeBoard(game->hiddenboard.board, auxrows);
 				freeBoard(game->visualboard.board, auxrows);
 				fclose(loadfile);
@@ -501,6 +503,7 @@ int LoadFile(tGame *game, char *name)
 		
 		if (strstr(&(campaign_name[campaign_len-FORMAT_LENGTH]), FILE_FORMAT) == NULL)
 		{
+				printf("ERROR EN EL FORMATO\n");
 				freeBoard(game->hiddenboard.board, auxrows);
 				freeBoard(game->visualboard.board, auxrows);
 				fclose(loadfile);
@@ -510,6 +513,7 @@ int LoadFile(tGame *game, char *name)
 	}
 	if (fgetc(loadfile) != EOF)
 	{
+		printf("EL ARCHIVO SEGUIA\n");
 		freeBoard(game->hiddenboard.board, auxrows);
 		freeBoard(game->visualboard.board, auxrows);
 		fclose(loadfile);

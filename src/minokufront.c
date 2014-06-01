@@ -67,7 +67,7 @@ main(void)
 			} while (!LoadFile(&game, loadname));
 			if (game.gametype == GAMETYPE_CAMPAIGN)
 			{
-				if (!setCampaign(&game))
+				if (!resumeCampaign(&game))
 				{
 					printf("campaña invalida\n");
 				}
@@ -193,7 +193,6 @@ int setNewGame(tGame * game)
 		game->level = game->campaign[game->campaign_level].level;
 	}
 	setGameMinesNumber(game);
-
  	game->undos = get_undos(game->level);
  	
  	if (game->gametype == GAMETYPE_INDIVIDUAL_NOLIMIT)
@@ -230,7 +229,8 @@ void getCampaignName(tGame *game)
 			{
 				if (strstr(&(name[len-FORMAT_LENGTH]), FILE_FORMAT) == NULL)
 					valid = FALSE;
-				valid = TRUE;
+				else
+					valid = TRUE;
 			}
 		}
 	} while (!valid);
