@@ -35,8 +35,10 @@ main(void)
 	char loadname[MAX_FILENAME_LEN];
 	
 	randomize();
+
 	option = Menu();
 	game.campaign_level = 0;
+	
 	switch (option)
 	{
 		case 1: /* New Game */
@@ -85,8 +87,10 @@ int setCampaign(tGame * game)
 	int i, valid;
 
 	getCampaignName(game);
+
 	if (!LoadCampaign(game))
 		return FALSE;
+
 	for (i = 0; i < game->levels_amount; i++)
 	{
 		if ((valid = setNewGame(game)) == MALLOC_ERR)
@@ -108,16 +112,22 @@ int setCampaign(tGame * game)
 int resumeCampaign(tGame * game)
 {
 	int i, valid;
+	int campaign_rows = game->campaign[game->campaign_level].rows;
+	int campaign_columns = game->campaign[game->campaign_level].columns;
+
 	if (!LoadCampaign(game))
 		return FALSE;
-	if (game->campaign[game->campaign_level].rows != game->hiddenboard.rows || game->campaign[game->campaign_level].columns != game->hiddenboard.columns)
+
+	if (campaign_rows != game->hiddenboard.rows || campaign_columns != game->hiddenboard.columns)
 		return FALSE;
+
 	Play(game);
+	
 	for (i = game->campaign_level; i < game->levels_amount; i++)
 	{
 		if ((valid = setNewGame(game)) == MALLOC_ERR)
 		{
-			printf("No hay memoria\n");
+			printf("No hay suficiente memoria para seguir jugando.\n");
 			return FALSE;
 		}
 		else if (valid)
@@ -175,10 +185,13 @@ setGametypeMenu(tGame * game)
 	return;
 }
 
-/* Sets ONLY gameplay config */
+/*
+**	setNewGame - Sets All the necesary info to play 
+**	in game structure.  
+*/
 int setNewGame(tGame * game)
 {
-	
+
 	if (game->gametype != GAMETYPE_CAMPAIGN)
 	{
 		getDim(game);
@@ -186,16 +199,22 @@ int setNewGame(tGame * game)
 	}
 	else
 	{
-		if (game->campaign[game->campaign_level].rows > MAX_ROWS || game->campaign[game->campaign_level].columns > MAX_COLUMNS)
+		int campaign_rows = game->campaign[game->campaign_level].rows;
+		int campaign_columns = game->campaign[game->campaign_level].columns;
+		int campaign_level = game->campaign[game->campaign_level].level;
+
+		if campaign_rows > MAX_ROWS || campaign_columns > MAX_COLUMNS)
 			return FALSE;
-		game->visualboard.rows = game->hiddenboard.rows = game->campaign[game->campaign_level].rows;
-		game->visualboard.columns = game->hiddenboard.columns = game->campaign[game->campaign_level].columns;
-		game->level = game->campaign[game->campaign_level].level;
+		
+		game->visualboard.rows = game->hiddenboard.rows = campaign_rows;
+		game->visualboard.columns = game->hiddenboard.columns = campaign_columns;
+		game->level = campaign_level;
 	}
 	setGameMinesNumber(game);
 
  	game->undos = get_undos(game->level);
  	
+ 	//Moves
  	if (game->gametype == GAMETYPE_INDIVIDUAL_NOLIMIT)
  		game->moves = UNLIMITED_MOVES;
  	else
@@ -204,21 +223,28 @@ int setNewGame(tGame * game)
  	game->mines_left = game->mines;
  	game->sweeps_left = (game->visualboard.rows * game->visualboard.columns) - game->mines;
  	game->flags_left = game->mines;
- 	game->gamestate = GAMESTATE_DEFAULT;
+ 	game->gamestate = GAMESTATE_DEFAULT; 
+
  	if (!CreateHiddenVisualBoard(game))
  		return MALLOC_ERR;
 
  	//Ready to play
  	return TRUE;
 }
+
+/*
+**	getCampaignName - Gets name and checks if it ends with ".txt"
+*/
 void getCampaignName(tGame *game)
 {
 	char name[MAX_FILENAME_LEN];
 	int valid;
 	int len;
+
 	do
 	{
 		printf("Escriba nombre de campaña\n");
+		
 		if (gets(name) == NULL)
 			valid = FALSE;
 		else
@@ -238,6 +264,7 @@ void getCampaignName(tGame *game)
 	strcpy(game->campaign_name, name);	
 	return;
 }
+
 /*
 **	CreateHiddenVisualBoard - Creates both hidden
 **	and visual board. Returns FALSE when there´s 

@@ -172,13 +172,13 @@ typedef struct
 	int moves;
 	int undos;
 	int mines;
-	int mines_left; //number of mines not flagged
-	int sweeps_left; //number of positions without sweep
-	int flags_left;
+	int mines_left; 	//number of mines not flagged
+	int sweeps_left; 	//Number of not sweeped positions
+	int flags_left;		//Resting flags
 	char campaign_name[MAX_FILENAME_LEN];
 	int campaign_level;
-	int gamestate;
-	int levels_amount;
+	int gamestate;		// DEFAULT, WIN or LOSE
+	int levels_amount;	//Number of campaign levels
 	tCampaign * campaign;
 
 } tGame;
