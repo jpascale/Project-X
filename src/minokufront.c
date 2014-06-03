@@ -35,6 +35,7 @@ main(void)
 	int option;
 	tGame game;
 	char loadname[MAX_FILENAME_LEN];
+	int valid;
 	
 	randomize();
 
@@ -53,24 +54,33 @@ main(void)
 					printf("No hay suficiente memoria para seguir jugando.\n");
 			}
 			else
-				if (!setCampaign(&game))
-					printf("Archivo invalido o inexistente.\n");
+				do
+				{	
+					if (!(valid = setCampaign(&game)))
+						printf("Archivo invalido o inexistente\n");
+				}
+				while (!valid);
 			break;
 
 		case 2:	/* Load */
 			do
 			{
 				getName(loadname);
+				if (!(valid = LoadFile(&game, loadname)))
+					printf("Archivo invalido o inexistente\n");
+				else
+					if (game.gametype == GAMETYPE_CAMPAIGN)
+					{
+						if (!(valid = resumeCampaign(&game)))
+							printf("Archivo de campaña invalido o inexistente\n");
+					}
 
-			} while (!LoadFile(&game, loadname));
+
+			} while (!valid);
 			
-			if (game.gametype == GAMETYPE_CAMPAIGN)
-			{
-				if (!resumeCampaign(&game))
-					printf("Archivo invalido o inexistente.\n");
-			}
-			else
-				Play(&game);
+
+			
+			Play(&game);
 			break;		
 	}
 
@@ -80,8 +90,8 @@ main(void)
 int setCampaign(tGame * game)
 {
 	int i, valid;
-
 	getCampaignName(game);
+	
 
 	if (!LoadCampaign(game))
 		return FALSE;
@@ -225,7 +235,7 @@ void getCampaignName(tGame *game)
 
 	do
 	{
-		printf("Escriba nombre de campaña\n");
+		printf("Escriba nombre de campaña, el archivo debe terminar en .txt\n");
 		
 		if (gets(name) == NULL)
 			valid = FALSE;
