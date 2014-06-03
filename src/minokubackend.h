@@ -18,6 +18,10 @@
 /*
 **		Macros
 */
+
+#define WITHDEL
+#define DELSHELL() printf("\033[2J\033[1;1H")
+
 #define FALSE 0
 #define TRUE 1
 
@@ -287,7 +291,7 @@ int Query(tBoard * structboard, tCommand * structcommand);
 int DoFlagUnflag(tGame * game, tCommand * command, char task);
 
 /*Sweeps a space, if there's a mine returns SWEEP_MINE*/
-int Sweep(tGame * game, tPos * position, tCommand * command);
+int Sweep(tGame * game, tCommand * command);
 
 /*Checks if a certain position exists on a certain board, returns TRUE or FALSE*/
 int LegalPos(tBoard * structboard, tPos * position);
