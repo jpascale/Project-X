@@ -159,8 +159,6 @@ int CreateHiddenVisualBoard(tGame * game)
 
 int Query(tBoard * hiddenboard, tCommand * structcommand)
 {
-  //ToDo: Modularize??
-
 	tArray * pquery = &structcommand->query.results;
 	int element = structcommand->query.index;
 	char isrow = structcommand->query.is_row;
@@ -282,16 +280,14 @@ int LegalPos(tBoard * structboard, tPos * pos)
 
 int FlagRange(tGame *game, tCommand * command, char task)
 {
-	//ToDo: Tidy
 	int k;
 	int flag_count = 0;
 	char isrow = command->flag.is_row;
 	tPos auxpos = command->flag.first_pos;
 	tPos finalpos = command->flag.last_pos;
-	//SaveLastState(game, &command->undo);
 	
 	if (isrow)
-	{ //ToDo: Improve
+	{
 		for(k = auxpos.j; k<=finalpos.j; k++)
 		{
 			command->flag.first_pos.j = k;
@@ -364,8 +360,6 @@ int WriteSaveFile(tGame *game, char *name)
 
 int LoadFile(tGame *game, char *name)
 {
-	//ToDo: Modularize
-	//ToDo: Finish
 	FILE * loadfile;
 	int auxrows=0, auxcols=0;
 	int num;

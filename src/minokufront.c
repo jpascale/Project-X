@@ -469,6 +469,7 @@ void Play(tGame * game)
 	tScan scan;
 	tCommand command;
 	command.undo.can_undo = FALSE;
+	command.undo.undo_error = FALSE;
 	command.undo.lastboard.rows = game->visualboard.rows; 
 	command.undo.lastboard.columns = game->visualboard.columns;
 	CreateBoard(&command.undo.lastboard);;
@@ -503,16 +504,18 @@ void Play(tGame * game)
 }
 
 int InputCommand(tScan * scan)
-{	//ToDo: tidy
+{
 	int i, j, k;
 	int found_space = FALSE;
 	int endfor = FALSE;
 	char * rinput; //Result input
-	char input[MAX_COMMAND_LEN + MAX_PARAMS_LEN + 2]; //Command, params and 2 for space and '\n'
+
+	/* Command, params and 2 for space and '\n' */
+	char input[MAX_COMMAND_LEN + MAX_PARAMS_LEN + 2]; 
 	
 	printf("%sIntroducir un comando: %s", KASK, KDEF);
 
-	rinput = fgets(input, MAX_COMMAND_LEN + MAX_PARAMS_LEN + 2, stdin); //+2 0 and blank
+	rinput = fgets(input, MAX_COMMAND_LEN + MAX_PARAMS_LEN + 2, stdin);
 	
 	if (rinput == NULL)
 		return FALSE;
@@ -545,7 +548,6 @@ int InputCommand(tScan * scan)
 
 int LegalCommand(tScan * scan, tCommand * command)
 {
-	//ToDo: Reduce mem access in for
 	/* Hardcoded commands respecting the COMMAND_ defines order */
 	static char * commandlist[] = {"s", "flag", "unflag", "query", "save", "quit\n", "undo\n"};
 	
@@ -633,7 +635,7 @@ int LegalSweep(tBoard * visualboard, tCommand * structcommand, char * params)
 
 int
 LegalFlag(tGame * game, tCommand * structcommand, char * params, char task) /*No valida si ya esta flaggeado*/
-{	//ToDo: Tidy
+{
 	int i;
 	char legal = TRUE;
 	char range_count = 0;
@@ -872,10 +874,17 @@ void PrintAll(tGame * game, tCommand * command)
 	
 	printf("Undos restantes: %d\n", game->undos);
 	printf("Flags restantes: %d\n", game->flags_left);
+	
 	if (command->command_ref == COMMAND_QUERY)
 	{
 		PrintQuery(&command->query);
 		free(command->query.results.array);
+	}
+	else if (command->command_ref == COMMAND_UNDO && \
+			(command->undo.undo_error == TRUE))
+	{
+		printf("%sNo es posible usar undo\n", KERR);
+		command->undo.undo_error = FALSE;
 	}
 	printf("%s", KDEF);
 	return;
@@ -977,7 +986,7 @@ int ExecCommand(tGame *game, tCommand * command)
 					game->moves--;
 			}
 			else
-				printf("%sNo es posible usar undo.%s\n", KERR, KDEF);
+				command->undo.undo_error = TRUE;
 			break;
 
 

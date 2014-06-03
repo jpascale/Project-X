@@ -1,4 +1,4 @@
-//_____minokubackend.h_____//
+/*_____minokubackend.h_____*/
 
 #ifndef _MINOKUBACK_H
 	#define _MINOKUBACK_H
@@ -19,11 +19,11 @@
 **		Macros
 */
 
-#define WITHDEL
+//Clears shell
 #define DELSHELL() printf("\033[2J\033[1;1H")
 
-#define FALSE 0
-#define TRUE 1
+#define FALSE 	0
+#define TRUE 	1
 
 // COLOR CONSTANTS
 #define KDEF  "\x1B[0m"		//default
@@ -83,7 +83,7 @@
 #define PERCENT_HARD 		0.7
 #define PERCENT_NIGHTMARE 	0.9
 
-// Command constants
+/* Command constants */
 #define MAX_COMMAND_LEN 	8
 #define MAX_PARAMS_LEN 		24
 #define COMMANDS_NUMBER 	7
@@ -210,7 +210,7 @@ typedef struct
 	int sweeps_left;
 	int flags_left;
 	char can_undo;
-
+	char undo_error;
 } tUndo;
 
 typedef struct
@@ -238,7 +238,7 @@ typedef struct
 
 typedef struct 
 {
-	tArray results; //ToDo: Change
+	tArray results;
 	int index;
 	char is_row;
 
