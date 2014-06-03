@@ -7,7 +7,14 @@ int Menu(void);
 void setGametypeMenu(tGame * game);
 void PrintBoard(tBoard * structboard);
 void getLevel(tGame * game);
-void getDim(tGame * game); 
+/*
+**	getDim - Asks for board dim.
+*/
+void getDim(tGame * game);
+/*
+**	setNewGame - Sets All the necesary info to play 
+**	in game structure.  
+*/ 
 int setNewGame(tGame * game);
 void Play(tGame * game);
 int LegalCommand(tScan * scan, tCommand * command);
@@ -21,6 +28,9 @@ int AskUndo(tGame * game, tUndo * undo);
 int ExecCommand(tGame *game, tCommand *command);
 void getName(char * name);
 void PrintAll(tGame * game);
+/*
+**	getCampaignName - Gets name and checks if it ends with ".txt"
+*/
 void getCampaignName(tGame *game);
 int setCampaign(tGame * game); 
 int resumeCampaign(tGame * game);
@@ -125,8 +135,7 @@ int resumeCampaign(tGame * game)
 		return FALSE;
 	campaign_rows = game->campaign[game->campaign_level-1].rows;
 	campaign_columns = game->campaign[game->campaign_level-1].columns;
-	/*DEBUG
-	printf("Campana rows: %d, game rows %d, Campana cols %d game cols %d\n", campaign_rows, game->hiddenboard.rows, campaign_columns, game->hiddenboard.columns);*/
+	
 	if (campaign_rows != game->hiddenboard.rows || campaign_columns != game->hiddenboard.columns)
 		return FALSE;
 
@@ -187,10 +196,7 @@ void setGametypeMenu(tGame * game)
 	return;
 }
 
-/*
-**	setNewGame - Sets All the necesary info to play 
-**	in game structure.  
-*/
+
 int setNewGame(tGame * game)
 {
 
@@ -233,9 +239,7 @@ int setNewGame(tGame * game)
  	return TRUE;
 }
 
-/*
-**	getCampaignName - Gets name and checks if it ends with ".txt"
-*/
+
 void getCampaignName(tGame *game)
 {
 	char name[MAX_FILENAME_LEN];
@@ -267,9 +271,7 @@ void getCampaignName(tGame *game)
 	return;
 }
 
-/*
-**	getDim - Asks for board dim.
-*/
+
 void getDim(tGame * game)
 {
 	int rowsaux, colaux;
