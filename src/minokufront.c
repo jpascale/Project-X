@@ -71,7 +71,9 @@ main(void)
 			{
 				getName(loadname);
 				if (!(valid = LoadFile(&game, loadname)))
+				{
 					printf("Archivo invalido o inexistente\n");
+				}
 				else
 					if (game.gametype == GAMETYPE_CAMPAIGN)
 					{
@@ -354,7 +356,8 @@ void Play(tGame * game)
 	command.undo.can_undo = FALSE;
 	command.undo.lastboard.rows = game->visualboard.rows; 
 	command.undo.lastboard.columns = game->visualboard.columns;
-	CreateBoard(&command.undo.lastboard);
+	CreateBoard(&command.undo.lastboard);;
+
 	do
 	{
 		PrintAll(game);
@@ -502,20 +505,20 @@ int LegalSweep(tBoard * visualboard, tCommand * structcommand, char * params)
 	char legal = TRUE;
 	char i_scan;
 
-	/*	Used &i_scan because we cannot use int pointer,
-	**	we use char pointer and cast it instead
-	*/
 	if (sscanf(params, "(%c,%d)%c", &i_scan, &aux.j, &new_line) != 3)
 		return FALSE;
 
 	if (new_line != '\n')
 		return FALSE;
-
+	/*	Used &i_scan because we cannot use int pointer,
+	**	we use char pointer and cast it instead
+	*/
 	aux.i = (int)i_scan;
 
 	if (!CheckLegalPos(visualboard, &aux))
 		legal = FALSE;
-	else if (visualboard->board[aux.i][aux.j] != VISUAL_UNFLAGGED)  // If there's a '&' or '-' on the visual board return false
+	/* If there's an '&' or '-' on the visual board return false*/
+	else if (visualboard->board[aux.i][aux.j] != VISUAL_UNFLAGGED)  
 		legal = FALSE;
 
 	if (legal){
@@ -539,7 +542,7 @@ LegalFlag(tGame * game, tCommand * structcommand, char * params, char task) /*No
 	char l_scan;
 	char new_line;
 
-	// Range flag
+	/* Range flag*/
 	if (sscanf(params, "(%c,%d:%c,%d)%c", &f_scan, &f_aux.j, &l_scan, &l_aux.j, &new_line) == 5)
 	{	
 		if (new_line != '\n')
@@ -550,7 +553,8 @@ LegalFlag(tGame * game, tCommand * structcommand, char * params, char task) /*No
 		
 		if (!CheckLegalPos(&game->visualboard, &f_aux) || !CheckLegalPos(&game->visualboard, &l_aux))
 			legal = FALSE;
-
+		/*Check if it's a row or a column and that the first position comes
+		before the last position*/
 		else if (f_aux.i == l_aux.i)
 		{	
 			if(f_aux.j > l_aux.j)
@@ -567,7 +571,7 @@ LegalFlag(tGame * game, tCommand * structcommand, char * params, char task) /*No
 		}	
 		else
 			legal = FALSE;
-		
+		/*Check how many elements you are flagging*/
 		if(legal && structcommand->flag.is_row)
 		{
 			for(i=f_aux.j; i<=l_aux.j; i++)
@@ -588,7 +592,8 @@ LegalFlag(tGame * game, tCommand * structcommand, char * params, char task) /*No
 					range_count++;
 			}		
 		}	
-		//If there nothing to flag in the range or you have enough moves or flags left
+		/*Check if there's nothing to flag in the range
+		or if you don't have enough moves or flags left*/
 		if (legal)
 		{
 			if (range_count == 0)
@@ -608,6 +613,7 @@ LegalFlag(tGame * game, tCommand * structcommand, char * params, char task) /*No
 		}
 
 	}
+	/*Single Flag*/
 	else if (sscanf(params, "(%c,%d)%c", &f_scan, &f_aux.j, &new_line) == 3)
 	{
 		if (new_line != '\n')
@@ -617,6 +623,8 @@ LegalFlag(tGame * game, tCommand * structcommand, char * params, char task) /*No
 
 		if (!CheckLegalPos(&game->visualboard, &f_aux))
 			legal = FALSE;
+
+		/*Check the element you are flagging is valid and you have enough flags left*/
 		else if ( (task == DO_FLAG) && (game->visualboard.board[f_aux.i][f_aux.j] != VISUAL_UNFLAGGED))
 			legal = FALSE;
 		else if( (task == DO_UNFLAG) && (game->visualboard.board[f_aux.i][f_aux.j] != VISUAL_FLAGGED))
@@ -645,12 +653,15 @@ LegalQuery(tBoard * visualboard, tCommand * structcommand, char * params)
 	char new_line;
 	char legal = TRUE;
 
-	
+	/*Query Column*/
 	if(sscanf(params, "%d%c", &index_column, &new_line) == 2)
 	{	
+		/*Translate the column to backend*/
 		index_column--;
+
 		if (new_line != '\n')
 			return FALSE;
+		/*Check the column is inside the board*/
 		if (index_column < 0 || index_column >= visualboard->columns)
 			legal = FALSE;
 		if (legal)
@@ -659,16 +670,23 @@ LegalQuery(tBoard * visualboard, tCommand * structcommand, char * params)
 			structcommand->query.index = index_column;
 		}	
 	}
+	/*Query Row*/
 	else if (sscanf(params, "%c%c", &index_row, &new_line) == 2 )
 	{	
+		/*Translate the row to backend*/
 		index_row = get_row_pos_byref(index_row);
 		
 		if (new_line != '\n')
 			return FALSE;
+		
+		/*Check the row was a letter*/
 		if (!isupper('A' + index_row))
 			legal = FALSE;
+		
+		/*Check the row is inside the board*/
 		else if (index_row < 0 || index_row >= visualboard->rows)
 			legal = FALSE;
+		
 		if(legal)
 		{	
 			structcommand->query.is_row = TRUE;
@@ -678,7 +696,7 @@ LegalQuery(tBoard * visualboard, tCommand * structcommand, char * params)
 	else
 		legal = FALSE;
 	
-	return legal;	
+	return legal;
 
 }
 
