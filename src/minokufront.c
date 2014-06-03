@@ -41,20 +41,23 @@ main(void)
 	randomize();
 
 	option = Menu();
-	game.campaign_level = 0;
+	
 	
 	switch (option)
 	{
 		case 1: /* New Game */
+			
 			setGametypeMenu(&game);
 			if (game.gametype != GAMETYPE_CAMPAIGN)
 			{
+				game.campaign_level = 0;
 				if (setNewGame(&game))
 					Play(&game);
 				else
 					printf("No hay suficiente memoria para seguir jugando.\n");
 			}
 			else
+				game.campaign_level = 1;
 				do
 				{	
 					if (!(valid = setCampaign(&game)))
@@ -97,7 +100,7 @@ int setCampaign(tGame * game)
 	if (!LoadCampaign(game))
 		return FALSE;
 
-	for (i = 0; i < game->levels_amount; i++)
+	for (i = 0; i <= game->levels_amount; i++)
 	{
 		if ((valid = setNewGame(game)) == MALLOC_ERR)
 		{
