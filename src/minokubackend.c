@@ -3,7 +3,7 @@
 
 static void CopyBoard(tBoard * board_from, tBoard * board_to);
 
-void setGameMinesNumber(tGame * game)
+void setGameMinesNumber(tGame * game) 
 {
 
 	int dim = game->hiddenboard.rows * game->hiddenboard.columns;
@@ -33,7 +33,7 @@ void setGameMinesNumber(tGame * game)
 	return;
 }
 
-int CreateBoard(tBoard * structboard)
+int CreateBoard(tBoard * structboard) 
 {
 	int i, auxrows, auxcolumns;
 	char ** auxboard;
@@ -70,7 +70,8 @@ void freeBoard(char ** board, int rows)
 	free(board);
 }
 
-int InitBoardMines(tBoard * structboard, int mines)
+
+int InitBoardMines(tBoard * structboard, int mines) 
 {
 	int i, k;
 	int auxrows = structboard->rows;
@@ -107,7 +108,7 @@ int InitBoardMines(tBoard * structboard, int mines)
 	return TRUE;
 }
 
-int CreateHiddenBoard(tBoard * structboard, int mines)
+int CreateHiddenBoard(tBoard * structboard, int mines) 
 {
 	if (CreateBoard(structboard) == FALSE)
 		return FALSE;
@@ -117,7 +118,8 @@ int CreateHiddenBoard(tBoard * structboard, int mines)
 	return TRUE;
 }
 
-void InitBoard(tBoard * structboard, char initchar)
+
+void InitBoard(tBoard * structboard, char initchar) 
 {
 	int i,j;
 	int dimr = structboard->rows;
