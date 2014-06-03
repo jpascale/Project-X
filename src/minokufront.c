@@ -28,6 +28,7 @@ int CheckLegalPos(tBoard * structboard, tPos * pos);
 int LegalSave(tCommand * structcommand, char * params);
 void TranslateCoords(tPos * pos);
 void Quit(tGame * game, tCommand * command);
+void PrintResult(tGame * game);
 
 int
 main(void)
@@ -373,14 +374,7 @@ void Play(tGame * game)
 		CheckGameState(game);
 	} while(game->gamestate == GAMESTATE_DEFAULT);
 
-	if (game->gamestate == GAMESTATE_WIN)
-	{
-		printf ("Ganaste!\n");
-		if (game->gametype == GAMETYPE_CAMPAIGN)
-			game->campaign_level++;
-	}
-	else
-		printf("Perdiste!\n");
+	PrintResult(game);
 
 	freeBoard(game->hiddenboard.board, game->hiddenboard.rows);
 	freeBoard(game->visualboard.board, game->hiddenboard.rows);
@@ -909,4 +903,23 @@ int CheckLegalPos(tBoard * structboard, tPos * pos)
 	res = ValidRow(pos);
 	res = res && LegalPos(structboard, pos);
 	return res;
+}
+
+void PrintResult(tGame * game)
+{
+	switch (game->gamestate)
+	{
+		case GAMESTATE_WIN:
+			printf ("Ganaste!\n");
+			if (game->gametype == GAMETYPE_CAMPAIGN)
+				game->campaign_level++;
+			break;
+			
+		case GAMESTATE_CANTWIN:
+			printf("No quedan suficientes movimientos para ganar la partida.\n");
+		case GAMESTATE_LOSE:
+			printf("Perdiste\n");
+			PrintBoard(&game->hiddenboard);
+			break;	
+	}
 }

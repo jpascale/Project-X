@@ -108,6 +108,7 @@
 #define GAMESTATE_DEFAULT 	0
 #define GAMESTATE_WIN 		1
 #define GAMESTATE_LOSE 		2
+#define GAMESTATE_CANTWIN 	3
 
 //Campaign Format
 #define FILE_FORMAT ".txt"

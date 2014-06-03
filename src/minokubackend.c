@@ -550,7 +550,7 @@ void CheckGameState(tGame * game)
 	if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
 	{
 		if (game->moves < game->sweeps_left && game->moves < game->mines_left)
-			game->gamestate = GAMESTATE_LOSE; 
+			game->gamestate = GAMESTATE_CANTWIN; 
 	}
 
 	return;
