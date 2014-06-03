@@ -21,15 +21,19 @@
 #define FALSE 0
 #define TRUE 1
 
-// Printf color constants
-#define KNRM  "\x1B[0m" //default
-#define KRED  "\x1B[31m"
-#define KGRN  "\x1B[32m"
-#define KYEL  "\x1B[33m"
-#define KBLU  "\x1B[34m"
-#define KMAG  "\x1B[35m"
-#define KCYN  "\x1B[36m"
-#define KWHT  "\x1B[37m"
+// COLOR CONSTANTS
+#define KDEF  "\x1B[0m"		//default
+
+//	Color constants for Board
+#define KMIN  "\x1B[31m" 	//MINE - RED 
+#define KSWP  "\x1B[32m"	//SWEEP - GREEN
+#define KFLG  "\x1B[34m"	//FLAG - BLUE
+#define KREF  "\x1B[36m"	//REFERENCE - CYAN
+
+#define KMSG  "\x1B[34m"	//MESSAGE - BLUE
+#define KASK  "\x1B[31m"	//ASK - RED
+#define KEXC  "\x1B[32m"	//EXCLAME - GREEN
+#define KERR  "\x1B[31m"	//ERROR - RED
 
 // Levels
 #define EASY 		1
@@ -137,6 +141,10 @@
 
 
 #define CLEAR_SCREEN() printf("\e[1;1H\e[2J")
+
+#define COLORBOARD	((board[i][j] == VISUAL_UNFLAGGED)? KMIN: \
+					((board[i][j] == VISUAL_FLAGGED)? KFLG: \
+					((board[i][j] == VISUAL_EMPTY)? KSWP:KMIN)))
 
 //Campaign Format
 #define FILE_FORMAT ".txt"

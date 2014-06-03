@@ -1,5 +1,6 @@
 #include "minokubackend.h"
 
+
 /*
 **		Function prototypes (front) 
 */
@@ -52,13 +53,13 @@ main(void)
 				if (setNewGame(&game))
 					Play(&game);
 				else
-					printf("No hay suficiente memoria para seguir jugando.\n");
+					printf("%sNo hay suficiente memoria para seguir jugando.\n%s", KERR, KDEF);
 			}
 			else
 				do
 				{	
 					if (!(valid = setCampaign(&game)))
-						printf("Archivo invalido o inexistente\n");
+						printf("%sArchivo invalido o inexistente\n%s", KERR, KDEF);
 				}
 				while (!valid);
 			break;
@@ -68,12 +69,12 @@ main(void)
 			{
 				getName(loadname);
 				if (!(valid = LoadFile(&game, loadname)))
-					printf("Archivo invalido o inexistente\n");
+					printf("%sArchivo invalido o inexistente%s\n", KERR, KDEF);
 				else
 					if (game.gametype == GAMETYPE_CAMPAIGN)
 					{
 						if (!(valid = resumeCampaign(&game)))
-							printf("Archivo de campaña invalido o inexistente\n");
+							printf("%sArchivo de campaña invalido o inexistente.%s\n", KERR, KDEF);
 					}
 
 
@@ -101,7 +102,7 @@ int setCampaign(tGame * game)
 	{
 		if ((valid = setNewGame(game)) == MALLOC_ERR)
 		{
-			printf("No hay memoria suficiente para seguir jugando.\n");
+			printf("%sNo hay memoria suficiente para seguir jugando.%s\n", KASK, KDEF);
 			return FALSE;
 		}
 		else if (valid)
@@ -128,7 +129,7 @@ int resumeCampaign(tGame * game)
 	{
 		if ((valid = setNewGame(game)) == MALLOC_ERR)
 		{
-			printf("No hay suficiente memoria para seguir jugando.\n");
+			printf("%sNo hay suficiente memoria para seguir jugando.\n%s", KERR, KDEF);
 			return FALSE;
 		}
 		else if (valid)				
@@ -142,14 +143,14 @@ int Menu(void)
 	
 	do
 	{	
-		printf("1. Juego Nuevo\n"  
+		printf("%s1. Juego Nuevo\n"  
 			   "2. Recuperar Juego Grabado\n"
-			   "3. Terminar\n");
+			   "3. Terminar%s\n", KASK, KDEF);
 	
-		option = getint("Elija una opcion: ");
+		option = getint("%sElija una opcion: %s", KASK, KDEF);
 
 		if (option > 3 || option < 1)
-			printf("Ingrese una opcion valida.\n");
+			printf("%sIngrese una opcion valida.%s\n", KERR, KASK);
 
 	} while(option > 3 || option < 1);
 	
@@ -163,14 +164,14 @@ void setGametypeMenu(tGame * game)
 
 	do
 	{
-		printf( "1.1 Juego individual sin limite de movimientos\n"
+		printf( "%s1.1 Juego individual sin limite de movimientos\n"
 				"1.2 Juego individual con limite de movimientos\n"
-				"1.3 Juego por campaña\n");
+				"1.3 Juego por campaña%s\n", KASK, KDEF);
 
-		option = getint("Elija una opcion: \n");
+		option = getint("%sElija una opcion: %s\n", KASK, KDEF);
 		
 		if (option > 3 || option < 1)
-			printf("Ingrese una opcion valida.\n");
+			printf("%sIngrese una opcion valida.%s\n", KERR, KDEF);
 		
 	} while(option > 3 || option < 1);
 
@@ -236,7 +237,7 @@ void getCampaignName(tGame *game)
 
 	do
 	{
-		printf("Escriba nombre de campaña, el archivo debe terminar en .txt\n");
+		printf("%sEscriba nombre de campaña, el archivo debe terminar en .txt%s\n", KASK, KDEF);
 		
 		if (gets(name) == NULL)
 			valid = FALSE;
@@ -268,12 +269,12 @@ void getDim(tGame * game)
 	
 	do
 	{
-		rowsaux = getint("Ingrese FILAS, minimo 5 y maximo 19:\n");
+		rowsaux = getint("%sIngrese FILAS, minimo 5 y maximo 19:%s\n", KASK, KDEF);
 	} while (rowsaux < 5 || rowsaux > 19);
 
 	do
 	{
-		colaux = getint("Ingrese COLUMNAS, minimo 5 y maximo 19:\n");
+		colaux = getint("%sIngrese COLUMNAS, minimo 5 y maximo 19:%s\n", KASK, KDEF);
 	} while (colaux < 5 || colaux > 19);
 
 	game->visualboard.rows = game->hiddenboard.rows = rowsaux;
@@ -293,7 +294,11 @@ void getLevel(tGame * game)
 
 	do
 	{
-		level = getint("Ingrese dificultad:\n1.Facil\n2.Medio\n3.Dificil\n4.Pesadilla\n");
+		level = getint(	"%sIngrese dificultad:\n"
+						"%s1.Facil\n"
+						"%s2.Medio\n"
+						"%s3.Dificil\n"
+						"%s4.Pesadilla%s\n", KREF, KSWP, KFLG, KREF, KMIN, KDEF);
 	
 		if (level == NIGHTMARE)
 			can_nightmare? (can = TRUE) : (can = FALSE);
@@ -301,7 +306,7 @@ void getLevel(tGame * game)
 			can = TRUE;
 
 		if (!can)
-			printf("No es posible elegir pesadilla con menos de 100 casilleros.\n");
+			printf("%sNo es posible elegir pesadilla con menos de 100 casilleros.%s\n", KERR, KDEF);
 
 	} while(level < EASY || level > NIGHTMARE || !can);
 
@@ -323,17 +328,18 @@ void PrintBoard(tBoard * structboard)
 
 	putchar('\t');
 	
+	printf("%s", KREF);	
 	for(i = 0; i < columns; i++)
 		printf("%d\t", i+1);
 
-	putchar('\n');
+	printf("%s\n", KDEF);
 	
 	for(i = 0; i < rows; i++)
 	{
-		printf("%c\t", toupperalpha(i));
+		printf("%s%c%s\t", KSWP, toupperalpha(i), KDEF);
 
 		for (j = 0; j < columns; j++)
-			printf("%c\t", board[i][j]);
+			printf("%s%c%s\t", COLORBOARD, board[i][j], KDEF);
 
 		putchar('\n');
 	}
@@ -366,7 +372,7 @@ void Play(tGame * game)
 			}
 
 		if (!legal)
-			printf("Commando invalido.\n");
+			printf("%sComando invalido.%s\n", KERR, KDEF);
 
 		} while (!legal);
 
@@ -395,7 +401,7 @@ int InputCommand(tScan * scan)
 	char * rinput; //Result input
 	char input[MAX_COMMAND_LEN + MAX_PARAMS_LEN + 2]; //Command, params and 2 for space and '\n'
 	
-	printf("Introducir un comando: ");
+	printf("%sIntroducir un comando: %s", KASK, KDEF);
 
 	rinput = fgets(input, MAX_COMMAND_LEN + MAX_PARAMS_LEN + 2, stdin); //+2 0 and blank
 	
@@ -704,7 +710,7 @@ int AskUndo(tGame * game, tUndo * undo)
 
 	PrintBoard(&game->visualboard);
 
-	printf("Perdiste! ¿Hacer Undo? (Ingresar undo o quit)\n");
+	printf("%sPerdiste! ¿Hacer Undo? (Ingresar undo o quit)%s\n", KASK, KDEF);
 
 	do{
 		pinput = fgets(input, MAX_COMMAND_LEN, stdin);
@@ -715,7 +721,7 @@ int AskUndo(tGame * game, tUndo * undo)
 		}
 
 		if (!wasundo && !wasquit)
-			printf("Ingresar quit o undo.");
+			printf("%sIngresar quit o undo.%s\n", KERR, KDEF);
 	}
 	while ( (!wasundo && !wasquit) || (pinput == NULL));
 
@@ -739,10 +745,14 @@ int AskUndo(tGame * game, tUndo * undo)
 void PrintAll(tGame * game)
 {
 	PrintBoard(&game->visualboard);
+	
+	printf("%s", KMSG);
 	if (game->gametype)
 		printf("Movimientos restantes: %d\n", game->moves);
+	
 	printf("Undos restantes: %d\n", game->undos);
 	printf("Flags restantes: %d\n", game->flags_left);
+	printf("%s", KDEF);
 	return;
 }
 
@@ -754,7 +764,7 @@ void Quit(tGame * game, tCommand * command)
 	int yes = FALSE;
 	int no = FALSE;
 
-	printf("?Desea guardar la partida? (Ingrese si o no)\n");
+	printf("%sDesea guardar la partida? (Ingrese si o no)%s\n", KASK, KDEF);
 	do
 	{
 		pinput = fgets(input, 5, stdin);
@@ -764,7 +774,7 @@ void Quit(tGame * game, tCommand * command)
 			no = strcmp(input, "no\n") == 0;
 		}
 		if (!yes && !no)
-			printf("Ingresar si o no\n");
+			printf("%sIngresar si o no%s\n", KASK, KDEF);
 
 	}while((!yes && !no) || (pinput == NULL));
 
@@ -844,7 +854,7 @@ int ExecCommand(tGame *game, tCommand * command)
 					game->moves--;
 			}
 			else
-				printf("No es posible usar undo.\n");
+				printf("%sNo es posible usar undo.%s\n", KERR, KDEF);
 			break;
 
 
@@ -874,7 +884,7 @@ void getName(char * name)
 	sprintf(fmt, "%%%ds", MAX_FILENAME_LEN);
 	do
 	{
-		printf("Introducir nombre de archivo\n");
+		printf("%sIntroducir nombre de archivo%s\n", KASK, KDEF);
 		res = scanf(fmt, name);
 	
 	} while(!res);
@@ -910,16 +920,17 @@ void PrintResult(tGame * game)
 	switch (game->gamestate)
 	{
 		case GAMESTATE_WIN:
-			printf ("Ganaste!\n");
+			PrintBoard(&game->visualboard);
+			printf ("%sGanaste!%s\n", KEXC, KDEF);
 			if (game->gametype == GAMETYPE_CAMPAIGN)
 				game->campaign_level++;
 			break;
-			
+
 		case GAMESTATE_CANTWIN:
-			printf("No quedan suficientes movimientos para ganar la partida.\n");
+			printf("%sNo quedan suficientes movimientos para ganar la partida.%s\n", KEXC, KDEF);
 		case GAMESTATE_LOSE:
-			printf("Perdiste\n");
 			PrintBoard(&game->hiddenboard);
+			printf("%sPerdiste!%s\n", KEXC, KDEF);
 			break;	
 	}
 }
