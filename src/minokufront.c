@@ -102,7 +102,7 @@ int setCampaign(tGame * game)
 	if (!LoadCampaign(game))
 		return FALSE;
 
-	for (i = 0; i <= game->levels_amount; i++)
+	for (i = 0; i < game->levels_amount; i++)
 	{
 		if ((valid = setNewGame(game)) == MALLOC_ERR)
 		{
@@ -118,12 +118,15 @@ int setCampaign(tGame * game)
 int resumeCampaign(tGame * game)
 {
 	int i, valid;
-	int campaign_rows = game->campaign[game->campaign_level].rows;
-	int campaign_columns = game->campaign[game->campaign_level].columns;
+	int campaign_rows;
+	int campaign_columns;
 
 	if (!LoadCampaign(game))
 		return FALSE;
-
+	campaign_rows = game->campaign[game->campaign_level-1].rows;
+	campaign_columns = game->campaign[game->campaign_level-1].columns;
+	/*DEBUG
+	printf("Campana rows: %d, game rows %d, Campana cols %d game cols %d\n", campaign_rows, game->hiddenboard.rows, campaign_columns, game->hiddenboard.columns);*/
 	if (campaign_rows != game->hiddenboard.rows || campaign_columns != game->hiddenboard.columns)
 		return FALSE;
 
@@ -198,9 +201,9 @@ int setNewGame(tGame * game)
 	}
 	else
 	{
-		int campaign_rows = game->campaign[game->campaign_level].rows;
-		int campaign_columns = game->campaign[game->campaign_level].columns;
-		int campaign_level = game->campaign[game->campaign_level].level;
+		int campaign_rows = game->campaign[game->campaign_level-1].rows;
+		int campaign_columns = game->campaign[game->campaign_level-1].columns;
+		int campaign_level = game->campaign[game->campaign_level-1].level;
 
 		if (campaign_rows > MAX_ROWS || campaign_columns > MAX_COLUMNS)
 			return FALSE;
