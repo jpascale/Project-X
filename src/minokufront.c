@@ -68,6 +68,7 @@ main(void)
 					printf("%sNo hay suficiente memoria para seguir jugando.\n%s", KERR, KDEF);
 			}
 			else
+			{
 				game.campaign_level = 1;
 				do
 				{	
@@ -75,6 +76,7 @@ main(void)
 						printf("%sArchivo invalido o inexistente\n%s", KERR, KDEF);
 				}
 				while (!valid);
+			}
 			break;
 
 		case 2:	/* Load */
@@ -90,10 +92,7 @@ main(void)
 							printf("%sArchivo de campaña invalido o inexistente.%s\n", KERR, KDEF);
 					}
 
-
 			} while (!valid);
-			
-
 			
 			Play(&game);
 			break;		
@@ -952,6 +951,7 @@ void PrintResult(tGame * game)
 
 		case GAMESTATE_CANTWIN:
 			printf("%sNo quedan suficientes movimientos para ganar la partida.%s\n", KEXC, KDEF);
+			game->gamestate = GAMESTATE_LOSE;
 		case GAMESTATE_LOSE:
 			PrintBoard(&game->hiddenboard);
 			printf("%sPerdiste!%s\n", KEXC, KDEF);
