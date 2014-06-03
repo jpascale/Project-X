@@ -211,7 +211,11 @@ int setNewGame(tGame * game)
 		int campaign_level = game->campaign[game->campaign_level-1].level;
 
 		if (campaign_rows > MAX_ROWS || campaign_columns > MAX_COLUMNS)
+		{	
+			printf("El nivel actual posee un tablero muy grande, se pasara al proximo nivel");
+			game->campaign_level++;
 			return FALSE;
+		}
 		
 		game->visualboard.rows = game->hiddenboard.rows = campaign_rows;
 		game->visualboard.columns = game->hiddenboard.columns = campaign_columns;
