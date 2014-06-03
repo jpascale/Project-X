@@ -3,7 +3,7 @@
 
 static void CopyBoard(tBoard * board_from, tBoard * board_to);
 
-void setGameMinesNumber(tGame * game)
+void setGameMinesNumber(tGame * game) 
 {
 
 	int dim = game->hiddenboard.rows * game->hiddenboard.columns;
@@ -33,23 +33,24 @@ void setGameMinesNumber(tGame * game)
 	return;
 }
 
-int CreateBoard(tBoard * structboard)
+int CreateBoard(tBoard * structboard) 
 {
-	//ToDo: Tidy
 	int i, auxrows, auxcolumns;
 	char ** auxboard;
+
 	auxrows = structboard->rows;
 	auxcolumns = structboard->columns;
 	auxboard = malloc(auxrows * sizeof(char *));
+
 	if (auxboard == NULL)
 	{	
 		free(auxboard);
 		return FALSE;
 	}
-	for(i=0; i<auxrows; i++)
+	for(i = 0; i < auxrows; i++)
 	{
-		auxboard[i] = malloc(auxcolumns*sizeof(char));
-		if(auxboard[i]==NULL)
+		auxboard[i] = malloc(auxcolumns * sizeof(char));
+		if(auxboard[i] == NULL)
 		{
 			freeBoard(auxboard, i);
 			return FALSE;
@@ -69,7 +70,8 @@ void freeBoard(char ** board, int rows)
 	free(board);
 }
 
-int InitBoardMines(tBoard * structboard, int mines)
+
+int InitBoardMines(tBoard * structboard, int mines) 
 {
 	int i, k;
 	int auxrows = structboard->rows;
@@ -106,7 +108,7 @@ int InitBoardMines(tBoard * structboard, int mines)
 	return TRUE;
 }
 
-int CreateHiddenBoard(tBoard * structboard, int mines)
+int CreateHiddenBoard(tBoard * structboard, int mines) 
 {
 	if (CreateBoard(structboard) == FALSE)
 		return FALSE;
@@ -116,7 +118,8 @@ int CreateHiddenBoard(tBoard * structboard, int mines)
 	return TRUE;
 }
 
-void InitBoard(tBoard * structboard, char initchar)
+
+void InitBoard(tBoard * structboard, char initchar) 
 {
 	int i,j;
 	int dimr = structboard->rows;
@@ -141,10 +144,26 @@ int CreateVisualBoard(tBoard * structboard)
 	return TRUE;
 }
 
-int Query(tBoard * hiddenboard, tArray * pquery, int element, char isrow)
+/*
+**	CreateHiddenVisualBoard - Creates both hidden
+**	and visual board. Returns FALSE when there´s 
+** 	no memory left.
+*/
+int CreateHiddenVisualBoard(tGame * game)
 {
-   //ToDo: Free array after use
+	if (!CreateHiddenBoard(&game->hiddenboard, game->mines) || !CreateVisualBoard(&game->visualboard))
+ 		return FALSE;
+
+ 	return TRUE;
+}
+
+int Query(tBoard * hiddenboard, tCommand * structcommand)
+{
   //ToDo: Modularize??
+
+	tArray * pquery = &structcommand->query.results;
+	int element = structcommand->query.index;
+	char isrow = structcommand->query.is_row;
 
 	int i, j;
 	int boarddim = isrow ? hiddenboard->columns : hiddenboard->rows;
@@ -231,10 +250,10 @@ int DoFlagUnflag(tGame * game, tCommand * command, char task)
 	return TRUE;
 }
 
-int Sweep(tGame * game, tPos * pos, tCommand * command)
+int Sweep(tGame * game, tCommand * command)
 {
-	int i = pos->i;
-	int j = pos->j;
+	int i = command->sweep.i;
+	int j = command->sweep.j;
 	
 	SaveLastState(game, &command->undo);
 
@@ -348,7 +367,7 @@ int LoadFile(tGame *game, char *name)
 	//ToDo: Modularize
 	//ToDo: Finish
 	FILE * loadfile;
-	int auxrows, auxcols;
+	int auxrows=0, auxcols=0;
 	int num;
 	int mines=0;
 	char elem;
@@ -359,158 +378,157 @@ int LoadFile(tGame *game, char *name)
 	int flags_left;
 	int mines_left;
 	char campaign_name[MAX_FILENAME_LEN];
+	int error = FALSE;
+	int hidden_created = FALSE;
+	int visual_created = FALSE;
 	
 	if ((loadfile = fopen(name, "rb")) == NULL)
-		return FALSE;
-
-	if (fread(&num, sizeof(num), 1, loadfile) != 1 )
-	{	
-		printf("ERROR EN EL NIVEL\n");
-		fclose(loadfile);
-		return FALSE;
-	}
-
-	game->campaign_level = num;
-
-	if (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < MIN_ROWS))
 	{
-		printf("ERROR EN LAS FILAS\n");
-		fclose(loadfile);
-		return FALSE;
+		error = TRUE;
 	}
 
-	game->hiddenboard.rows = game->visualboard.rows = auxrows = num;
-
-
-	if (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < MIN_COLUMNS))
+	else if (fread(&num, sizeof(num), 1, loadfile) != 1)
 	{
-		printf("ERROR EN LAS COLUMNAS\n");
-		fclose(loadfile);
-		return FALSE;
+		error = TRUE; 
 	}
-	
-	game->hiddenboard.columns = game->visualboard.columns = auxcols = num;
-
-
-	if (fread(&num, sizeof(num), 1, loadfile) > get_undos(game->level))
+	else if (!error)
 	{
-		printf("ERROR EN LOS UNDOS\n");
-		fclose(loadfile);
-		return FALSE;
+		game->campaign_level = num;
 	}
-	game->undos = num;
 
-
-	if (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < 0))
+	if (!error && (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < MIN_ROWS)))
 	{
-		printf("ERROR EN LOS MOVES\n");
-		fclose(loadfile);
-		return FALSE;
+		error = TRUE;
 	}
-
-	game->moves = num;
-	game->gametype = game->moves? GAMETYPE_INDIVIDUAL_LIMIT : GAMETYPE_INDIVIDUAL_NOLIMIT;
-
-
-	if (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < 0 || num > 1 || (num == 1 && !game->moves)))
+	else if (!error)
 	{
-		printf("ERROR EN LA CAMPAIGN\n");
-		fclose(loadfile);
-		return FALSE;
+		game->hiddenboard.rows = game->visualboard.rows = auxrows = num;
 	}
-	
-	game->gametype = num? GAMETYPE_CAMPAIGN : game->gametype;
+
+
+	if (!error && (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < MIN_COLUMNS)))
+	{
+		error = TRUE;
+	}
+	else if (!error)
+	{
+		game->hiddenboard.columns = game->visualboard.columns = auxcols = num;
+	}
+
+
+	if (!error && (fread(&num, sizeof(num), 1, loadfile) > get_undos(game->level)))
+		error = TRUE;
+	else if (!error)
+		game->undos = num;
+
+
+	if (!error && (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < 0)))
+		error = TRUE;
+	else if (!error)
+	{
+		game->moves = num;
+		game->gametype = game->moves? GAMETYPE_INDIVIDUAL_LIMIT : GAMETYPE_INDIVIDUAL_NOLIMIT;
+	}
+
+
+	if (!error && (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < 0 || num > 1 || (num == 1 && !game->moves))))
+		error = TRUE;
+	else if (!error)
+		game->gametype = num? GAMETYPE_CAMPAIGN : game->gametype;
 
 
 
-	if (CreateBoard(&game->hiddenboard)==FALSE)
+	if (!error && CreateBoard(&game->hiddenboard)==FALSE)
 	{
 
 		fclose(loadfile);
 		return MALLOC_ERR;
 	}
-	board = game->hiddenboard.board;
+	if (!error)
+	{
+		board = game->hiddenboard.board;
+		hidden_created = TRUE;
+	}
 
-	for (i = 0; i < auxcols * auxrows; i++)
+	for (i = 0; !error && i < auxcols * auxrows; i++)
 	{
 		elem = fgetc(loadfile);
 		if (elem != HIDDEN_MINE && elem != HIDDEN_EMPTY)
-		{
-			printf("ERROR EN EL HIDDENBOARD\n");
-			freeBoard(game->hiddenboard.board, auxrows);
-			fclose(loadfile);
-			return FALSE;
-		}
-		if (elem == HIDDEN_MINE)
+			error = TRUE;
+		else if (elem == HIDDEN_MINE)
 			mines++;
-		board[i/auxcols][i%auxcols] = elem;
+		if (!error)
+			board[i/auxcols][i%auxcols] = elem;
 	}
-
+	
+	if (!error)
+	{
 	game->mines = mines_left = flags_left = mines;
 	sweeps_left = auxcols * auxrows - mines;
+	}
 
-	if (CreateBoard(&game->visualboard)==FALSE)
+	if (!error && CreateBoard(&game->visualboard)==FALSE)
 	{
 		freeBoard(game->hiddenboard.board, auxrows);
 		fclose(loadfile);
 		return MALLOC_ERR;
 	}
-	board = game->visualboard.board;
+	if (!error)
+	{
+		board = game->visualboard.board;
+		visual_created = TRUE;
+	}
 
-	for (i = 0; i < auxcols * auxrows; i++)
+	for (i = 0; !error && i < auxcols * auxrows; i++)
 	{
 		elem = fgetc(loadfile);
 		if ((elem != VISUAL_UNFLAGGED && elem != VISUAL_EMPTY && elem != VISUAL_FLAGGED) || (elem == VISUAL_EMPTY && game->hiddenboard.board[i/auxcols][i%auxcols] == HIDDEN_MINE))
+			error = TRUE;
+		else
 		{
-			printf("ERROR EN EL VISUALBOARD\n");
-			freeBoard(game->hiddenboard.board, auxrows);
-			freeBoard(game->visualboard.board, auxrows);
-			fclose(loadfile);
-			return FALSE;
+			board[i/auxcols][i%auxcols] = elem;
+			flags_left -= (elem == VISUAL_FLAGGED);
+			sweeps_left -= (elem == VISUAL_EMPTY);
+			mines_left -= (elem == VISUAL_FLAGGED && game->hiddenboard.board[i/auxcols][i%auxcols] == HIDDEN_MINE);
 		}
-		board[i/auxcols][i%auxcols] = elem;
-		flags_left -= (elem == VISUAL_FLAGGED);
-		sweeps_left -= (elem == VISUAL_EMPTY);
-		mines_left -= (elem == VISUAL_FLAGGED && game->hiddenboard.board[i/auxcols][i%auxcols] == HIDDEN_MINE);
 	}
-	game->flags_left = flags_left;
-	game->sweeps_left = sweeps_left;
-	game->mines_left = mines_left;
+	if (!error)
+	{
+		game->flags_left = flags_left;
+		game->sweeps_left = sweeps_left;
+		game->mines_left = mines_left;
+	}
 
-	if (game->gametype == GAMETYPE_CAMPAIGN)
+	if (!error && game->gametype == GAMETYPE_CAMPAIGN)
 	{
 		if (fgets(campaign_name, MAX_FILENAME_LEN, loadfile) == NULL || (campaign_len = strlen(campaign_name)) < FORMAT_LENGTH + 1)
-		{
-				printf("ERROR EN EL NOMBRE DE LA CAMPANA\n");
-				freeBoard(game->hiddenboard.board, auxrows);
-				freeBoard(game->visualboard.board, auxrows);
-				fclose(loadfile);
-				return FALSE;
-		}
+			error = TRUE;
 		
-		if (strstr(&(campaign_name[campaign_len-FORMAT_LENGTH]), FILE_FORMAT) == NULL)
-		{
-				printf("ERROR EN EL FORMATO\n");
-				freeBoard(game->hiddenboard.board, auxrows);
-				freeBoard(game->visualboard.board, auxrows);
-				fclose(loadfile);
-				return FALSE;
-		}
-		strcpy(game->campaign_name, campaign_name);
+		else if (strstr(&(campaign_name[campaign_len-FORMAT_LENGTH]), FILE_FORMAT) == NULL)
+			error = TRUE;
+		else
+			strcpy(game->campaign_name, campaign_name);
 	}
-	if (fgetc(loadfile) != EOF)
+
+	if (!error && fgetc(loadfile) != EOF)
+		error = TRUE;
+
+	else if (!error)
+		game->gamestate=GAMESTATE_DEFAULT;
+	if (error)
 	{
-		printf("EL ARCHIVO SEGUIA\n");
-		freeBoard(game->hiddenboard.board, auxrows);
-		freeBoard(game->visualboard.board, auxrows);
-		fclose(loadfile);
-		return FALSE;
+		if (hidden_created)
+		{
+			freeBoard(game->hiddenboard.board, auxrows);
+		}
+		if (visual_created)
+		{
+			freeBoard(game->visualboard.board, auxrows);
+		}
 	}
-
-	game->gamestate=GAMESTATE_DEFAULT;
-
-	fclose(loadfile);
-	return TRUE;
+	if (loadfile != NULL)
+		fclose(loadfile);
+	return !error;
 
 }
 
@@ -565,7 +583,7 @@ void CheckGameState(tGame * game)
 	if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
 	{
 		if (game->moves < game->sweeps_left && game->moves < game->mines_left)
-			game->gamestate = GAMESTATE_LOSE; 
+			game->gamestate = GAMESTATE_CANTWIN; 
 	}
 
 	return;
