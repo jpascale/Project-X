@@ -364,7 +364,7 @@ int LoadFile(tGame *game, char *name)
 	//ToDo: Modularize
 	//ToDo: Finish
 	FILE * loadfile;
-	int auxrows, auxcols;
+	int auxrows=0, auxcols=0;
 	int num;
 	int mines=0;
 	char elem;
@@ -376,25 +376,41 @@ int LoadFile(tGame *game, char *name)
 	int mines_left;
 	char campaign_name[MAX_FILENAME_LEN];
 	int error = FALSE;
+	int hidden_created = FALSE;
+	int visual_created = FALSE;
 	
 	if ((loadfile = fopen(name, "rb")) == NULL)
+	{
 		error = TRUE;
+	}
 
-	if (!error && (fread(&num, sizeof(num), 1, loadfile) != 1))
+	else if (fread(&num, sizeof(num), 1, loadfile) != 1)
+	{
 		error = TRUE; 
+	}
 	else if (!error)
+	{
 		game->campaign_level = num;
+	}
 
 	if (!error && (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < MIN_ROWS)))
+	{
 		error = TRUE;
+	}
 	else if (!error)
+	{
 		game->hiddenboard.rows = game->visualboard.rows = auxrows = num;
+	}
 
 
 	if (!error && (fread(&num, sizeof(num), 1, loadfile) != 1 || (num < MIN_COLUMNS)))
+	{
 		error = TRUE;
+	}
 	else if (!error)
+	{
 		game->hiddenboard.columns = game->visualboard.columns = auxcols = num;
+	}
 
 
 	if (!error && (fread(&num, sizeof(num), 1, loadfile) > get_undos(game->level)))
@@ -425,9 +441,13 @@ int LoadFile(tGame *game, char *name)
 		fclose(loadfile);
 		return MALLOC_ERR;
 	}
-	board = game->hiddenboard.board;
+	if (!error)
+	{
+		board = game->hiddenboard.board;
+		hidden_created = TRUE;
+	}
 
-	for (i = 0; i < auxcols * auxrows && !error; i++)
+	for (i = 0; !error && i < auxcols * auxrows; i++)
 	{
 		elem = fgetc(loadfile);
 		if (elem != HIDDEN_MINE && elem != HIDDEN_EMPTY)
@@ -450,9 +470,13 @@ int LoadFile(tGame *game, char *name)
 		fclose(loadfile);
 		return MALLOC_ERR;
 	}
-	board = game->visualboard.board;
+	if (!error)
+	{
+		board = game->visualboard.board;
+		visual_created = TRUE;
+	}
 
-	for (i = 0; i < auxcols * auxrows && !error; i++)
+	for (i = 0; !error && i < auxcols * auxrows; i++)
 	{
 		elem = fgetc(loadfile);
 		if ((elem != VISUAL_UNFLAGGED && elem != VISUAL_EMPTY && elem != VISUAL_FLAGGED) || (elem == VISUAL_EMPTY && game->hiddenboard.board[i/auxcols][i%auxcols] == HIDDEN_MINE))
@@ -486,14 +510,21 @@ int LoadFile(tGame *game, char *name)
 	if (!error && fgetc(loadfile) != EOF)
 		error = TRUE;
 
-	else
+	else if (!error)
 		game->gamestate=GAMESTATE_DEFAULT;
 	if (error)
 	{
-		freeBoard(game->hiddenboard.board, auxrows);
-		freeBoard(game->visualboard.board, auxrows);
+		if (hidden_created)
+		{
+			freeBoard(game->hiddenboard.board, auxrows);
+		}
+		if (visual_created)
+		{
+			freeBoard(game->visualboard.board, auxrows);
+		}
 	}
-	fclose(loadfile);
+	if (loadfile != NULL)
+		fclose(loadfile);
 	return !error;
 
 }
