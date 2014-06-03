@@ -98,6 +98,7 @@ int ExecCommand(tGame *game, tCommand *command);
 **	getName - Gets a filename.
 */
 void getName(char * name);
+<<<<<<< HEAD
 
 /*
 **	PrintAll - Prints moves left, undos left, flags left, after a valid comand.
@@ -105,6 +106,9 @@ void getName(char * name);
 */
 void PrintAll(tGame * game);
 
+=======
+void PrintAll(tGame * game, tCommand * command);
+>>>>>>> 30c72fdbee673dd44042ae2e7c46796430ff605c
 /*
 **	getCampaignName - Gets filename and checks if it ends with ".txt"
 */
@@ -475,7 +479,7 @@ void Play(tGame * game)
 
 	do
 	{
-		PrintAll(game);
+		PrintAll(game, &command);
 		
 		do
 		{	
@@ -801,10 +805,12 @@ LegalQuery(tBoard * visualboard, tCommand * structcommand, char * params)
 
 }
 
-void PrintQuery (tQuery * query)
+void PrintQuery(tQuery * query)
 {	
 	int i;
 	int dim = query->results.dim;
+
+	printf("Query: ");
 
 	if (dim)
 	{
@@ -858,8 +864,10 @@ int AskUndo(tGame * game, tUndo * undo)
 
 }
 
-void PrintAll(tGame * game)
+void PrintAll(tGame * game, tCommand * command)
 {
+	DELSHELL();
+
 	PrintBoard(&game->visualboard);
 	
 	printf("%s", KMSG);
@@ -868,6 +876,11 @@ void PrintAll(tGame * game)
 	
 	printf("Undos restantes: %d\n", game->undos);
 	printf("Flags restantes: %d\n", game->flags_left);
+	if (command->command_ref == COMMAND_QUERY)
+	{
+		PrintQuery(&command->query);
+		free(command->query.results.results);
+	}
 	printf("%s", KDEF);
 	return;
 }
@@ -911,7 +924,7 @@ int ExecCommand(tGame *game, tCommand * command)
 	switch (i)
 	{
 		case COMMAND_SWEEP:
-			res = Sweep(game, &command->sweep, command);
+			res = Sweep(game, command);
 			if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
 				game->moves--;
 			break;
@@ -948,8 +961,8 @@ int ExecCommand(tGame *game, tCommand * command)
 		
 		case COMMAND_QUERY:
 			res = Query(&game->hiddenboard, command);
-			PrintQuery(&command->query);
-			free(command->query.results.results);
+			//PrintQuery(&command->query);
+			//free(command->query.results.results);
 			break;
 
 		case COMMAND_SAVE:

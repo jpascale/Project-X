@@ -250,10 +250,10 @@ int DoFlagUnflag(tGame * game, tCommand * command, char task)
 	return TRUE;
 }
 
-int Sweep(tGame * game, tPos * pos, tCommand * command)
+int Sweep(tGame * game, tCommand * command)
 {
-	int i = pos->i;
-	int j = pos->j;
+	int i = command->sweep.i;
+	int j = command->sweep.j;
 	
 	SaveLastState(game, &command->undo);
 
