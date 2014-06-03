@@ -4,42 +4,150 @@
 /*
 **		Function prototypes (front) 
 */
+
+/*
+**	Menu - Initial menu: Play, Load, Quit.
+*/
 int Menu(void);
+
+/*
+**	setGametypeMenu - Choose gametype: No moves limit, Limited moves, Campaign.   
+*/
 void setGametypeMenu(tGame * game);
+
+/*
+**	PrintBoard - Prints the gameboard.
+*/
 void PrintBoard(tBoard * structboard);
+
+/*
+**	getLevel - Asks for level taking into account nightmare restriction.
+*/
 void getLevel(tGame * game);
+
 /*
 **	getDim - Asks for board dim.
 */
 void getDim(tGame * game);
+
 /*
-**	setNewGame - Sets All the necesary info to play 
-**	in game structure.  
+**	setNewGame - Sets All the necesary info to play in game structure.  
 */ 
 int setNewGame(tGame * game);
-void Play(tGame * game);
-int LegalCommand(tScan * scan, tCommand * command);
-int InputCommand(tScan * scan);
-int LegalParams(tGame * game, tCommand * command, tScan * scan);
-int LegalSweep(tBoard * visualboard, tCommand * command, char * params);
-int LegalFlag(tGame * game, tCommand * command, char * params, char task);
-int LegalQuery(tBoard * visualboard, tCommand * structcommand, char * params);
-void PrintQuery (tQuery * query);
-int AskUndo(tGame * game, tUndo * undo);
-int ExecCommand(tGame *game, tCommand *command);
-void getName(char * name);
-void PrintAll(tGame * game);
+
 /*
-**	getCampaignName - Gets name and checks if it ends with ".txt"
+**	Play - Receives gameplay configured structure and starts game.
+*/
+void Play(tGame * game);
+
+/*
+**	InputCommand - Scans a command and it´s params and saves
+**	them in a structure. Returns FALSE if no input.
+*/
+int InputCommand(tScan * scan);
+
+/*
+**	LegalCommand - Receives scanned command, sets command reference
+**	in structure,retuns TRUE if valid.
+*/
+int LegalCommand(tScan * scan, tCommand * command);
+
+/*
+**	LegalParams - Detects command reference and returns command validation.
+*/
+int LegalParams(tGame * game, tCommand * command, tScan * scan);
+
+/*
+**	LegalSweep - Validates Sweep command.
+*/
+int LegalSweep(tBoard * visualboard, tCommand * command, char * params);
+
+/*
+**	LegalFlag - Validates Flag/Unflag command. Saves in a struct if it's
+**  a single flag or a range flag.
+*/
+int LegalFlag(tGame * game, tCommand * command, char * params, char task);
+
+/*
+**	LegalQuery - Validates Query command.
+*/
+int LegalQuery(tBoard * visualboard, tCommand * structcommand, char * params);
+
+/*
+**	LegalSave - Validates Save command. 
+*/
+int LegalSave(tCommand * structcommand, char * params);
+
+/*
+**	PrintQuery - Prints query resluts.
+*/
+void PrintQuery (tQuery * query);
+
+/*
+**	AskUndo - If you sweep a mine, AskUndo asks if you want to undo the move
+**	or quit.
+*/
+int AskUndo(tGame * game, tUndo * undo);
+
+/*
+**	ExecCommand - Recieves a valid command and executes it.
+*/
+int ExecCommand(tGame *game, tCommand *command);
+
+/*
+**	getName - Gets a filename.
+*/
+void getName(char * name);
+
+/*
+**	PrintAll - Prints moves left, undos left, flags left, after a valid comand.
+**  If the previous command was a query calls PrintQuery.   
+*/
+void PrintAll(tGame * game);
+
+/*
+**	getCampaignName - Gets filename and checks if it ends with ".txt"
 */
 void getCampaignName(tGame *game);
-int setCampaign(tGame * game); 
+
+/*
+**	setCampaign - Starts a new campaign and Plays all levels. 
+*/
+int setCampaign(tGame * game);
+
+/*
+**	resumeCampaign - Loads a campaign file and Plays all levels. 
+*/
 int resumeCampaign(tGame * game);
+
+/*
+**	CheckLegalPos - Validates a position with (row,column) format, for example (A,5).
+**	Calls TranslateCoord, ValidRow and LegalPos.
+*/
 int CheckLegalPos(tBoard * structboard, tPos * pos);
-int LegalSave(tCommand * structcommand, char * params);
+
+/*
+**	TranslateCoords - Changes rows from letter to number and decreases columns so they
+** 	match backend columns. (For example column 1 for the user is column 0 for the backend) 
+*/
 void TranslateCoords(tPos * pos);
+
+/*
+**	ValidRow - Checks if row is a letter.
+*/
+int ValidRow(tPos * pos);
+
+/*
+**	Quit - Asks if you want to save the game, then exits game.
+*/
 void Quit(tGame * game, tCommand * command);
+
+/*
+**	PrintResult - After finishing game prints Win or Lose. If you are still playing but
+**  you dont have enough moves to win prints Lose.
+*/
 void PrintResult(tGame * game);
+
 
 int
 main(void)
@@ -93,7 +201,7 @@ main(void)
 					}
 
 			} while (!valid);
-			
+
 			Play(&game);
 			break;		
 	}
@@ -151,6 +259,7 @@ int resumeCampaign(tGame * game)
 	}
 	return TRUE;
 }
+
 int Menu(void)
 {
 	int option;
@@ -178,9 +287,9 @@ void setGametypeMenu(tGame * game)
 
 	do
 	{
-		printf( "%s1.1 Juego individual sin limite de movimientos\n"
-				"1.2 Juego individual con limite de movimientos\n"
-				"1.3 Juego por campaña%s\n", KASK, KDEF);
+		printf( "%s1. Juego individual sin limite de movimientos\n"
+				"2. Juego individual con limite de movimientos\n"
+				"3. Juego por campaña%s\n", KASK, KDEF);
 
 		option = getint("%sElija una opcion: %s\n", KASK, KDEF);
 		
@@ -294,9 +403,7 @@ void getDim(tGame * game)
 	return;
 }
 
-/*
-**	getLevel - Asks for level taking into account nightmare restriction.
-*/
+
 void getLevel(tGame * game)
 {	
 	int level;
@@ -326,9 +433,7 @@ void getLevel(tGame * game)
 	return;
 }
 
-/*
-**	PrintBoard
-*/
+
 void PrintBoard(tBoard * structboard)
 {
 	int i, j;
@@ -356,9 +461,7 @@ void PrintBoard(tBoard * structboard)
 	}
 }
 
-/*
-**	Play - Receives gameplay configured structure and starts game.
-*/
+
 void Play(tGame * game)
 {	
 	int legal;
@@ -379,7 +482,7 @@ void Play(tGame * game)
 			if ((legal = InputCommand(&scan)))
 			{	
 				if((legal = LegalCommand(&scan, &command)))
-					if (command.command_ref < 5) //All commands but quit or undo
+					if (command.command_ref < 5) /*All commands but quit or undo*/
 						legal = LegalParams(game, &command, &scan);
 			}
 
@@ -398,12 +501,6 @@ void Play(tGame * game)
 	freeBoard(game->visualboard.board, game->hiddenboard.rows);
 	return;
 }
-
-/*
-**		InputCommand - Scans a command and it´s params
-**		and saves them in a structure. Returns FALSE if
-**		no input. 
-*/
 
 int InputCommand(tScan * scan)
 {	//ToDo: tidy
@@ -446,12 +543,6 @@ int InputCommand(tScan * scan)
 	return TRUE;
 }
 
-/*
-**		LegalCommand - Receives scanned command, sets 
-**		command reference in structure,retuns TRUE 
-**		if valid.
-*/
-
 int LegalCommand(tScan * scan, tCommand * command)
 {
 	//ToDo: Reduce mem access in for
@@ -475,9 +566,7 @@ int LegalCommand(tScan * scan, tCommand * command)
 	return found;
 }
 
-/*
-**	LegalParams - Detects command reference and returns command validation.
-*/
+
 int LegalParams(tGame * game, tCommand * structcommand, tScan * scan)
 {	
 	switch(structcommand->command_ref)
@@ -928,7 +1017,7 @@ void TranslateCoords(tPos * pos)
 	pos->j--;
 }
 
-static int ValidRow(tPos * pos)
+int ValidRow(tPos * pos)
 {
 	return isupper('A' + pos->i);
 }
