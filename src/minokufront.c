@@ -2,18 +2,16 @@
 
 /*
 **		Function prototypes (front) 
-**		TODO: Put this in frontend. Backend does not need this.
 */
 int Menu(void);
 void setGametypeMenu(tGame * game);
 void PrintBoard(tBoard * structboard);
 void getLevel(tGame * game);
-void getDim(tGame * game);
+void getDim(tGame * game); 
 int setNewGame(tGame * game);
 void Play(tGame * game);
 int LegalCommand(tScan * scan, tCommand * command);
 int InputCommand(tScan * scan);
-int CreateHiddenVisualBoard(tGame * game); //ToDo: Change name
 int LegalParams(tGame * game, tCommand * command, tScan * scan);
 int LegalSweep(tBoard * visualboard, tCommand * command, char * params);
 int LegalFlag(tGame * game, tCommand * command, char * params, char task);
@@ -22,19 +20,18 @@ void PrintQuery (tQuery * query);
 int AskUndo(tGame * game, tUndo * undo);
 int ExecCommand(tGame *game, tCommand *command);
 void getName(char * name);
-//ToDo Remove
 void PrintAll(tGame * game);
 void getCampaignName(tGame *game);
-int setCampaign(tGame * game);
+int setCampaign(tGame * game); 
 int resumeCampaign(tGame * game);
 int CheckLegalPos(tBoard * structboard, tPos * pos);
 int LegalSave(tCommand * structcommand, char * params);
 void TranslateCoords(tPos * pos);
+void Quit(tGame * game, tCommand * command);
 
 int
 main(void)
 {
-	//ToDo: tidy this, replace cases with constants
 	int option;
 	tGame game;
 	char loadname[MAX_FILENAME_LEN];
@@ -249,19 +246,6 @@ void getCampaignName(tGame *game)
 	
 	strcpy(game->campaign_name, name);	
 	return;
-}
-
-/*
-**	CreateHiddenVisualBoard - Creates both hidden
-**	and visual board. Returns FALSE when there´s 
-** 	no memory left.
-*/
-int CreateHiddenVisualBoard(tGame * game)
-{
-	if (!CreateHiddenBoard(&game->hiddenboard, game->mines) || !CreateVisualBoard(&game->visualboard))
- 		return FALSE;
-
- 	return TRUE;
 }
 
 /*
@@ -519,17 +503,9 @@ int LegalSweep(tBoard * visualboard, tCommand * structcommand, char * params)
 
 	if (new_line != '\n')
 		return FALSE;
-	
-	//ToDo: Modularize
+
 	aux.i = (int)i_scan;
-	/*TranslateCoords(&aux);
 
-	if (!ValidRow(&aux)) //Column is not a letter?
-		legal = FALSE;
-
-	else if (!LegalPos(visualboard, &aux)) // If Position is not on the board return false
-		legal = FALSE;
-	*/
 	if (!CheckLegalPos(visualboard, &aux))
 		legal = FALSE;
 	else if (visualboard->board[aux.i][aux.j] != VISUAL_UNFLAGGED)  // If there's a '&' or '-' on the visual board return false
@@ -915,7 +891,7 @@ void TranslateCoords(tPos * pos)
 	pos->j--;
 }
 
-int ValidRow(tPos * pos)
+static int ValidRow(tPos * pos)
 {
 	return isupper('A' + pos->i);
 }

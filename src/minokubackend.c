@@ -35,21 +35,22 @@ void setGameMinesNumber(tGame * game)
 
 int CreateBoard(tBoard * structboard)
 {
-	//ToDo: Tidy
 	int i, auxrows, auxcolumns;
 	char ** auxboard;
+
 	auxrows = structboard->rows;
 	auxcolumns = structboard->columns;
 	auxboard = malloc(auxrows * sizeof(char *));
+
 	if (auxboard == NULL)
 	{	
 		free(auxboard);
 		return FALSE;
 	}
-	for(i=0; i<auxrows; i++)
+	for(i = 0; i < auxrows; i++)
 	{
-		auxboard[i] = malloc(auxcolumns*sizeof(char));
-		if(auxboard[i]==NULL)
+		auxboard[i] = malloc(auxcolumns * sizeof(char));
+		if(auxboard[i] == NULL)
 		{
 			freeBoard(auxboard, i);
 			return FALSE;
@@ -139,6 +140,19 @@ int CreateVisualBoard(tBoard * structboard)
 	InitBoard(structboard, VISUAL_UNFLAGGED);
 	
 	return TRUE;
+}
+
+/*
+**	CreateHiddenVisualBoard - Creates both hidden
+**	and visual board. Returns FALSE when there´s 
+** 	no memory left.
+*/
+int CreateHiddenVisualBoard(tGame * game)
+{
+	if (!CreateHiddenBoard(&game->hiddenboard, game->mines) || !CreateVisualBoard(&game->visualboard))
+ 		return FALSE;
+
+ 	return TRUE;
 }
 
 int Query(tBoard * hiddenboard, tArray * pquery, int element, char isrow)

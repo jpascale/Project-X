@@ -21,7 +21,7 @@
 #define FALSE 0
 #define TRUE 1
 
-// Printf color constants - Usage: printf("%sasdasd\n", KRED);
+// Printf color constants
 #define KNRM  "\x1B[0m" //default
 #define KRED  "\x1B[31m"
 #define KGRN  "\x1B[32m"
@@ -251,6 +251,7 @@ int InitBoardMines(tBoard * structboard, int mines);
 void InitBoard(tBoard * structboard, char initchar);
 int CreateVisualBoard(tBoard * structboard);
 int CreateHiddenBoard(tBoard * structboard, int mines);
+int CreateHiddenVisualBoard(tGame * game);
 int Query(tBoard * structboard, tArray * pquery, int element, char isrow);
 int DoFlagUnflag(tGame * game, tCommand * command, char task);
 int Sweep(tGame * game, tPos * position, tCommand * command);
