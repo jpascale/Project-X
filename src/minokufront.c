@@ -98,17 +98,13 @@ int ExecCommand(tGame *game, tCommand *command);
 **	getName - Gets a filename.
 */
 void getName(char * name);
-<<<<<<< HEAD
 
 /*
 **	PrintAll - Prints moves left, undos left, flags left, after a valid comand.
 **  If the previous command was a query calls PrintQuery.   
 */
-void PrintAll(tGame * game);
-
-=======
 void PrintAll(tGame * game, tCommand * command);
->>>>>>> 30c72fdbee673dd44042ae2e7c46796430ff605c
+
 /*
 **	getCampaignName - Gets filename and checks if it ends with ".txt"
 */
