@@ -330,7 +330,6 @@ int WriteSaveFile(tGame *game, char *name)
 		fclose(savefile);
 		return FALSE;
 	}
-	// ToDo: Use aux function or macro
 
 	for (i = 0; i < data[SAVEFILE_ROWS]; i++)
 		if (fwrite(hiddenboard[i], sizeof(char), data[SAVEFILE_COLUMNS], savefile) != data[SAVEFILE_COLUMNS])
@@ -573,7 +572,7 @@ void CheckGameState(tGame * game)
 	if (!game->mines_left || !game->sweeps_left)
 		game->gamestate = GAMESTATE_WIN;
 
-	// Campaign or limited
+	/* Campaign or limited */
 	if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
 	{
 		if (game->moves < game->sweeps_left && game->moves < game->mines_left)

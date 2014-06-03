@@ -332,7 +332,7 @@ int setNewGame(tGame * game)
 	setGameMinesNumber(game);
  	game->undos = get_undos(game->level);
  	
- 	//Moves
+ 	/* Moves */
  	if (game->gametype == GAMETYPE_INDIVIDUAL_NOLIMIT)
  		game->moves = UNLIMITED_MOVES;
  	else
@@ -346,7 +346,7 @@ int setNewGame(tGame * game)
  	if (!CreateHiddenVisualBoard(game))
  		return MALLOC_ERR;
 
- 	//Ready to play
+ 	/* Ready to play */
  	return TRUE;
 }
 
@@ -508,7 +508,7 @@ int InputCommand(tScan * scan)
 	int i, j, k;
 	int found_space = FALSE;
 	int endfor = FALSE;
-	char * rinput; //Result input
+	char * rinput; /*Result input*/
 
 	/* Command, params and 2 for space and '\n' */
 	char input[MAX_COMMAND_LEN + MAX_PARAMS_LEN + 2]; 
@@ -520,7 +520,7 @@ int InputCommand(tScan * scan)
 	if (rinput == NULL)
 		return FALSE;
 
-	// Exit if no scan
+	/* Exit if no scan */
 	if (input[0] == '\n')
 		return FALSE;
 
