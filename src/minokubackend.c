@@ -155,10 +155,13 @@ int CreateHiddenVisualBoard(tGame * game)
  	return TRUE;
 }
 
-int Query(tBoard * hiddenboard, tArray * pquery, int element, char isrow)
+int Query(tBoard * hiddenboard, tCommand * structcommand)
 {
-   //ToDo: Free array after use
   //ToDo: Modularize??
+
+	tArray * pquery = &structcommand->query.results;
+	int element = structcommand->query.index;
+	char isrow = structcommand->query.is_row;
 
 	int i, j;
 	int boarddim = isrow ? hiddenboard->columns : hiddenboard->rows;

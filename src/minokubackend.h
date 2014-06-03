@@ -252,7 +252,7 @@ void InitBoard(tBoard * structboard, char initchar);
 int CreateVisualBoard(tBoard * structboard);
 int CreateHiddenBoard(tBoard * structboard, int mines);
 int CreateHiddenVisualBoard(tGame * game);
-int Query(tBoard * structboard, tArray * pquery, int element, char isrow);
+int Query(tBoard * structboard, tCommand * structcommand);
 int DoFlagUnflag(tGame * game, tCommand * command, char task);
 int Sweep(tGame * game, tPos * position, tCommand * command);
 int LegalPos(tBoard * structboard, tPos * position);

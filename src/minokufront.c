@@ -697,7 +697,6 @@ int AskUndo(tGame * game, tUndo * undo)
 
 	int wasundo = FALSE;
 	int wasquit = FALSE;
-	int valid;
 
 	PrintBoard(&game->visualboard);
 
@@ -777,7 +776,7 @@ void Quit(tGame * game, tCommand * command)
 int ExecCommand(tGame *game, tCommand * command)
 {
 	int i = command->command_ref;
-	int res; //Result
+	int res;
 
 	switch (i)
 	{
@@ -790,7 +789,7 @@ int ExecCommand(tGame *game, tCommand * command)
 		case COMMAND_FLAG:
 			if (!(command->flag.is_range))
 			{	
-				DoFlagUnflag(game, command, DO_FLAG);
+				res = DoFlagUnflag(game, command, DO_FLAG);
 				if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
 					game->moves--;
 			}	
@@ -805,20 +804,20 @@ int ExecCommand(tGame *game, tCommand * command)
 		case COMMAND_UNFLAG:
 			if (!(command->flag.is_range))
 			{
-				DoFlagUnflag(game, command, DO_UNFLAG);
+				res = DoFlagUnflag(game, command, DO_UNFLAG);
 				if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
 					game->moves--;
 			}	
 			else
 			{
-				FlagRange(game, command, DO_UNFLAG);
+				res = FlagRange(game, command, DO_UNFLAG);
 				if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
 					game->moves-= res;
 			}	
 			break;
 		
 		case COMMAND_QUERY:
-			res = Query(&game->hiddenboard, &command->query.results, command->query.index, command->query.is_row);
+			res = Query(&game->hiddenboard, command);
 			PrintQuery(&command->query);
 			free(command->query.results.results);
 			break;
@@ -853,14 +852,11 @@ int ExecCommand(tGame *game, tCommand * command)
 		{	
 			if (game->gametype == GAMETYPE_INDIVIDUAL_NOLIMIT)
 				AskUndo(game, &command->undo);
-			else if (game->moves && game->undos)
+			else if (game->moves)
 				AskUndo(game, &command->undo);
 			else
-			{
 				game->gamestate = GAMESTATE_LOSE;
-			}	
 		}
-		//ToDo Merge
 		else
 			game->gamestate = GAMESTATE_LOSE;
 	}	
