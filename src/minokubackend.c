@@ -216,7 +216,7 @@ int Query(tBoard * hiddenboard, tCommand * structcommand)
 	if (results != NULL)
 		results = realloc(results, (j + (state == FOUND_MINE)) * sizeof(*results));
 	pquery->dim = j + (state == FOUND_MINE);
-	pquery->results = results;
+	pquery->array = results;
 	
 	return (results != NULL);
 }

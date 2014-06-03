@@ -811,7 +811,7 @@ void PrintQuery(tQuery * query)
 	if (dim)
 	{
 		for (i = 0; i < dim; i++)
-			printf("%d%s", query->results.results[i], (i != (dim-1))? " - ": "\n");	
+			printf("%d%s", query->results.array[i], (i != (dim-1))? " - ": "\n");	
 	}else
 		printf("0\n");
 		
@@ -875,7 +875,7 @@ void PrintAll(tGame * game, tCommand * command)
 	if (command->command_ref == COMMAND_QUERY)
 	{
 		PrintQuery(&command->query);
-		free(command->query.results.results);
+		free(command->query.results.array);
 	}
 	printf("%s", KDEF);
 	return;
@@ -957,8 +957,6 @@ int ExecCommand(tGame *game, tCommand * command)
 		
 		case COMMAND_QUERY:
 			res = Query(&game->hiddenboard, command);
-			//PrintQuery(&command->query);
-			//free(command->query.results.results);
 			break;
 
 		case COMMAND_SAVE:

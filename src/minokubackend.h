@@ -215,7 +215,7 @@ typedef struct
 
 typedef struct
 {
-	int * results; //ToDo: change for array
+	int * array;
 	int dim;
 
 } tArray;
