@@ -1,4 +1,4 @@
-//_____minokubackend.h_____//
+/*_____minokubackend.h_____*/
 
 #ifndef _MINOKUBACK_H
 	#define _MINOKUBACK_H
@@ -19,48 +19,48 @@
 **		Macros
 */
 
-#define WITHDEL
+/* Clears shell */
 #define DELSHELL() printf("\033[2J\033[1;1H")
 
-#define FALSE 0
-#define TRUE 1
+#define FALSE 	0
+#define TRUE 	1
 
-// COLOR CONSTANTS
-#define KDEF  "\x1B[0m"		//default
+/* COLOR CONSTANTS */
+#define KDEF  "\x1B[0m"		/* default */
 
-//	Color constants for Board
-#define KMIN  "\x1B[31m" 	//MINE - RED 
-#define KSWP  "\x1B[32m"	//SWEEP - GREEN
-#define KFLG  "\x1B[34m"	//FLAG - BLUE
-#define KREF  "\x1B[36m"	//REFERENCE - CYAN
+/*	Color constants for Board */
+#define KMIN  "\x1B[31m" 	/* MINE - RED */ 
+#define KSWP  "\x1B[32m"	/* SWEEP - GREEN */
+#define KFLG  "\x1B[34m"	/* FLAG - BLUE */
+#define KREF  "\x1B[36m"	/* REFERENCE - CYAN */
 
-#define KMSG  "\x1B[34m"	//MESSAGE - BLUE
-#define KASK  "\x1B[31m"	//ASK - RED
-#define KEXC  "\x1B[32m"	//EXCLAME - GREEN
-#define KERR  "\x1B[31m"	//ERROR - RED
+#define KMSG  "\x1B[34m"	/* MESSAGE - BLUE */
+#define KASK  "\x1B[31m"	/* ASK - RED */
+#define KEXC  "\x1B[32m"	/* EXCLAME - GREEN */
+#define KERR  "\x1B[31m"	/* ERROR - RED */
 
-// Levels
+/* Levels */
 #define EASY 		1
 #define MEDIUM		2
 #define HARD 		3
 #define NIGHTMARE	4
 
 
-//Campaign
+/* Campaign */
 #define INDIVIDUAL_GAME 0
 
-// Query States
+/* Query States */
 #define NOT_FOUND_MINE 	0
 #define FOUND_MINE 		1
 
-// Sweep 
+/* Sweep */
 #define SWEEP_MINE -1
 
-// Chars for hidden board
+/* Chars for hidden board */
 #define HIDDEN_MINE 	'#'
 #define HIDDEN_EMPTY 	'-'
 
-// Chars for visual display
+/* Chars for visual display */
 #define VISUAL_UNFLAGGED 	'0'
 #define VISUAL_FLAGGED 		'&'
 #define VISUAL_EMPTY 		'-'
@@ -71,19 +71,19 @@
 
 #define UNLIMITED_MOVES 0
 
-//Minimum and maximum dim
+/* Minimum and maximum dim */
 #define MIN_ROWS 5
 #define MIN_COLUMNS 5
 #define MAX_ROWS 19
 #define MAX_COLUMNS 19
 
-// Level mines percentage
+/* Level mines percentage */
 #define PERCENT_EASY 		0.2
 #define PERCENT_MEDIUM 		0.5
 #define PERCENT_HARD 		0.7
 #define PERCENT_NIGHTMARE 	0.9
 
-// Command constants
+/* Command constants */
 #define MAX_COMMAND_LEN 	8
 #define MAX_PARAMS_LEN 		24
 #define COMMANDS_NUMBER 	7
@@ -97,15 +97,15 @@
 #define COMMAND_QUIT 	5
 #define COMMAND_UNDO 	6
 
-// Flag/Unflag tasks
+/* Flag/Unflag tasks */
 #define DO_FLAG		0
 #define DO_UNFLAG 	1
 
-// Malloc constants
+/* Malloc constants */
 #define BLOCK 5
 #define MALLOC_ERR -1
 
-//Savefile constants
+/* Savefile constants */
 #define SAVEFILE_LEVEL 0
 #define SAVEFILE_ROWS 1
 #define SAVEFILE_COLUMNS 2
@@ -118,29 +118,29 @@
 #define GAMESTATE_LOSE 		2
 #define GAMESTATE_CANTWIN 	3
 
-//Campaign Format
+/* Campaign Format */
 #define FILE_FORMAT ".txt"
 #define FORMAT_LENGTH 4
 
-// map undos quantity
+/* map undos quantity */
 #define get_undos(level) (((level)==NIGHTMARE)?1: \
 						  ((level)==HARD)?3: \
 						  ((level)==MEDIUM)?5:10)
 
-// Gets player moves
+/* Gets player moves */
 #define get_moves(mines, undos) ((mines) + (undos))
 
-// Maps letter reference to board row number
+/* Maps letter reference to board row number */
 #define get_row_pos_byref(row) ( (row) - 'A')
 
-// Number to upper letter
+/* Number to upper letter */
 #define toupperalpha(x) ((x)+'A')
 
-// Maximum and minimum
+/* Maximum and minimum */
 #define min(x, y) ((x)<(y)?(x):(y))
 #define max(x, y) ((x)>(y)?(x):(y))
 
-// Delete buffer
+/* Delete buffer */
 #define DELBFF() while(getchar() != '\n')
 
 
@@ -150,7 +150,7 @@
 					((board[i][j] == VISUAL_FLAGGED)? KFLG: \
 					((board[i][j] == VISUAL_EMPTY)? KSWP:KMIN)))
 
-//Campaign Format
+/*Campaign Format */
 #define FILE_FORMAT ".txt"
 #define FORMAT_LENGTH 4
 #define MAX_CAMPAIGN_LINE_LENGTH 9
@@ -185,13 +185,13 @@ typedef struct
 	int moves;
 	int undos;
 	int mines;
-	int mines_left; 	//number of mines not flagged
-	int sweeps_left; 	//Number of not sweeped positions
-	int flags_left;		//Resting flags
+	int mines_left; 	/* number of mines not flagged */
+	int sweeps_left; 	/* Number of not sweeped positions */
+	int flags_left;		/* Resting flags */
 	char campaign_name[MAX_FILENAME_LEN];
 	int campaign_level;
-	int gamestate;		// DEFAULT, WIN or LOSE
-	int levels_amount;	//Number of campaign levels
+	int gamestate;		/* DEFAULT, WIN or LOSE */
+	int levels_amount;	/* Number of campaign levels */
 	tCampaign * campaign;
 
 } tGame;
@@ -210,12 +210,12 @@ typedef struct
 	int sweeps_left;
 	int flags_left;
 	char can_undo;
-
+	char undo_error;
 } tUndo;
 
 typedef struct
 {
-	int * results; //ToDo: change for array
+	int * array;
 	int dim;
 
 } tArray;
@@ -238,7 +238,7 @@ typedef struct
 
 typedef struct 
 {
-	tArray results; //ToDo: Change
+	tArray results;
 	int index;
 	char is_row;
 

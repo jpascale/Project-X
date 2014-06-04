@@ -159,8 +159,6 @@ int CreateHiddenVisualBoard(tGame * game)
 
 int Query(tBoard * hiddenboard, tCommand * structcommand)
 {
-  //ToDo: Modularize??
-
 	tArray * pquery = &structcommand->query.results;
 	int element = structcommand->query.index;
 	char isrow = structcommand->query.is_row;
@@ -216,7 +214,7 @@ int Query(tBoard * hiddenboard, tCommand * structcommand)
 	if (results != NULL)
 		results = realloc(results, (j + (state == FOUND_MINE)) * sizeof(*results));
 	pquery->dim = j + (state == FOUND_MINE);
-	pquery->results = results;
+	pquery->array = results;
 	
 	return (results != NULL);
 }
@@ -282,16 +280,14 @@ int LegalPos(tBoard * structboard, tPos * pos)
 
 int FlagRange(tGame *game, tCommand * command, char task)
 {
-	//ToDo: Tidy
 	int k;
 	int flag_count = 0;
 	char isrow = command->flag.is_row;
 	tPos auxpos = command->flag.first_pos;
 	tPos finalpos = command->flag.last_pos;
-	//SaveLastState(game, &command->undo);
 	
 	if (isrow)
-	{ //ToDo: Improve
+	{
 		for(k = auxpos.j; k<=finalpos.j; k++)
 		{
 			command->flag.first_pos.j = k;
@@ -334,7 +330,6 @@ int WriteSaveFile(tGame *game, char *name)
 		fclose(savefile);
 		return FALSE;
 	}
-	// ToDo: Use aux function or macro
 
 	for (i = 0; i < data[SAVEFILE_ROWS]; i++)
 		if (fwrite(hiddenboard[i], sizeof(char), data[SAVEFILE_COLUMNS], savefile) != data[SAVEFILE_COLUMNS])
@@ -364,8 +359,6 @@ int WriteSaveFile(tGame *game, char *name)
 
 int LoadFile(tGame *game, char *name)
 {
-	//ToDo: Modularize
-	//ToDo: Finish
 	FILE * loadfile;
 	int auxrows=0, auxcols=0;
 	int num;
@@ -579,7 +572,7 @@ void CheckGameState(tGame * game)
 	if (!game->mines_left || !game->sweeps_left)
 		game->gamestate = GAMESTATE_WIN;
 
-	// Campaign or limited
+	/* Campaign or limited */
 	if (game->gametype != GAMETYPE_INDIVIDUAL_NOLIMIT)
 	{
 		if (game->moves < game->sweeps_left && game->moves < game->mines_left)
