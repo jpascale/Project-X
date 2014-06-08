@@ -834,9 +834,11 @@ int AskUndo(tGame * game, tUndo * undo)
 {
 	char input[MAX_COMMAND_LEN];
 	char * pinput;
-
+	char new_line;
 	int wasundo = FALSE;
 	int wasquit = FALSE;
+	int i;
+
 
 	PrintBoard(&game->visualboard);
 
@@ -851,7 +853,17 @@ int AskUndo(tGame * game, tUndo * undo)
 		}
 
 		if (!wasundo && !wasquit)
+		{
 			printf("%s%s%s\n", KERR, ASKUNDO_ERR, KDEF);
+			new_line = FALSE;
+			for (i=0; i<MAX_COMMAND_LEN; i++)
+			{	
+				if (input[i] == '\n')
+					new_line = TRUE;
+			}	
+			if (!new_line)
+				DELBFF();	
+		}	
 	}
 	while ( (!wasundo && !wasquit) || (pinput == NULL));
 
@@ -907,6 +919,8 @@ void Quit(tGame * game, tCommand * command)
 	char savename[MAX_FILENAME_LEN];
 	int yes = FALSE;
 	int no = FALSE;
+	int i;
+	char new_line;
 
 	printf("%sDesea guardar la partida? (Ingrese si o no)%s\n", KASK, KDEF);
 	do
@@ -918,8 +932,17 @@ void Quit(tGame * game, tCommand * command)
 			no = strcmp(input, "no\n") == 0;
 		}
 		if (!yes && !no)
+		{	
 			printf("%sIngresar si o no.%s\n", KASK, KDEF);
-
+			new_line = FALSE;
+			for (i=0; i<5; i++)
+			{
+				if (input[i] == '\n')
+					new_line = TRUE;
+			}	
+			if (!new_line)
+				DELBFF();
+		}	
 	}while((!yes && !no) || (pinput == NULL));
 
 	if (yes)
