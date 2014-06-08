@@ -54,11 +54,11 @@
 #define FOUND_MINE 		1
 
 /* Sweep */
-#define SWEEP_MINE -1
+#define SWEEP_MINE	-1
 
 /* Chars for hidden board */
-#define HIDDEN_MINE 	'#'
-#define HIDDEN_EMPTY 	'-'
+#define HIDDEN_MINE 		'#'
+#define HIDDEN_EMPTY 		'-'
 
 /* Chars for visual display */
 #define VISUAL_UNFLAGGED 	'0'
@@ -72,9 +72,9 @@
 #define UNLIMITED_MOVES 0
 
 /* Minimum and maximum dim */
-#define MIN_ROWS 5
+#define MIN_ROWS 	5
 #define MIN_COLUMNS 5
-#define MAX_ROWS 19
+#define MAX_ROWS 	19
 #define MAX_COLUMNS 19
 
 /* Level mines percentage */
@@ -102,15 +102,15 @@
 #define DO_UNFLAG 	1
 
 /* Malloc constants */
-#define BLOCK 5
+#define BLOCK 		5
 #define MALLOC_ERR -1
 
 /* Savefile constants */
-#define SAVEFILE_LEVEL 0
-#define SAVEFILE_ROWS 1
-#define SAVEFILE_COLUMNS 2
-#define SAVEFILE_UNDOS 3
-#define SAVEFILE_MOVES 4
+#define SAVEFILE_LEVEL	 	0
+#define SAVEFILE_ROWS	 	1
+#define SAVEFILE_COLUMNS 	2
+#define SAVEFILE_UNDOS 		3
+#define SAVEFILE_MOVES		4
 #define SAVEFILE_ISCAMPAIGN 5
 
 #define GAMESTATE_DEFAULT 	0
@@ -152,7 +152,7 @@
 
 /*Campaign Format */
 #define FILE_FORMAT ".txt"
-#define FORMAT_LENGTH 4
+#define FORMAT_LENGTH 			 4
 #define MAX_CAMPAIGN_LINE_LENGTH 9
 
 
