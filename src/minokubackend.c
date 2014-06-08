@@ -475,7 +475,8 @@ int LoadFile(tGame *game, char *name)
 	for (i = 0; !error && i < auxcols * auxrows; i++)
 	{
 		elem = fgetc(loadfile);
-		if ((elem != VISUAL_UNFLAGGED && elem != VISUAL_EMPTY && elem != VISUAL_FLAGGED) || (elem == VISUAL_EMPTY && game->hiddenboard.board[i/auxcols][i%auxcols] == HIDDEN_MINE))
+		if ((elem != VISUAL_UNFLAGGED && elem != VISUAL_EMPTY && elem != VISUAL_FLAGGED) || \
+            (elem == VISUAL_EMPTY && game->hiddenboard.board[i/auxcols][i%auxcols] == HIDDEN_MINE))
 			error = TRUE;
 		else
 		{
@@ -608,7 +609,9 @@ int LoadCampaign(tGame * game)
 				error = TRUE;
 			else
 			{
-				if (level < EASY || level > NIGHTMARE || rows < MIN_ROWS || columns < MIN_COLUMNS || (level == NIGHTMARE && rows * columns < 100))
+				if (level < EASY || level > NIGHTMARE || \
+                    rows < MIN_ROWS || columns < MIN_COLUMNS || \
+                    (level == NIGHTMARE && rows * columns < 100))
 					error = TRUE;
 				else
 				{

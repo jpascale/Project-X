@@ -1,5 +1,14 @@
 #include "minokubackend.h"
 
+#define MEM_ERR "No hay suficiente memoria para seguir jugando."
+#define FILE_ERR "Archivo invalido o inexistente."
+#define CFILE_ERR "Archivo de campaña invalido o inexistente."
+#define OPT_ERR "Ingrese una opcion valida."
+#define NIGHTMARE_ERR "No es posible elegir pesadilla con menos de 100 casilleros."
+#define COMMAND_ERR "Comando invalido."
+#define ASKUNDO_ERR "Ingresar quit o undo."
+#define UNDO_ERR "No es posible usar undo."
+#define NOMOVES_ERR "No quedan suficientes movimientos para ganar la partida."
 
 /*
 **		Function prototypes (front) 
@@ -121,14 +130,15 @@ int setCampaign(tGame * game);
 int resumeCampaign(tGame * game);
 
 /*
-**	CheckLegalPos - Validates a position with (row,column) format, for example (A,5).
+**	CheckLegalPos - Validates a position with (row,column) format, Eg: (A,5)
 **	Calls TranslateCoord, ValidRow and LegalPos.
 */
 int CheckLegalPos(tBoard * structboard, tPos * pos);
 
 /*
-**	TranslateCoords - Changes rows from letter to number and decreases columns so they
-** 	match backend columns. (For example column 1 for the user is column 0 for the backend) 
+**	TranslateCoords - Changes rows from letter to number and decreases 
+**  columns so they match backend columns. (For example column 1 for the 
+**  user is column 0 for the backend)
 */
 void TranslateCoords(tPos * pos);
 
@@ -143,8 +153,8 @@ int ValidRow(tPos * pos);
 void Quit(tGame * game, tCommand * command);
 
 /*
-**	PrintResult - After finishing game prints Win or Lose. If you are still playing but
-**  you dont have enough moves to win prints Lose.
+**	PrintResult - After finishing game prints Win or Lose. If you are still 
+**  playing but you dont have enough moves to win prints Lose.
 */
 void PrintResult(tGame * game);
 
@@ -173,7 +183,7 @@ main(void)
 				if (setNewGame(&game))
 					Play(&game);
 				else
-					printf("%sNo hay suficiente memoria para seguir jugando.\n%s", KERR, KDEF);
+					printf("%s%s%s\n", KERR, MEM_ERR, KDEF);
 			}
 			else
 			{
@@ -181,7 +191,7 @@ main(void)
 				do
 				{	
 					if (!(valid = setCampaign(&game)))
-						printf("%sArchivo invalido o inexistente\n%s", KERR, KDEF);
+						printf("%s%s%s\n", KERR, FILE_ERR, KDEF);
 				}
 				while (!valid);
 			}
@@ -192,12 +202,12 @@ main(void)
 			{
 				getName(loadname);
 				if (!(valid = LoadFile(&game, loadname)))
-					printf("%sArchivo invalido o inexistente%s\n", KERR, KDEF);
+					printf("%s%s%s\n", KERR, FILE_ERR, KDEF);
 				else
 					if (game.gametype == GAMETYPE_CAMPAIGN)
 					{
 						if (!(valid = resumeCampaign(&game)))
-							printf("%sArchivo de campaña invalido o inexistente.%s\n", KERR, KDEF);
+							printf("%s%s%s\n", KERR, CFILE_ERR, KDEF);
 					}
 
 			} while (!valid);
@@ -222,7 +232,7 @@ int setCampaign(tGame * game)
 	{
 		if ((valid = setNewGame(game)) == MALLOC_ERR)
 		{
-			printf("%sNo hay memoria suficiente para seguir jugando.%s\n", KASK, KDEF);
+			printf("%s%s%s\n", KASK, MEM_ERR,KDEF);
 			return FALSE;
 		}
 		else if (valid)
@@ -251,7 +261,7 @@ int resumeCampaign(tGame * game)
 	{
 		if ((valid = setNewGame(game)) == MALLOC_ERR)
 		{
-			printf("%sNo hay suficiente memoria para seguir jugando.\n%s", KERR, KDEF);
+			printf("%s%s%s\n", KERR, MEM_ERR, KDEF);
 			return FALSE;
 		}
 		else if (valid)				
@@ -273,7 +283,7 @@ int Menu(void)
 		option = getint("%sElija una opcion: %s", KASK, KDEF);
 
 		if (option > 3 || option < 1)
-			printf("%sIngrese una opcion valida.%s\n", KERR, KASK);
+			printf("%s%s%s\n", KERR, OPT_ERR, KASK);
 
 	} while(option > 3 || option < 1);
 	
@@ -294,7 +304,7 @@ void setGametypeMenu(tGame * game)
 		option = getint("%sElija una opcion: %s\n", KASK, KDEF);
 		
 		if (option > 3 || option < 1)
-			printf("%sIngrese una opcion valida.%s\n", KERR, KDEF);
+			printf("%s%s%s\n", KERR, OPT_ERR, KDEF);
 		
 	} while(option > 3 || option < 1);
 
@@ -424,7 +434,7 @@ void getLevel(tGame * game)
 			can = TRUE;
 
 		if (!can)
-			printf("%sNo es posible elegir pesadilla con menos de 100 casilleros.%s\n", KERR, KDEF);
+			printf("%s%s%s\n", KERR, NIGHTMARE_ERR, KDEF);
 
 	} while(level < EASY || level > NIGHTMARE || !can);
 
@@ -488,7 +498,7 @@ void Play(tGame * game)
 			}
 
 		if (!legal)
-			printf("%sComando invalido.%s\n", KERR, KDEF);
+			printf("%s%s%s\n", KERR, COMMAND_ERR, KDEF);
 
 		} while (!legal);
 
@@ -841,7 +851,7 @@ int AskUndo(tGame * game, tUndo * undo)
 		}
 
 		if (!wasundo && !wasquit)
-			printf("%sIngresar quit o undo.%s\n", KERR, KDEF);
+			printf("%s%s%s\n", KERR, ASKUNDO_ERR, KDEF);
 	}
 	while ( (!wasundo && !wasquit) || (pinput == NULL));
 
@@ -883,7 +893,7 @@ void PrintAll(tGame * game, tCommand * command)
 	else if (command->command_ref == COMMAND_UNDO && \
 			(command->undo.undo_error == TRUE))
 	{
-		printf("%sNo es posible usar undo\n", KERR);
+		printf("%s%s\n", KERR, UNDO_ERR);
 		command->undo.undo_error = FALSE;
 	}
 	printf("%s", KDEF);
@@ -908,7 +918,7 @@ void Quit(tGame * game, tCommand * command)
 			no = strcmp(input, "no\n") == 0;
 		}
 		if (!yes && !no)
-			printf("%sIngresar si o no%s\n", KASK, KDEF);
+			printf("%sIngresar si o no.%s\n", KASK, KDEF);
 
 	}while((!yes && !no) || (pinput == NULL));
 
@@ -1059,7 +1069,7 @@ void PrintResult(tGame * game)
 			break;
 
 		case GAMESTATE_CANTWIN:
-			printf("%sNo quedan suficientes movimientos para ganar la partida.%s\n", KEXC, KDEF);
+			printf("%s%s%s\n", KEXC, NOMOVES_ERR, KDEF);
 			game->gamestate = GAMESTATE_LOSE;
 		case GAMESTATE_LOSE:
 			PrintBoard(&game->hiddenboard);
